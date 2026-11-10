@@ -615,24 +615,36 @@
     // ==========================================
     const BACKEND_URL = "https://AnatoliiHordiienko.pythonanywhere.com";
 
-    // Надійне отримання ID користувача
+    // Надійне отримання єдиного ID користувача для ВСІХ пристроїв
     function getSyncUserId() {
-      // 1. Спробуємо взяти з Telegram WebApp
-      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-        const tgId = window.Telegram.WebApp.initDataUnsafe.user.id;
-        if (tgId) {
-          localStorage.setItem("diet_permanent_tg_id", "tg_" + tgId);
-          return "tg_" + tgId;
+      // 1. Перевірка параметра ?tgId= у посиланні браузера
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const qId = urlParams.get('tgId') || urlParams.get('userId');
+        if (qId) {
+          localStorage.setItem("diet_permanent_tg_id", "tg_" + qId.replace('tg_', ''));
+          return "tg_" + qId.replace('tg_', '');
+        }
+      } catch (e) {}
+
+      // 2. Отримання з Telegram WebApp SDK
+      if (window.Telegram && window.Telegram.WebApp) {
+        const initData = window.Telegram.WebApp.initDataUnsafe;
+        if (initData && initData.user && initData.user.id) {
+          const uId = "tg_" + initData.user.id;
+          localStorage.setItem("diet_permanent_tg_id", uId);
+          return uId;
         }
       }
-      // 2. Якщо вже був збережений раніше справжній TG ID
+
+      // 3. Збережений постійний Telegram ID
       const cachedTgId = localStorage.getItem("diet_permanent_tg_id");
       if (cachedTgId) return cachedTgId;
 
-      // 3. Fallback: постійний пристроєвий ідентифікатор
+      // 4. Постійний ID для окремого браузера
       let localId = localStorage.getItem("app_device_sync_id");
       if (!localId) {
-        localId = "user_" + Math.random().toString(36).substring(2, 10);
+        localId = "tg_167040233"; // За замовчуванням ваш основний ID адміністратора
         localStorage.setItem("app_device_sync_id", localId);
       }
       return localId;
@@ -763,18 +775,6 @@
     document.getElementById('theme-toggle-btn').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
     });
-
-    function getSyncUserId() {
-      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        return "tg_" + tg.initDataUnsafe.user.id;
-      }
-      let localId = localStorage.getItem("app_device_sync_id");
-      if (!localId) {
-        localId = "guest_" + Math.random().toString(36).substring(2, 10);
-        localStorage.setItem("app_device_sync_id", localId);
-      }
-      return localId;
-    }
 
     // State: consumed weights
     let consumed = {};
