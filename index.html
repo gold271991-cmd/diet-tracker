@@ -276,7 +276,7 @@
             </button>
           </div>
 
-          <!-- Target Weight Progress Widget -->
+          <!-- Target Weight Progress Widget (Only shown on "weight" metric!) -->
           <div id="target-weight-widget" class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/80 border border-blue-200/80 dark:border-slate-700 rounded-2xl p-4 shadow-xs space-y-2.5 hidden">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1.5">
@@ -459,6 +459,7 @@
         </div>
 
         <form id="onboarding-form" class="space-y-3 text-xs">
+          <!-- Gender -->
           <div>
             <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Стать:</label>
             <div class="grid grid-cols-2 gap-2">
@@ -473,6 +474,7 @@
             </div>
           </div>
 
+          <!-- Birthday & Height -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Дата народження:</label>
@@ -484,6 +486,7 @@
             </div>
           </div>
 
+          <!-- Initial Measurements Grid -->
           <div class="space-y-1 pt-1">
             <span class="block font-bold text-gray-900 dark:text-white text-xs">Поточні заміри тіла:</span>
             <div class="grid grid-cols-2 gap-2">
@@ -514,6 +517,7 @@
             </div>
           </div>
 
+          <!-- Target Weight (Optional) -->
           <div class="pt-1">
             <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Цільова вага (кг, опціонально):</label>
             <input type="number" step="0.1" id="ob-target-weight" value="82.0" placeholder="Наприклад 80.0" class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -608,6 +612,7 @@
     const MASTER_CATEGORIES = [{"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [{"id": "a_bobovi", "name": "Бобові", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 527, "protein": 34}, "deficit": {"base": 100, "kcal": 310, "protein": 20}, "surplus": {"base": 230, "kcal": 715, "protein": 46}}, {"id": "a_krupa", "name": "Будь-яка крупа", "unit": "г", "note": "", "maintenance": {"base": 165, "kcal": 545, "protein": 16.5}, "deficit": {"base": 95, "kcal": 314, "protein": 9.5}, "surplus": {"base": 220, "kcal": 726, "protein": 22}}, {"id": "a_kartoplia", "name": "Картопля", "unit": "г", "note": "", "maintenance": {"base": 700, "kcal": 539, "protein": 14}, "deficit": {"base": 415, "kcal": 320, "protein": 8.3}, "surplus": {"base": 950, "kcal": 730, "protein": 19}}, {"id": "a_kukurudza", "name": "Кукурудза свіжа", "unit": "г", "note": "", "maintenance": {"base": 630, "kcal": 542, "protein": 20.8}, "deficit": {"base": 370, "kcal": 318, "protein": 12.2}, "surplus": {"base": 850, "kcal": 730, "protein": 28}}, {"id": "a_lavash", "name": "Лаваш", "unit": "г", "note": "", "maintenance": {"base": 225, "kcal": 540, "protein": 18}, "deficit": {"base": 135, "kcal": 324, "protein": 10.8}, "surplus": {"base": 300, "kcal": 720, "protein": 24}}, {"id": "a_makarony", "name": "Макарони т.с.", "unit": "г", "note": "", "maintenance": {"base": 160, "kcal": 544, "protein": 19.2}, "deficit": {"base": 95, "kcal": 323, "protein": 11.4}, "surplus": {"base": 215, "kcal": 730, "protein": 25.8}}, {"id": "a_rys", "name": "Рис (не шліфований)", "unit": "г", "note": "", "maintenance": {"base": 165, "kcal": 545, "protein": 12.4}, "deficit": {"base": 95, "kcal": 314, "protein": 7.1}, "surplus": {"base": 220, "kcal": 726, "protein": 16.5}}, {"id": "a_hlibtsi", "name": "Хлібці", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 544, "protein": 17}, "deficit": {"base": 100, "kcal": 320, "protein": 10}, "surplus": {"base": 230, "kcal": 736, "protein": 23}}, {"id": "a_boroshno", "name": "Цільнозернове борошно", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 544, "protein": 18.7}, "deficit": {"base": 100, "kcal": 320, "protein": 11}, "surplus": {"base": 230, "kcal": 736, "protein": 25}}, {"id": "a_hlib", "name": "Цільнозерновий хліб", "unit": "г", "note": "", "maintenance": {"base": 215, "kcal": 538, "protein": 19.3}, "deficit": {"base": 130, "kcal": 325, "protein": 11.7}, "surplus": {"base": 290, "kcal": 725, "protein": 26}}]}, {"id": "B", "name": "Категорія Б", "desc": "Білки (м'ясо, птиця, риба, морепродукти, яйця)", "badgeBg": "#DC2626", "items": [{"id": "b_file", "name": "Куряче або індиче філе", "unit": "г", "note": "", "maintenance": {"base": 325, "kcal": 358, "protein": 71.5}, "deficit": {"base": 430, "kcal": 473, "protein": 94.6}, "surplus": {"base": 380, "kcal": 420, "protein": 83.6}}, {"id": "b_moreprodukty", "name": "Морепродукти", "unit": "г", "note": "", "maintenance": {"base": 355, "kcal": 355, "protein": 71}, "deficit": {"base": 470, "kcal": 470, "protein": 94}, "surplus": {"base": 420, "kcal": 420, "protein": 84}}, {"id": "b_pechinka", "name": "Печінка", "unit": "г", "note": "", "maintenance": {"base": 275, "kcal": 358, "protein": 49.5}, "deficit": {"base": 360, "kcal": 468, "protein": 64.8}, "surplus": {"base": 325, "kcal": 420, "protein": 58.5}}, {"id": "b_ryba_fat", "name": "Риба (від 5% жиру)", "unit": "г", "note": "", "maintenance": {"base": 210, "kcal": 357, "protein": 37.8}, "deficit": {"base": 275, "kcal": 468, "protein": 49.5}, "surplus": {"base": 250, "kcal": 425, "protein": 45}}, {"id": "b_ryba_lean", "name": "Риба (до 5% жиру)", "unit": "г", "note": "", "maintenance": {"base": 325, "kcal": 358, "protein": 65}, "deficit": {"base": 430, "kcal": 473, "protein": 86}, "surplus": {"base": 380, "kcal": 420, "protein": 76}}, {"id": "b_teliatyna", "name": "Телятина", "unit": "г", "note": "", "maintenance": {"base": 210, "kcal": 357, "protein": 42}, "deficit": {"base": 275, "kcal": 468, "protein": 55}, "surplus": {"base": 250, "kcal": 425, "protein": 50}}, {"id": "b_yaytsya", "name": "Яйця (цілі)", "unit": "шт", "note": "", "maintenance": {"base": 5, "kcal": 393, "protein": 31.3}, "deficit": {"base": 6, "kcal": 471, "protein": 37.5}, "surplus": {"base": 6, "kcal": 471, "protein": 37.5}}]}, {"id": "V", "name": "Категорія В", "desc": "Клітковина (овочі, зелень, квашенина, гриби)", "badgeBg": "#16A34A", "items": [{"id": "v_gryby", "name": "Гриби", "unit": "г", "note": "", "maintenance": {"base": 600, "kcal": 120, "protein": 21}, "deficit": {"base": 600, "kcal": 120, "protein": 21}, "surplus": {"base": 600, "kcal": 120, "protein": 21}}, {"id": "v_ovochi", "name": "Овочі (квашені також і зелень)", "unit": "г", "note": "", "maintenance": {"base": 600, "kcal": 120, "protein": 9}, "deficit": {"base": 600, "kcal": 120, "protein": 9}, "surplus": {"base": 600, "kcal": 120, "protein": 9}}]}, {"id": "G", "name": "Категорія Г", "desc": "Корисні жири та соуси (олія, авокадо, оливки, соуси)", "badgeBg": "#D97706", "items": [{"id": "g_avokado", "name": "Авокадо", "unit": "г", "note": "", "maintenance": {"base": 145, "kcal": 232, "protein": 2.9}, "deficit": {"base": 110, "kcal": 176, "protein": 2.2}, "surplus": {"base": 170, "kcal": 272, "protein": 3.4}}, {"id": "g_oliya", "name": "Будь-яка олія (рекомендуємо лляну)", "unit": "г", "note": "Рекомендуємо лляну", "maintenance": {"base": 26, "kcal": 234, "protein": 0}, "deficit": {"base": 20, "kcal": 180, "protein": 0}, "surplus": {"base": 30, "kcal": 270, "protein": 0}}, {"id": "g_girchytsya", "name": "Гірчиця", "unit": "г", "note": "", "maintenance": {"base": 175, "kcal": 114, "protein": 8.8}, "deficit": {"base": 135, "kcal": 88, "protein": 6.8}, "surplus": {"base": 200, "kcal": 130, "protein": 10}}, {"id": "g_ketchup", "name": "Кетчуп", "unit": "г", "note": "", "maintenance": {"base": 115, "kcal": 115, "protein": 1.2}, "deficit": {"base": 90, "kcal": 90, "protein": 0.9}, "surplus": {"base": 135, "kcal": 135, "protein": 1.4}}, {"id": "g_mayonez", "name": "Майонез", "unit": "г", "note": "", "maintenance": {"base": 40, "kcal": 240, "protein": 0.4}, "deficit": {"base": 30, "kcal": 180, "protein": 0.3}, "surplus": {"base": 45, "kcal": 270, "protein": 0.5}}, {"id": "g_olyvky", "name": "Оливки", "unit": "г", "note": "", "maintenance": {"base": 200, "kcal": 230, "protein": 2}, "deficit": {"base": 155, "kcal": 178, "protein": 1.6}, "surplus": {"base": 235, "kcal": 270, "protein": 2.4}}]}, {"id": "D", "name": "Категорія Д", "desc": "Молочні та кисломолочні продукти", "badgeBg": "#9333EA", "items": [{"id": "d_kefir", "name": "Кефір", "unit": "г", "note": "", "maintenance": {"name": "Кефір 2,5%", "base": 480, "kcal": 240, "protein": 14.4}, "deficit": {"name": "Кефір 1%", "base": 630, "kcal": 263, "protein": 19.5}, "surplus": {"name": "Кефір 2,5%", "base": 580, "kcal": 290, "protein": 17.4}}, {"id": "d_moloko", "name": "Молоко", "unit": "г", "note": "", "maintenance": {"name": "Молоко 2,5%", "base": 480, "kcal": 240, "protein": 14.4}, "deficit": {"name": "Молоко 1%", "base": 635, "kcal": 261, "protein": 19}, "surplus": {"name": "Молоко 2,5%", "base": 580, "kcal": 290, "protein": 17.4}}, {"id": "d_yogurt", "name": "Несолодкий йогурт", "unit": "г", "note": "", "maintenance": {"name": "Несолодкий йогурт 2% жиру", "base": 400, "kcal": 240, "protein": 16.8}, "deficit": {"name": "Несолодкий йогурт 1% жиру", "base": 555, "kcal": 260, "protein": 17.2}, "surplus": {"name": "Несолодкий йогурт 2% жиру", "base": 480, "kcal": 290, "protein": 20}}, {"id": "d_syr_kislo", "name": "Сир кисломолочний нежирний (0,2% жиру)", "unit": "г", "note": "", "maintenance": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 300, "kcal": 240, "protein": 54}, "deficit": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 325, "kcal": 260, "protein": 58.5}, "surplus": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 360, "kcal": 290, "protein": 65}}, {"id": "d_syry_tverdi", "name": "Сири м'які, тверді, плавлені", "unit": "г", "note": "", "maintenance": {"name": "Сири м'які, тверді, плавлені", "base": 70, "kcal": 245, "protein": 14}, "deficit": {"name": "Сири м'які, тверді, плавлені", "base": 75, "kcal": 263, "protein": 15}, "surplus": {"name": "Сири м'які, тверді, плавлені", "base": 85, "kcal": 295, "protein": 17}}, {"id": "d_smetana", "name": "Сметана 15%", "unit": "г", "note": "", "maintenance": {"name": "Сметана 15%", "base": 160, "kcal": 240, "protein": 12.8}, "deficit": {"name": "Сметана 15%", "base": 175, "kcal": 263, "protein": 14}, "surplus": {"name": "Сметана 15%", "base": 190, "kcal": 285, "protein": 15}}]}, {"id": "E", "name": "Категорія Е", "desc": "Фрукти та ягоди (денна фруктова порція)", "badgeBg": "#DB2777", "items": [{"id": "e_banany", "name": "Банани, виноград, хурма", "unit": "г", "note": "", "maintenance": {"base": 495, "kcal": 470, "protein": 5}, "deficit": {"base": 265, "kcal": 252, "protein": 2.7}, "surplus": {"base": 550, "kcal": 522, "protein": 5.5}}, {"id": "e_frukty", "name": "Фрукти та ягоди", "unit": "г", "note": "", "maintenance": {"base": 940, "kcal": 470, "protein": 9.4}, "deficit": {"base": 500, "kcal": 250, "protein": 5}, "surplus": {"base": 1050, "kcal": 525, "protein": 10.5}}]}, {"id": "YE", "name": "Категорія Є", "desc": "Горіхи та насіння (джерело мікроелементів та жирів)", "badgeBg": "#475569", "items": [{"id": "ye_gorikhy", "name": "Будь-які горіхи (рекомендуємо грецькі)", "unit": "г", "note": "Рекомендуємо грецькі", "maintenance": {"base": 25, "kcal": 150, "protein": 5}, "deficit": {"base": 20, "kcal": 120, "protein": 4}, "surplus": {"base": 30, "kcal": 180, "protein": 6}}, {"id": "ye_nasinnya", "name": "Насіння", "unit": "г", "note": "", "maintenance": {"base": 25, "kcal": 150, "protein": 5}, "deficit": {"base": 20, "kcal": 120, "protein": 4}, "surplus": {"base": 30, "kcal": 180, "protein": 6}}]}, {"id": "ZH", "name": "Категорія Ж", "desc": "Снеки, солодощі, десерти або напої", "badgeBg": "#EA580C", "items": [{"id": "zh_banany", "name": "Банани, виноград, хурма", "unit": "г", "note": "", "maintenance": {"base": 710, "kcal": 675, "protein": 7.1}, "deficit": {"base": 500, "kcal": 475, "protein": 5}, "surplus": {"base": 710, "kcal": 675, "protein": 7.1}}, {"id": "zh_solodoshchi", "name": "Будь-що (солодощі, снеки, ковбаса тощо) / фр...", "unit": "г", "note": "", "maintenance": {"base": 135, "kcal": 675, "protein": 6.8}, "deficit": {"base": 95, "kcal": 475, "protein": 4.8}, "surplus": {"base": 135, "kcal": 675, "protein": 6.8}}, {"id": "zh_alcohol_hard", "name": "Міцні алкогольні напої (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 50, "kcal": 110, "protein": 0}, "deficit": {"base": 50, "kcal": 110, "protein": 0}, "surplus": {"base": 50, "kcal": 110, "protein": 0}}, {"id": "zh_pyvo", "name": "Пиво (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 240, "kcal": 103, "protein": 0}, "deficit": {"base": 240, "kcal": 103, "protein": 0}, "surplus": {"base": 240, "kcal": 103, "protein": 0}}, {"id": "zh_vyno", "name": "Сухе вино (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 150, "kcal": 104, "protein": 0}, "deficit": {"base": 150, "kcal": 104, "protein": 0}, "surplus": {"base": 150, "kcal": 104, "protein": 0}}, {"id": "zh_frukty", "name": "Фрукти та ягоди", "unit": "г", "note": "", "maintenance": {"base": 1350, "kcal": 675, "protein": 13.5}, "deficit": {"base": 950, "kcal": 475, "protein": 9.5}, "surplus": {"base": 1350, "kcal": 675, "protein": 13.5}}]}];
     const MEASUREMENTS_CONFIG = [{"id": "weight", "name": "Вага", "unit": "кг", "step": "0.1", "icon": "scale", "target": "82.5"}, {"id": "bicep", "name": "Обхват плеча", "unit": "см", "step": "0.5", "icon": "arm", "target": "38.0"}, {"id": "chest", "name": "Обхват грудей", "unit": "см", "step": "0.5", "icon": "chest", "target": "106.0"}, {"id": "waist", "name": "Обхват талії", "unit": "см", "step": "0.5", "icon": "waist", "target": "84.0"}, {"id": "hips", "name": "Обхват стегон", "unit": "см", "step": "0.5", "icon": "hips", "target": "100.0"}, {"id": "thigh", "name": "Обхват стегна", "unit": "см", "step": "0.5", "icon": "thigh", "target": "60.0"}];
 
+    // Reference Male Defaults: 35yo, 183cm, 76.6kg
     let userProfile = {
       gender: 'male',
       birthday: '1991-05-15',
@@ -626,6 +631,7 @@
     let editingRecordOriginalDate = null;
     let currentlyExpandedId = null;
 
+    // Telegram User ID identification
     const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
     let userId = 'default_user';
     let userName = 'Користувач';
@@ -662,13 +668,26 @@
       document.documentElement.classList.toggle('dark');
     });
 
+    // ROBUST PERSISTENCE: Check multiple storage locations to prevent repeated onboarding
     const profileKey = 'diet_user_profile_' + userId;
+    const globalOnboardedKey = 'diet_onboarded_' + userId;
+
+    let isAlreadyOnboarded = false;
     try {
-      const savedProfile = localStorage.getItem(profileKey);
+      if (localStorage.getItem(globalOnboardedKey) === 'true' || localStorage.getItem('diet_global_onboarded') === 'true') {
+        isAlreadyOnboarded = true;
+      }
+      const savedProfile = localStorage.getItem(profileKey) || localStorage.getItem('diet_user_profile_default_user');
       if (savedProfile) {
-        userProfile = Object.assign(userProfile, JSON.parse(savedProfile));
+        const parsed = JSON.parse(savedProfile);
+        userProfile = Object.assign(userProfile, parsed);
+        if (parsed.hasCompletedOnboarding) {
+          isAlreadyOnboarded = true;
+        }
       }
     } catch (e) {}
+
+    userProfile.hasCompletedOnboarding = isAlreadyOnboarded;
 
     function calculateAge(birthdayStr) {
       if (!birthdayStr) return 35;
@@ -721,7 +740,17 @@
 
     function saveUserProfile() {
       try {
-        localStorage.setItem(profileKey, JSON.stringify(userProfile));
+        userProfile.hasCompletedOnboarding = true;
+        const json = JSON.stringify(userProfile);
+        localStorage.setItem(profileKey, json);
+        localStorage.setItem('diet_user_profile_default_user', json);
+        localStorage.setItem(globalOnboardedKey, 'true');
+        localStorage.setItem('diet_global_onboarded', 'true');
+
+        if (tg && tg.CloudStorage && typeof tg.CloudStorage.setItem === 'function') {
+          tg.CloudStorage.setItem(globalOnboardedKey, 'true', () => {});
+          tg.CloudStorage.setItem(profileKey, json, () => {});
+        }
       } catch (e) {}
     }
 
@@ -911,7 +940,6 @@
               </div>
             </div>
 
-            <!-- Drawer for Slider and Manual Input -->
             <div id="drawer-${it.id}" class="drawer-controls hidden pt-2.5 mt-1.5 border-t border-gray-100 dark:border-slate-700/60">
               <div class="flex items-center space-x-2.5">
                 <div class="slider-container flex-1">
@@ -1476,6 +1504,8 @@
 
         container.appendChild(row);
       });
+
+      updateReminderBadges();
     }
 
     function openMetricDetail(metricId) {
@@ -2061,9 +2091,17 @@
       openOnboardingModal();
     });
 
+    // Onboarding Verification: Only triggers if never completed before
     function checkOnboardingNeeded() {
-      if (!userProfile.hasCompletedOnboarding) {
+      const isDone = userProfile.hasCompletedOnboarding === true ||
+                     localStorage.getItem(globalOnboardedKey) === 'true' ||
+                     localStorage.getItem('diet_global_onboarded') === 'true';
+
+      const modal = document.getElementById('onboarding-modal');
+      if (!isDone) {
         openOnboardingModal();
+      } else {
+        if (modal) modal.classList.add('hidden');
       }
     }
 
@@ -2107,6 +2145,7 @@
       userProfile.targetWeight = targetWeight;
       userProfile.hasCompletedOnboarding = true;
 
+      // Lock onboarding permanently
       saveUserProfile();
 
       const todayStr = new Date().toISOString().split('T')[0];
@@ -2159,17 +2198,13 @@
       }, 2000);
     }
 
-    // Init App with safe bootstrap
-    try {
-      updateGoalButtonsUI();
-      buildCalculatorDOM();
-      updateValuesInPlace();
-      renderMeasurementsList();
-      updateReminderBadges();
-      checkOnboardingNeeded();
-    } catch (err) {
-      console.error('Initialization error:', err);
-    }
+    // Init App
+    updateGoalButtonsUI();
+    buildCalculatorDOM();
+    updateValuesInPlace();
+    renderMeasurementsList();
+    updateReminderBadges();
+    checkOnboardingNeeded();
   </script>
 </body>
 </html>
