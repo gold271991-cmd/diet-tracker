@@ -143,7 +143,7 @@
         <div class="flex items-center space-x-2">
           <!-- Live Sync & Save Indicator Badge -->
           <div id="autosave-badge" class="flex items-center space-x-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full transition-opacity duration-300">
-            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg id="sync-icon-ok" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
             </svg>
             <span id="sync-status-text">Збережено</span>
@@ -615,6 +615,29 @@
     // ==========================================
     const BACKEND_URL = "https://AnatoliiHordiienko.pythonanywhere.com";
 
+    // Надійне отримання ID користувача
+    function getSyncUserId() {
+      // 1. Спробуємо взяти з Telegram WebApp
+      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+        const tgId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        if (tgId) {
+          localStorage.setItem("diet_permanent_tg_id", "tg_" + tgId);
+          return "tg_" + tgId;
+        }
+      }
+      // 2. Якщо вже був збережений раніше справжній TG ID
+      const cachedTgId = localStorage.getItem("diet_permanent_tg_id");
+      if (cachedTgId) return cachedTgId;
+
+      // 3. Fallback: постійний пристроєвий ідентифікатор
+      let localId = localStorage.getItem("app_device_sync_id");
+      if (!localId) {
+        localId = "user_" + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem("app_device_sync_id", localId);
+      }
+      return localId;
+    }
+
     const MASTER_CATEGORIES = [
       {"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [
         {"id": "a_bobovi", "name": "Бобові", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 527, "protein": 34}, "deficit": {"base": 100, "kcal": 310, "protein": 20}, "surplus": {"base": 230, "kcal": 715, "protein": 46}},
@@ -718,6 +741,7 @@
           const u = tg.initDataUnsafe.user;
           userId = u.id ? String(u.id) : 'default_user';
           userName = u.first_name || 'Користувач';
+          localStorage.setItem("diet_permanent_tg_id", "tg_" + userId);
         }
         applyTelegramTheme();
         tg.onEvent('themeChanged', applyTelegramTheme);
@@ -808,12 +832,29 @@
     // Cloud Sync Loader
     async function syncLoadFromServer() {
       const syncId = getSyncUserId();
+      const syncStatusEl = document.getElementById('sync-status-text');
+      if (syncStatusEl) syncStatusEl.textContent = 'Синхронізація...';
+
       try {
-        const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`);
-        if (!resp.ok) return false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
+          method: "GET",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!resp.ok) {
+          if (syncStatusEl) syncStatusEl.textContent = 'Локально';
+          return false;
+        }
+
         const json = await resp.json();
-        if (json.exists && json.data) {
+        if (json && json.exists && json.data) {
           const remote = json.data;
+          
           if (remote.userProfile) {
             userProfile = Object.assign(userProfile, remote.userProfile);
             localStorage.setItem(profileKey, JSON.stringify(userProfile));
@@ -826,17 +867,26 @@
             measurementsData = remote.measurementsData;
             localStorage.setItem(measurementsKey, JSON.stringify(measurementsData));
           }
+          if (remote.customBaseMap) {
+            customBaseMap = remote.customBaseMap;
+            localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
+          }
           if (remote.goal) {
             currentGoalKey = remote.goal;
           }
-          if (remote.userProfile && remote.userProfile.hasCompletedOnboarding) {
+
+          if (userProfile.hasCompletedOnboarding) {
             localStorage.setItem("diet_global_onboarded", "true");
             localStorage.setItem("diet_onboarded_" + userId, "true");
           }
+
+          if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
           return true;
+        } else {
+          if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
         }
       } catch (e) {
-        console.warn("Помилка завантаження з хмари:", e);
+        if (syncStatusEl) syncStatusEl.textContent = 'Локально';
       }
       return false;
     }
@@ -845,6 +895,7 @@
     function syncSaveToServer() {
       const syncStatusEl = document.getElementById('sync-status-text');
       if (syncStatusEl) syncStatusEl.textContent = 'Збереження...';
+      
       clearTimeout(cloudSyncTimer);
       cloudSyncTimer = setTimeout(async () => {
         const syncId = getSyncUserId();
@@ -856,18 +907,32 @@
           customBaseMap,
           lastUpdated: new Date().toISOString()
         };
+
         try {
-          await fetch(`${BACKEND_URL}/api/sync/save`, {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+          const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: syncId, payload })
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({ userId: syncId, payload }),
+            signal: controller.signal
           });
-          if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
+          clearTimeout(timeoutId);
+
+          if (resp.ok) {
+            if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
+          } else {
+            if (syncStatusEl) syncStatusEl.textContent = 'Локально';
+          }
         } catch (e) {
-          console.error("Помилка збереження в хмару:", e);
-          if (syncStatusEl) syncStatusEl.textContent = 'Збережено локально';
+          // Gracefully fallback to localStorage without noisy errors
+          if (syncStatusEl) syncStatusEl.textContent = 'Локально';
         }
-      }, 1200);
+      }, 800);
     }
 
     function calculateAge(birthdayStr) {
@@ -2303,7 +2368,9 @@
     // Init App with safe bootstrap sequence
     async function initApp() {
       try {
+        // Спочатку синхронізуємо дані з сервера
         await syncLoadFromServer();
+        
         updateGoalButtonsUI();
         buildCalculatorDOM();
         updateValuesInPlace();
