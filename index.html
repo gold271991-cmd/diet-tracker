@@ -617,13 +617,14 @@
 
     // Надійне отримання єдиного ID користувача для ВСІХ пристроїв
     function getSyncUserId() {
-      // 1. Перевірка параметра ?tgId= у посиланні браузера
+      // 1. Перевірка параметра ?tgId= або ?userId= у посиланні браузера
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const qId = urlParams.get('tgId') || urlParams.get('userId');
         if (qId) {
-          localStorage.setItem("diet_permanent_tg_id", "tg_" + qId.replace('tg_', ''));
-          return "tg_" + qId.replace('tg_', '');
+          const cleanId = String(qId).replace('tg_', '');
+          localStorage.setItem("diet_permanent_tg_id", cleanId);
+          return cleanId;
         }
       } catch (e) {}
 
@@ -631,7 +632,7 @@
       if (window.Telegram && window.Telegram.WebApp) {
         const initData = window.Telegram.WebApp.initDataUnsafe;
         if (initData && initData.user && initData.user.id) {
-          const uId = "tg_" + initData.user.id;
+          const uId = String(initData.user.id);
           localStorage.setItem("diet_permanent_tg_id", uId);
           return uId;
         }
@@ -641,13 +642,8 @@
       const cachedTgId = localStorage.getItem("diet_permanent_tg_id");
       if (cachedTgId) return cachedTgId;
 
-      // 4. Постійний ID для окремого браузера
-      let localId = localStorage.getItem("app_device_sync_id");
-      if (!localId) {
-        localId = "tg_167040233"; // За замовчуванням ваш основний ID адміністратора
-        localStorage.setItem("app_device_sync_id", localId);
-      }
-      return localId;
+      // 4. Постійний ID за замовчуванням (ваш основний ID)
+      return "167040233";
     }
 
     const MASTER_CATEGORIES = [
@@ -837,7 +833,7 @@
 
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
 
         const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
           method: "GET",
@@ -857,6 +853,7 @@
           
           if (remote.userProfile) {
             userProfile = Object.assign(userProfile, remote.userProfile);
+            userProfile.hasCompletedOnboarding = true;
             localStorage.setItem(profileKey, JSON.stringify(userProfile));
           }
           if (remote.consumed) {
@@ -875,15 +872,13 @@
             currentGoalKey = remote.goal;
           }
 
-          if (userProfile.hasCompletedOnboarding) {
-            localStorage.setItem("diet_global_onboarded", "true");
-            localStorage.setItem("diet_onboarded_" + userId, "true");
-          }
+          localStorage.setItem("diet_global_onboarded", "true");
+          localStorage.setItem("diet_onboarded_" + userId, "true");
 
           if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
           return true;
         } else {
-          if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
+          if (syncStatusEl) syncStatusEl.textContent = 'Новий профіль';
         }
       } catch (e) {
         if (syncStatusEl) syncStatusEl.textContent = 'Локально';
@@ -910,7 +905,7 @@
 
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
 
           const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
             method: "POST",
@@ -929,10 +924,9 @@
             if (syncStatusEl) syncStatusEl.textContent = 'Локально';
           }
         } catch (e) {
-          // Gracefully fallback to localStorage without noisy errors
           if (syncStatusEl) syncStatusEl.textContent = 'Локально';
         }
-      }, 800);
+      }, 600);
     }
 
     function calculateAge(birthdayStr) {
