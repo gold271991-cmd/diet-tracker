@@ -141,12 +141,12 @@
         </div>
 
         <div class="flex items-center space-x-2">
-          <!-- Auto-save Live Indicator Badge -->
+          <!-- Live Sync & Save Indicator Badge -->
           <div id="autosave-badge" class="flex items-center space-x-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full transition-opacity duration-300">
             <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
             </svg>
-            <span>Збережено</span>
+            <span id="sync-status-text">Збережено</span>
           </div>
 
           <!-- Dark Mode Toggle Button -->
@@ -171,10 +171,10 @@
 
       <!-- Goal Selector Segmented Control -->
       <div id="goal-selector-container" class="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl flex items-center justify-between text-xs font-semibold mb-2">
-        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="deficit">
+        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="deficit">
           Схуднення <span id="label-goal-deficit" class="text-[10px] block font-normal opacity-85">2 208 ккал</span>
         </button>
-        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="maintenance">
+        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="maintenance">
           Підтримка <span id="label-goal-maint" class="text-[10px] block font-normal opacity-85">2 822 ккал</span>
         </button>
         <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="surplus">
@@ -230,7 +230,7 @@
             <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
             </svg>
-            <span>Натисніть на продукт, щоб відкрити повзунок. Натискання повз нього автоматично згортає вікно.</span>
+            <span>Натисніть на продукт, щоб відкрити введення. Клік повз нього автоматично згортає вікно.</span>
           </div>
         </div>
 
@@ -314,7 +314,7 @@
                 <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 block" id="detail-metric-date">Останній замір: сьогодні</span>
               </div>
               <div class="text-right">
-                <span id="detail-metric-current" class="text-3xl font-extrabold text-gray-900 dark:text-white">82.5</span>
+                <span id="detail-metric-current" class="text-3xl font-extrabold text-gray-900 dark:text-white">76.6</span>
                 <span id="detail-metric-unit" class="text-sm font-semibold text-gray-500 dark:text-gray-400 ml-0.5">кг</span>
               </div>
             </div>
@@ -323,11 +323,11 @@
             <div class="grid grid-cols-2 gap-2.5 mt-3.5 pt-3 border-t border-gray-100 dark:border-slate-700/60 text-xs">
               <div class="bg-gray-50 dark:bg-slate-700/50 p-2.5 rounded-xl">
                 <span class="text-xs text-gray-500 dark:text-gray-400 block font-medium">Загальна зміна</span>
-                <strong id="detail-total-change" class="text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">+1.5 кг</strong>
+                <strong id="detail-total-change" class="text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">0.0 кг</strong>
               </div>
               <div class="bg-gray-50 dark:bg-slate-700/50 p-2.5 rounded-xl">
                 <span class="text-xs text-gray-500 dark:text-gray-400 block font-medium">Зміна до попер. тижня</span>
-                <strong id="detail-week-change" class="text-sm font-bold text-blue-600 dark:text-blue-400 block mt-0.5">+0.3 кг</strong>
+                <strong id="detail-week-change" class="text-sm font-bold text-blue-600 dark:text-blue-400 block mt-0.5">0.0 кг</strong>
               </div>
             </div>
           </div>
@@ -387,7 +387,7 @@
 
         <div class="bg-gray-50 dark:bg-slate-800/60 p-3 rounded-xl border border-gray-200 dark:border-slate-700">
           <h2 class="text-sm font-bold text-gray-900 dark:text-white">Персональні базові норми продуктів</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Тут можна налаштувати стандартну порцію для кожного продукту (в поточному обраному режимі).</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Налаштування індивідуальної порції для кожного продукту в поточному режимі.</p>
         </div>
 
         <div id="settings-categories-container" class="space-y-3"></div>
@@ -437,7 +437,7 @@
       </button>
     </nav>
 
-    <!-- ONBOARDING MODAL -->
+    <!-- ONBOARDING MODAL (Full Initial Questionnaire for New Users) -->
     <div id="onboarding-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
       <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="text-center space-y-1">
@@ -448,6 +448,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Введіть ваші параметри — раціон автоматично перерахується під ваше тіло</p>
         </div>
 
+        <!-- Requirement Callout Notice -->
         <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-2xl text-xs text-amber-900 dark:text-amber-200 space-y-1">
           <div class="flex items-center space-x-1.5 font-bold">
             <span>⚠️</span>
@@ -609,10 +610,81 @@
   </div>
 
   <script>
-    const MASTER_CATEGORIES = [{"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [{"id": "a_bobovi", "name": "Бобові", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 527, "protein": 34}, "deficit": {"base": 100, "kcal": 310, "protein": 20}, "surplus": {"base": 230, "kcal": 715, "protein": 46}}, {"id": "a_krupa", "name": "Будь-яка крупа", "unit": "г", "note": "", "maintenance": {"base": 165, "kcal": 545, "protein": 16.5}, "deficit": {"base": 95, "kcal": 314, "protein": 9.5}, "surplus": {"base": 220, "kcal": 726, "protein": 22}}, {"id": "a_kartoplia", "name": "Картопля", "unit": "г", "note": "", "maintenance": {"base": 700, "kcal": 539, "protein": 14}, "deficit": {"base": 415, "kcal": 320, "protein": 8.3}, "surplus": {"base": 950, "kcal": 730, "protein": 19}}, {"id": "a_kukurudza", "name": "Кукурудза свіжа", "unit": "г", "note": "", "maintenance": {"base": 630, "kcal": 542, "protein": 20.8}, "deficit": {"base": 370, "kcal": 318, "protein": 12.2}, "surplus": {"base": 850, "kcal": 730, "protein": 28}}, {"id": "a_lavash", "name": "Лаваш", "unit": "г", "note": "", "maintenance": {"base": 225, "kcal": 540, "protein": 18}, "deficit": {"base": 135, "kcal": 324, "protein": 10.8}, "surplus": {"base": 300, "kcal": 720, "protein": 24}}, {"id": "a_makarony", "name": "Макарони т.с.", "unit": "г", "note": "", "maintenance": {"base": 160, "kcal": 544, "protein": 19.2}, "deficit": {"base": 95, "kcal": 323, "protein": 11.4}, "surplus": {"base": 215, "kcal": 730, "protein": 25.8}}, {"id": "a_rys", "name": "Рис (не шліфований)", "unit": "г", "note": "", "maintenance": {"base": 165, "kcal": 545, "protein": 12.4}, "deficit": {"base": 95, "kcal": 314, "protein": 7.1}, "surplus": {"base": 220, "kcal": 726, "protein": 16.5}}, {"id": "a_hlibtsi", "name": "Хлібці", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 544, "protein": 17}, "deficit": {"base": 100, "kcal": 320, "protein": 10}, "surplus": {"base": 230, "kcal": 736, "protein": 23}}, {"id": "a_boroshno", "name": "Цільнозернове борошно", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 544, "protein": 18.7}, "deficit": {"base": 100, "kcal": 320, "protein": 11}, "surplus": {"base": 230, "kcal": 736, "protein": 25}}, {"id": "a_hlib", "name": "Цільнозерновий хліб", "unit": "г", "note": "", "maintenance": {"base": 215, "kcal": 538, "protein": 19.3}, "deficit": {"base": 130, "kcal": 325, "protein": 11.7}, "surplus": {"base": 290, "kcal": 725, "protein": 26}}]}, {"id": "B", "name": "Категорія Б", "desc": "Білки (м'ясо, птиця, риба, морепродукти, яйця)", "badgeBg": "#DC2626", "items": [{"id": "b_file", "name": "Куряче або індиче філе", "unit": "г", "note": "", "maintenance": {"base": 325, "kcal": 358, "protein": 71.5}, "deficit": {"base": 430, "kcal": 473, "protein": 94.6}, "surplus": {"base": 380, "kcal": 420, "protein": 83.6}}, {"id": "b_moreprodukty", "name": "Морепродукти", "unit": "г", "note": "", "maintenance": {"base": 355, "kcal": 355, "protein": 71}, "deficit": {"base": 470, "kcal": 470, "protein": 94}, "surplus": {"base": 420, "kcal": 420, "protein": 84}}, {"id": "b_pechinka", "name": "Печінка", "unit": "г", "note": "", "maintenance": {"base": 275, "kcal": 358, "protein": 49.5}, "deficit": {"base": 360, "kcal": 468, "protein": 64.8}, "surplus": {"base": 325, "kcal": 420, "protein": 58.5}}, {"id": "b_ryba_fat", "name": "Риба (від 5% жиру)", "unit": "г", "note": "", "maintenance": {"base": 210, "kcal": 357, "protein": 37.8}, "deficit": {"base": 275, "kcal": 468, "protein": 49.5}, "surplus": {"base": 250, "kcal": 425, "protein": 45}}, {"id": "b_ryba_lean", "name": "Риба (до 5% жиру)", "unit": "г", "note": "", "maintenance": {"base": 325, "kcal": 358, "protein": 65}, "deficit": {"base": 430, "kcal": 473, "protein": 86}, "surplus": {"base": 380, "kcal": 420, "protein": 76}}, {"id": "b_teliatyna", "name": "Телятина", "unit": "г", "note": "", "maintenance": {"base": 210, "kcal": 357, "protein": 42}, "deficit": {"base": 275, "kcal": 468, "protein": 55}, "surplus": {"base": 250, "kcal": 425, "protein": 50}}, {"id": "b_yaytsya", "name": "Яйця (цілі)", "unit": "шт", "note": "", "maintenance": {"base": 5, "kcal": 393, "protein": 31.3}, "deficit": {"base": 6, "kcal": 471, "protein": 37.5}, "surplus": {"base": 6, "kcal": 471, "protein": 37.5}}]}, {"id": "V", "name": "Категорія В", "desc": "Клітковина (овочі, зелень, квашенина, гриби)", "badgeBg": "#16A34A", "items": [{"id": "v_gryby", "name": "Гриби", "unit": "г", "note": "", "maintenance": {"base": 600, "kcal": 120, "protein": 21}, "deficit": {"base": 600, "kcal": 120, "protein": 21}, "surplus": {"base": 600, "kcal": 120, "protein": 21}}, {"id": "v_ovochi", "name": "Овочі (квашені також і зелень)", "unit": "г", "note": "", "maintenance": {"base": 600, "kcal": 120, "protein": 9}, "deficit": {"base": 600, "kcal": 120, "protein": 9}, "surplus": {"base": 600, "kcal": 120, "protein": 9}}]}, {"id": "G", "name": "Категорія Г", "desc": "Корисні жири та соуси (олія, авокадо, оливки, соуси)", "badgeBg": "#D97706", "items": [{"id": "g_avokado", "name": "Авокадо", "unit": "г", "note": "", "maintenance": {"base": 145, "kcal": 232, "protein": 2.9}, "deficit": {"base": 110, "kcal": 176, "protein": 2.2}, "surplus": {"base": 170, "kcal": 272, "protein": 3.4}}, {"id": "g_oliya", "name": "Будь-яка олія (рекомендуємо лляну)", "unit": "г", "note": "Рекомендуємо лляну", "maintenance": {"base": 26, "kcal": 234, "protein": 0}, "deficit": {"base": 20, "kcal": 180, "protein": 0}, "surplus": {"base": 30, "kcal": 270, "protein": 0}}, {"id": "g_girchytsya", "name": "Гірчиця", "unit": "г", "note": "", "maintenance": {"base": 175, "kcal": 114, "protein": 8.8}, "deficit": {"base": 135, "kcal": 88, "protein": 6.8}, "surplus": {"base": 200, "kcal": 130, "protein": 10}}, {"id": "g_ketchup", "name": "Кетчуп", "unit": "г", "note": "", "maintenance": {"base": 115, "kcal": 115, "protein": 1.2}, "deficit": {"base": 90, "kcal": 90, "protein": 0.9}, "surplus": {"base": 135, "kcal": 135, "protein": 1.4}}, {"id": "g_mayonez", "name": "Майонез", "unit": "г", "note": "", "maintenance": {"base": 40, "kcal": 240, "protein": 0.4}, "deficit": {"base": 30, "kcal": 180, "protein": 0.3}, "surplus": {"base": 45, "kcal": 270, "protein": 0.5}}, {"id": "g_olyvky", "name": "Оливки", "unit": "г", "note": "", "maintenance": {"base": 200, "kcal": 230, "protein": 2}, "deficit": {"base": 155, "kcal": 178, "protein": 1.6}, "surplus": {"base": 235, "kcal": 270, "protein": 2.4}}]}, {"id": "D", "name": "Категорія Д", "desc": "Молочні та кисломолочні продукти", "badgeBg": "#9333EA", "items": [{"id": "d_kefir", "name": "Кефір", "unit": "г", "note": "", "maintenance": {"name": "Кефір 2,5%", "base": 480, "kcal": 240, "protein": 14.4}, "deficit": {"name": "Кефір 1%", "base": 630, "kcal": 263, "protein": 19.5}, "surplus": {"name": "Кефір 2,5%", "base": 580, "kcal": 290, "protein": 17.4}}, {"id": "d_moloko", "name": "Молоко", "unit": "г", "note": "", "maintenance": {"name": "Молоко 2,5%", "base": 480, "kcal": 240, "protein": 14.4}, "deficit": {"name": "Молоко 1%", "base": 635, "kcal": 261, "protein": 19}, "surplus": {"name": "Молоко 2,5%", "base": 580, "kcal": 290, "protein": 17.4}}, {"id": "d_yogurt", "name": "Несолодкий йогурт", "unit": "г", "note": "", "maintenance": {"name": "Несолодкий йогурт 2% жиру", "base": 400, "kcal": 240, "protein": 16.8}, "deficit": {"name": "Несолодкий йогурт 1% жиру", "base": 555, "kcal": 260, "protein": 17.2}, "surplus": {"name": "Несолодкий йогурт 2% жиру", "base": 480, "kcal": 290, "protein": 20}}, {"id": "d_syr_kislo", "name": "Сир кисломолочний нежирний (0,2% жиру)", "unit": "г", "note": "", "maintenance": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 300, "kcal": 240, "protein": 54}, "deficit": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 325, "kcal": 260, "protein": 58.5}, "surplus": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 360, "kcal": 290, "protein": 65}}, {"id": "d_syry_tverdi", "name": "Сири м'які, тверді, плавлені", "unit": "г", "note": "", "maintenance": {"name": "Сири м'які, тверді, плавлені", "base": 70, "kcal": 245, "protein": 14}, "deficit": {"name": "Сири м'які, тверді, плавлені", "base": 75, "kcal": 263, "protein": 15}, "surplus": {"name": "Сири м'які, тверді, плавлені", "base": 85, "kcal": 295, "protein": 17}}, {"id": "d_smetana", "name": "Сметана 15%", "unit": "г", "note": "", "maintenance": {"name": "Сметана 15%", "base": 160, "kcal": 240, "protein": 12.8}, "deficit": {"name": "Сметана 15%", "base": 175, "kcal": 263, "protein": 14}, "surplus": {"name": "Сметана 15%", "base": 190, "kcal": 285, "protein": 15}}]}, {"id": "E", "name": "Категорія Е", "desc": "Фрукти та ягоди (денна фруктова порція)", "badgeBg": "#DB2777", "items": [{"id": "e_banany", "name": "Банани, виноград, хурма", "unit": "г", "note": "", "maintenance": {"base": 495, "kcal": 470, "protein": 5}, "deficit": {"base": 265, "kcal": 252, "protein": 2.7}, "surplus": {"base": 550, "kcal": 522, "protein": 5.5}}, {"id": "e_frukty", "name": "Фрукти та ягоди", "unit": "г", "note": "", "maintenance": {"base": 940, "kcal": 470, "protein": 9.4}, "deficit": {"base": 500, "kcal": 250, "protein": 5}, "surplus": {"base": 1050, "kcal": 525, "protein": 10.5}}]}, {"id": "YE", "name": "Категорія Є", "desc": "Горіхи та насіння (джерело мікроелементів та жирів)", "badgeBg": "#475569", "items": [{"id": "ye_gorikhy", "name": "Будь-які горіхи (рекомендуємо грецькі)", "unit": "г", "note": "Рекомендуємо грецькі", "maintenance": {"base": 25, "kcal": 150, "protein": 5}, "deficit": {"base": 20, "kcal": 120, "protein": 4}, "surplus": {"base": 30, "kcal": 180, "protein": 6}}, {"id": "ye_nasinnya", "name": "Насіння", "unit": "г", "note": "", "maintenance": {"base": 25, "kcal": 150, "protein": 5}, "deficit": {"base": 20, "kcal": 120, "protein": 4}, "surplus": {"base": 30, "kcal": 180, "protein": 6}}]}, {"id": "ZH", "name": "Категорія Ж", "desc": "Снеки, солодощі, десерти або напої", "badgeBg": "#EA580C", "items": [{"id": "zh_banany", "name": "Банани, виноград, хурма", "unit": "г", "note": "", "maintenance": {"base": 710, "kcal": 675, "protein": 7.1}, "deficit": {"base": 500, "kcal": 475, "protein": 5}, "surplus": {"base": 710, "kcal": 675, "protein": 7.1}}, {"id": "zh_solodoshchi", "name": "Будь-що (солодощі, снеки, ковбаса тощо) / фр...", "unit": "г", "note": "", "maintenance": {"base": 135, "kcal": 675, "protein": 6.8}, "deficit": {"base": 95, "kcal": 475, "protein": 4.8}, "surplus": {"base": 135, "kcal": 675, "protein": 6.8}}, {"id": "zh_alcohol_hard", "name": "Міцні алкогольні напої (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 50, "kcal": 110, "protein": 0}, "deficit": {"base": 50, "kcal": 110, "protein": 0}, "surplus": {"base": 50, "kcal": 110, "protein": 0}}, {"id": "zh_pyvo", "name": "Пиво (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 240, "kcal": 103, "protein": 0}, "deficit": {"base": 240, "kcal": 103, "protein": 0}, "surplus": {"base": 240, "kcal": 103, "protein": 0}}, {"id": "zh_vyno", "name": "Сухе вино (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 150, "kcal": 104, "protein": 0}, "deficit": {"base": 150, "kcal": 104, "protein": 0}, "surplus": {"base": 150, "kcal": 104, "protein": 0}}, {"id": "zh_frukty", "name": "Фрукти та ягоди", "unit": "г", "note": "", "maintenance": {"base": 1350, "kcal": 675, "protein": 13.5}, "deficit": {"base": 950, "kcal": 475, "protein": 9.5}, "surplus": {"base": 1350, "kcal": 675, "protein": 13.5}}]}];
-    const MEASUREMENTS_CONFIG = [{"id": "weight", "name": "Вага", "unit": "кг", "step": "0.1", "icon": "scale", "target": "82.5"}, {"id": "bicep", "name": "Обхват плеча", "unit": "см", "step": "0.5", "icon": "arm", "target": "38.0"}, {"id": "chest", "name": "Обхват грудей", "unit": "см", "step": "0.5", "icon": "chest", "target": "106.0"}, {"id": "waist", "name": "Обхват талії", "unit": "см", "step": "0.5", "icon": "waist", "target": "84.0"}, {"id": "hips", "name": "Обхват стегон", "unit": "см", "step": "0.5", "icon": "hips", "target": "100.0"}, {"id": "thigh", "name": "Обхват стегна", "unit": "см", "step": "0.5", "icon": "thigh", "target": "60.0"}];
+    // ==========================================
+    // СИНХРОНІЗАЦІЯ З СЕРВЕРОМ (PythonAnywhere)
+    // ==========================================
+    const BACKEND_URL = "https://AnatoliiHordiienko.pythonanywhere.com";
 
-    // Reference Male Defaults: 35yo, 183cm, 76.6kg
+    const MASTER_CATEGORIES = [
+      {"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [
+        {"id": "a_bobovi", "name": "Бобові", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 527, "protein": 34}, "deficit": {"base": 100, "kcal": 310, "protein": 20}, "surplus": {"base": 230, "kcal": 715, "protein": 46}},
+        {"id": "a_krupa", "name": "Будь-яка крупа", "unit": "г", "note": "", "maintenance": {"base": 165, "kcal": 545, "protein": 16.5}, "deficit": {"base": 95, "kcal": 314, "protein": 9.5}, "surplus": {"base": 220, "kcal": 726, "protein": 22}},
+        {"id": "a_kartoplia", "name": "Картопля", "unit": "г", "note": "", "maintenance": {"base": 700, "kcal": 539, "protein": 14}, "deficit": {"base": 415, "kcal": 320, "protein": 8.3}, "surplus": {"base": 950, "kcal": 730, "protein": 19}},
+        {"id": "a_kukurudza", "name": "Кукурудза свіжа", "unit": "г", "note": "", "maintenance": {"base": 630, "kcal": 542, "protein": 20.8}, "deficit": {"base": 370, "kcal": 318, "protein": 12.2}, "surplus": {"base": 850, "kcal": 730, "protein": 28}},
+        {"id": "a_lavash", "name": "Лаваш", "unit": "г", "note": "", "maintenance": {"base": 225, "kcal": 540, "protein": 18}, "deficit": {"base": 135, "kcal": 324, "protein": 10.8}, "surplus": {"base": 300, "kcal": 720, "protein": 24}},
+        {"id": "a_makarony", "name": "Макарони т.с.", "unit": "г", "note": "", "maintenance": {"base": 160, "kcal": 544, "protein": 19.2}, "deficit": {"base": 95, "kcal": 323, "protein": 11.4}, "surplus": {"base": 215, "kcal": 730, "protein": 25.8}},
+        {"id": "a_rys", "name": "Рис (не шліфований)", "unit": "г", "note": "", "maintenance": {"base": 165, "kcal": 545, "protein": 12.4}, "deficit": {"base": 95, "kcal": 314, "protein": 7.1}, "surplus": {"base": 220, "kcal": 726, "protein": 16.5}},
+        {"id": "a_hlibtsi", "name": "Хлібці", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 544, "protein": 17}, "deficit": {"base": 100, "kcal": 320, "protein": 10}, "surplus": {"base": 230, "kcal": 736, "protein": 23}},
+        {"id": "a_boroshno", "name": "Цільнозернове борошно", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 544, "protein": 18.7}, "deficit": {"base": 100, "kcal": 320, "protein": 11}, "surplus": {"base": 230, "kcal": 736, "protein": 25}},
+        {"id": "a_hlib", "name": "Цільнозерновий хліб", "unit": "г", "note": "", "maintenance": {"base": 215, "kcal": 538, "protein": 19.3}, "deficit": {"base": 130, "kcal": 325, "protein": 11.7}, "surplus": {"base": 290, "kcal": 725, "protein": 26}}
+      ]},
+      {"id": "B", "name": "Категорія Б", "desc": "Білки (м'ясо, птиця, риба, морепродукти, яйця)", "badgeBg": "#DC2626", "items": [
+        {"id": "b_file", "name": "Куряче або індиче філе", "unit": "г", "note": "", "maintenance": {"base": 325, "kcal": 358, "protein": 71.5}, "deficit": {"base": 430, "kcal": 473, "protein": 94.6}, "surplus": {"base": 380, "kcal": 420, "protein": 83.6}},
+        {"id": "b_moreprodukty", "name": "Морепродукти", "unit": "г", "note": "", "maintenance": {"base": 355, "kcal": 355, "protein": 71}, "deficit": {"base": 470, "kcal": 470, "protein": 94}, "surplus": {"base": 420, "kcal": 420, "protein": 84}},
+        {"id": "b_pechinka", "name": "Печінка", "unit": "г", "note": "", "maintenance": {"base": 275, "kcal": 358, "protein": 49.5}, "deficit": {"base": 360, "kcal": 468, "protein": 64.8}, "surplus": {"base": 325, "kcal": 420, "protein": 58.5}},
+        {"id": "b_ryba_fat", "name": "Риба (від 5% жиру)", "unit": "г", "note": "", "maintenance": {"base": 210, "kcal": 357, "protein": 37.8}, "deficit": {"base": 275, "kcal": 468, "protein": 49.5}, "surplus": {"base": 250, "kcal": 425, "protein": 45}},
+        {"id": "b_ryba_lean", "name": "Риба (до 5% жиру)", "unit": "г", "note": "", "maintenance": {"base": 325, "kcal": 358, "protein": 65}, "deficit": {"base": 430, "kcal": 473, "protein": 86}, "surplus": {"base": 380, "kcal": 420, "protein": 76}},
+        {"id": "b_teliatyna", "name": "Телятина", "unit": "г", "note": "", "maintenance": {"base": 210, "kcal": 357, "protein": 42}, "deficit": {"base": 275, "kcal": 468, "protein": 55}, "surplus": {"base": 250, "kcal": 425, "protein": 50}},
+        {"id": "b_yaytsya", "name": "Яйця (цілі)", "unit": "шт", "note": "", "maintenance": {"base": 5, "kcal": 393, "protein": 31.3}, "deficit": {"base": 6, "kcal": 471, "protein": 37.5}, "surplus": {"base": 6, "kcal": 471, "protein": 37.5}}
+      ]},
+      {"id": "V", "name": "Категорія В", "desc": "Клітковина (овочі, зелень, квашенина, гриби)", "badgeBg": "#16A34A", "items": [
+        {"id": "v_gryby", "name": "Гриби", "unit": "г", "note": "", "maintenance": {"base": 600, "kcal": 120, "protein": 21}, "deficit": {"base": 600, "kcal": 120, "protein": 21}, "surplus": {"base": 600, "kcal": 120, "protein": 21}},
+        {"id": "v_ovochi", "name": "Овочі (квашені також і зелень)", "unit": "г", "note": "", "maintenance": {"base": 600, "kcal": 120, "protein": 9}, "deficit": {"base": 600, "kcal": 120, "protein": 9}, "surplus": {"base": 600, "kcal": 120, "protein": 9}}
+      ]},
+      {"id": "G", "name": "Категорія Г", "desc": "Корисні жири та соуси (олія, авокадо, оливки, соуси)", "badgeBg": "#D97706", "items": [
+        {"id": "g_avokado", "name": "Авокадо", "unit": "г", "note": "", "maintenance": {"base": 145, "kcal": 232, "protein": 2.9}, "deficit": {"base": 110, "kcal": 176, "protein": 2.2}, "surplus": {"base": 170, "kcal": 272, "protein": 3.4}},
+        {"id": "g_oliya", "name": "Будь-яка олія (рекомендуємо лляну)", "unit": "г", "note": "Рекомендуємо лляну", "maintenance": {"base": 26, "kcal": 234, "protein": 0}, "deficit": {"base": 20, "kcal": 180, "protein": 0}, "surplus": {"base": 30, "kcal": 270, "protein": 0}},
+        {"id": "g_girchytsya", "name": "Гірчиця", "unit": "г", "note": "", "maintenance": {"base": 175, "kcal": 114, "protein": 8.8}, "deficit": {"base": 135, "kcal": 88, "protein": 6.8}, "surplus": {"base": 200, "kcal": 130, "protein": 10}},
+        {"id": "g_ketchup", "name": "Кетчуп", "unit": "г", "note": "", "maintenance": {"base": 115, "kcal": 115, "protein": 1.2}, "deficit": {"base": 90, "kcal": 90, "protein": 0.9}, "surplus": {"base": 135, "kcal": 135, "protein": 1.4}},
+        {"id": "g_mayonez", "name": "Майонез", "unit": "г", "note": "", "maintenance": {"base": 40, "kcal": 240, "protein": 0.4}, "deficit": {"base": 30, "kcal": 180, "protein": 0.3}, "surplus": {"base": 45, "kcal": 270, "protein": 0.5}},
+        {"id": "g_olyvky", "name": "Оливки", "unit": "г", "note": "", "maintenance": {"base": 200, "kcal": 230, "protein": 2}, "deficit": {"base": 155, "kcal": 178, "protein": 1.6}, "surplus": {"base": 235, "kcal": 270, "protein": 2.4}}
+      ]},
+      {"id": "D", "name": "Категорія Д", "desc": "Молочні та кисломолочні продукти", "badgeBg": "#9333EA", "items": [
+        {"id": "d_kefir", "name": "Кефір", "unit": "г", "note": "", "maintenance": {"name": "Кефір 2,5%", "base": 480, "kcal": 240, "protein": 14.4}, "deficit": {"name": "Кефір 1%", "base": 630, "kcal": 263, "protein": 19.5}, "surplus": {"name": "Кефір 2,5%", "base": 580, "kcal": 290, "protein": 17.4}},
+        {"id": "d_moloko", "name": "Молоко", "unit": "г", "note": "", "maintenance": {"name": "Молоко 2,5%", "base": 480, "kcal": 240, "protein": 14.4}, "deficit": {"name": "Молоко 1%", "base": 635, "kcal": 261, "protein": 19}, "surplus": {"name": "Молоко 2,5%", "base": 580, "kcal": 290, "protein": 17.4}},
+        {"id": "d_yogurt", "name": "Несолодкий йогурт", "unit": "г", "note": "", "maintenance": {"name": "Несолодкий йогурт 2% жиру", "base": 400, "kcal": 240, "protein": 16.8}, "deficit": {"name": "Несолодкий йогурт 1% жиру", "base": 555, "kcal": 260, "protein": 17.2}, "surplus": {"name": "Несолодкий йогурт 2% жиру", "base": 480, "kcal": 290, "protein": 20}},
+        {"id": "d_syr_kislo", "name": "Сир кисломолочний нежирний (0,2% жиру)", "unit": "г", "note": "", "maintenance": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 300, "kcal": 240, "protein": 54}, "deficit": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 325, "kcal": 260, "protein": 58.5}, "surplus": {"name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 360, "kcal": 290, "protein": 65}},
+        {"id": "d_syry_tverdi", "name": "Сири м'які, тверді, плавлені", "unit": "г", "note": "", "maintenance": {"name": "Сири м'які, тверді, плавлені", "base": 70, "kcal": 245, "protein": 14}, "deficit": {"name": "Сири м'які, тверді, плавлені", "base": 75, "kcal": 263, "protein": 15}, "surplus": {"name": "Сири м'які, тверді, плавлені", "base": 85, "kcal": 295, "protein": 17}},
+        {"id": "d_smetana", "name": "Сметана 15%", "unit": "г", "note": "", "maintenance": {"name": "Сметана 15%", "base": 160, "kcal": 240, "protein": 12.8}, "deficit": {"name": "Сметана 15%", "base": 175, "kcal": 263, "protein": 14}, "surplus": {"name": "Сметана 15%", "base": 190, "kcal": 285, "protein": 15}}
+      ]},
+      {"id": "E", "name": "Категорія Е", "desc": "Фрукти та ягоди (денна фруктова порція)", "badgeBg": "#DB2777", "items": [
+        {"id": "e_banany", "name": "Банани, виноград, хурма", "unit": "г", "note": "", "maintenance": {"base": 495, "kcal": 470, "protein": 5}, "deficit": {"base": 265, "kcal": 252, "protein": 2.7}, "surplus": {"base": 550, "kcal": 522, "protein": 5.5}},
+        {"id": "e_frukty", "name": "Фрукти та ягоди", "unit": "г", "note": "", "maintenance": {"base": 940, "kcal": 470, "protein": 9.4}, "deficit": {"base": 500, "kcal": 250, "protein": 5}, "surplus": {"base": 1050, "kcal": 525, "protein": 10.5}}
+      ]},
+      {"id": "YE", "name": "Категорія Є", "desc": "Горіхи та насіння (джерело мікроелементів та жирів)", "badgeBg": "#475569", "items": [
+        {"id": "ye_gorikhy", "name": "Будь-які горіхи (рекомендуємо грецькі)", "unit": "г", "note": "Рекомендуємо грецькі", "maintenance": {"base": 25, "kcal": 150, "protein": 5}, "deficit": {"base": 20, "kcal": 120, "protein": 4}, "surplus": {"base": 30, "kcal": 180, "protein": 6}},
+        {"id": "ye_nasinnya", "name": "Насіння", "unit": "г", "note": "", "maintenance": {"base": 25, "kcal": 150, "protein": 5}, "deficit": {"base": 20, "kcal": 120, "protein": 4}, "surplus": {"base": 30, "kcal": 180, "protein": 6}}
+      ]},
+      {"id": "ZH", "name": "Категорія Ж", "desc": "Снеки, солодощі, десерти або напої", "badgeBg": "#EA580C", "items": [
+        {"id": "zh_banany", "name": "Банани, виноград, хурма", "unit": "г", "note": "", "maintenance": {"base": 710, "kcal": 675, "protein": 7.1}, "deficit": {"base": 500, "kcal": 475, "protein": 5}, "surplus": {"base": 710, "kcal": 675, "protein": 7.1}},
+        {"id": "zh_solodoshchi", "name": "Будь-що (солодощі, снеки, ковбаса тощо) / фр...", "unit": "г", "note": "", "maintenance": {"base": 135, "kcal": 675, "protein": 6.8}, "deficit": {"base": 95, "kcal": 475, "protein": 4.8}, "surplus": {"base": 135, "kcal": 675, "protein": 6.8}},
+        {"id": "zh_alcohol_hard", "name": "Міцні алкогольні напої (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 50, "kcal": 110, "protein": 0}, "deficit": {"base": 50, "kcal": 110, "protein": 0}, "surplus": {"base": 50, "kcal": 110, "protein": 0}},
+        {"id": "zh_pyvo", "name": "Пиво (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 240, "kcal": 103, "protein": 0}, "deficit": {"base": 240, "kcal": 103, "protein": 0}, "surplus": {"base": 240, "kcal": 103, "protein": 0}},
+        {"id": "zh_vyno", "name": "Сухе вино (НЕ КОЖНОГО ДНЯ!)", "unit": "г", "note": "НЕ КОЖНОГО ДНЯ!", "maintenance": {"base": 150, "kcal": 104, "protein": 0}, "deficit": {"base": 150, "kcal": 104, "protein": 0}, "surplus": {"base": 150, "kcal": 104, "protein": 0}},
+        {"id": "zh_frukty", "name": "Фрукти та ягоди", "unit": "г", "note": "", "maintenance": {"base": 1350, "kcal": 675, "protein": 13.5}, "deficit": {"base": 950, "kcal": 475, "protein": 9.5}, "surplus": {"base": 1350, "kcal": 675, "protein": 13.5}}
+      ]}
+    ];
+
+    const MEASUREMENTS_CONFIG = [
+      {"id": "weight", "name": "Вага", "unit": "кг", "step": "0.1", "icon": "scale", "target": "82.5"},
+      {"id": "bicep", "name": "Обхват плеча", "unit": "см", "step": "0.5", "icon": "arm", "target": "38.0"},
+      {"id": "chest", "name": "Обхват грудей", "unit": "см", "step": "0.5", "icon": "chest", "target": "106.0"},
+      {"id": "waist", "name": "Обхват талії", "unit": "см", "step": "0.5", "icon": "waist", "target": "84.0"},
+      {"id": "hips", "name": "Обхват стегон", "unit": "см", "step": "0.5", "icon": "hips", "target": "100.0"},
+      {"id": "thigh", "name": "Обхват стегна", "unit": "см", "step": "0.5", "icon": "thigh", "target": "60.0"}
+    ];
+
+    // User Profile Configuration (Reference male: 35yo, 183cm, 76.6kg)
     let userProfile = {
       gender: 'male',
       birthday: '1991-05-15',
@@ -631,7 +703,7 @@
     let editingRecordOriginalDate = null;
     let currentlyExpandedId = null;
 
-    // Telegram User ID identification
+    // Telegram User ID
     const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
     let userId = 'default_user';
     let userName = 'Користувач';
@@ -668,26 +740,135 @@
       document.documentElement.classList.toggle('dark');
     });
 
-    // ROBUST PERSISTENCE: Check multiple storage locations to prevent repeated onboarding
-    const profileKey = 'diet_user_profile_' + userId;
-    const globalOnboardedKey = 'diet_onboarded_' + userId;
+    function getSyncUserId() {
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        return "tg_" + tg.initDataUnsafe.user.id;
+      }
+      let localId = localStorage.getItem("app_device_sync_id");
+      if (!localId) {
+        localId = "guest_" + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem("app_device_sync_id", localId);
+      }
+      return localId;
+    }
 
-    let isAlreadyOnboarded = false;
+    // State: consumed weights
+    let consumed = {};
+    MASTER_CATEGORIES.forEach(cat => {
+      cat.items.forEach(it => {
+        consumed[it.id] = 0;
+      });
+    });
+
+    const userBaseKey = 'diet_user_base_' + userId;
+    let customBaseMap = {};
+
+    const profileKey = 'diet_user_profile_' + userId;
+    const userStateKey = 'diet_consumed_state_' + userId;
+    const historyKey = 'diet_history_' + userId;
+    let historyRecords = [];
+
+    const measurementsKey = 'diet_measurements_' + userId;
+    let measurementsData = {
+      weight: [
+        { date: '2026-10-20', val: 76.6 },
+        { date: '2026-10-27', val: 76.8 },
+        { date: '2026-11-03', val: 77.2 },
+        { date: '2026-11-10', val: 77.5 }
+      ],
+      bicep: [{ date: '2026-10-20', val: 38.0 }],
+      chest: [{ date: '2026-10-20', val: 106.0 }],
+      waist: [{ date: '2026-10-20', val: 84.0 }],
+      hips: [{ date: '2026-10-20', val: 100.0 }],
+      thigh: [{ date: '2026-10-20', val: 60.0 }]
+    };
+
+    // Load Local Fallbacks
     try {
-      if (localStorage.getItem(globalOnboardedKey) === 'true' || localStorage.getItem('diet_global_onboarded') === 'true') {
-        isAlreadyOnboarded = true;
-      }
-      const savedProfile = localStorage.getItem(profileKey) || localStorage.getItem('diet_user_profile_default_user');
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        userProfile = Object.assign(userProfile, parsed);
-        if (parsed.hasCompletedOnboarding) {
-          isAlreadyOnboarded = true;
+      const savedProfile = localStorage.getItem(profileKey);
+      if (savedProfile) userProfile = Object.assign(userProfile, JSON.parse(savedProfile));
+      const savedBases = localStorage.getItem(userBaseKey);
+      if (savedBases) customBaseMap = JSON.parse(savedBases);
+      const savedState = localStorage.getItem(userStateKey);
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed.consumed) {
+          for (const k in parsed.consumed) {
+            if (consumed.hasOwnProperty(k)) consumed[k] = Number(parsed.consumed[k]) || 0;
+          }
         }
+        if (parsed.goal) currentGoalKey = parsed.goal;
       }
+      const savedHist = localStorage.getItem(historyKey);
+      if (savedHist) historyRecords = JSON.parse(savedHist);
+      const savedM = localStorage.getItem(measurementsKey);
+      if (savedM) measurementsData = JSON.parse(savedM);
     } catch (e) {}
 
-    userProfile.hasCompletedOnboarding = isAlreadyOnboarded;
+    // Cloud Sync Loader
+    async function syncLoadFromServer() {
+      const syncId = getSyncUserId();
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`);
+        if (!resp.ok) return false;
+        const json = await resp.json();
+        if (json.exists && json.data) {
+          const remote = json.data;
+          if (remote.userProfile) {
+            userProfile = Object.assign(userProfile, remote.userProfile);
+            localStorage.setItem(profileKey, JSON.stringify(userProfile));
+          }
+          if (remote.consumed) {
+            consumed = Object.assign(consumed, remote.consumed);
+            localStorage.setItem(userStateKey, JSON.stringify({ goal: remote.goal || currentGoalKey, consumed }));
+          }
+          if (remote.measurementsData) {
+            measurementsData = remote.measurementsData;
+            localStorage.setItem(measurementsKey, JSON.stringify(measurementsData));
+          }
+          if (remote.goal) {
+            currentGoalKey = remote.goal;
+          }
+          if (remote.userProfile && remote.userProfile.hasCompletedOnboarding) {
+            localStorage.setItem("diet_global_onboarded", "true");
+            localStorage.setItem("diet_onboarded_" + userId, "true");
+          }
+          return true;
+        }
+      } catch (e) {
+        console.warn("Помилка завантаження з хмари:", e);
+      }
+      return false;
+    }
+
+    let cloudSyncTimer = null;
+    function syncSaveToServer() {
+      const syncStatusEl = document.getElementById('sync-status-text');
+      if (syncStatusEl) syncStatusEl.textContent = 'Збереження...';
+      clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = setTimeout(async () => {
+        const syncId = getSyncUserId();
+        const payload = {
+          userProfile,
+          consumed,
+          goal: currentGoalKey,
+          measurementsData,
+          customBaseMap,
+          lastUpdated: new Date().toISOString()
+        };
+        try {
+          await fetch(`${BACKEND_URL}/api/sync/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: syncId, payload })
+          });
+          if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
+        } catch (e) {
+          console.error("Помилка збереження в хмару:", e);
+          if (syncStatusEl) syncStatusEl.textContent = 'Збережено локально';
+        }
+      }, 1200);
+    }
 
     function calculateAge(birthdayStr) {
       if (!birthdayStr) return 35;
@@ -695,9 +876,7 @@
       const now = new Date();
       let age = now.getFullYear() - birth.getFullYear();
       const m = now.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-        age--;
-      }
+      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
       return Math.max(16, age);
     }
 
@@ -709,7 +888,6 @@
       } else {
         bmr = 10 * userProfile.weight + 6.25 * userProfile.height - 5 * age + 5;
       }
-
       const userTDEE = Math.round(bmr * 1.62);
       const scaleRatio = userTDEE / 2822.0;
 
@@ -740,83 +918,16 @@
 
     function saveUserProfile() {
       try {
-        userProfile.hasCompletedOnboarding = true;
-        const json = JSON.stringify(userProfile);
-        localStorage.setItem(profileKey, json);
-        localStorage.setItem('diet_user_profile_default_user', json);
-        localStorage.setItem(globalOnboardedKey, 'true');
-        localStorage.setItem('diet_global_onboarded', 'true');
-
-        if (tg && tg.CloudStorage && typeof tg.CloudStorage.setItem === 'function') {
-          tg.CloudStorage.setItem(globalOnboardedKey, 'true', () => {});
-          tg.CloudStorage.setItem(profileKey, json, () => {});
-        }
+        localStorage.setItem(profileKey, JSON.stringify(userProfile));
       } catch (e) {}
+      syncSaveToServer();
     }
-
-    const userBaseKey = 'diet_user_base_' + userId;
-    let customBaseMap = {};
-    try {
-      const savedBases = localStorage.getItem(userBaseKey);
-      if (savedBases) customBaseMap = JSON.parse(savedBases);
-    } catch (e) {}
-
-    let consumed = {};
-    MASTER_CATEGORIES.forEach(cat => {
-      cat.items.forEach(it => {
-        consumed[it.id] = 0;
-      });
-    });
-
-    const userStateKey = 'diet_consumed_state_' + userId;
-    try {
-      const savedState = localStorage.getItem(userStateKey);
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
-        if (parsed.consumed) {
-          for (const k in parsed.consumed) {
-            if (consumed.hasOwnProperty(k)) {
-              consumed[k] = Number(parsed.consumed[k]) || 0;
-            }
-          }
-        }
-        if (parsed.goal) {
-          currentGoalKey = parsed.goal;
-        }
-      }
-    } catch (e) {}
-
-    const historyKey = 'diet_history_' + userId;
-    let historyRecords = [];
-    try {
-      const savedHist = localStorage.getItem(historyKey);
-      if (savedHist) historyRecords = JSON.parse(savedHist);
-    } catch (e) {}
-
-    const measurementsKey = 'diet_measurements_' + userId;
-    let measurementsData = {
-      weight: [
-        { date: '2026-10-20', val: 76.6 },
-        { date: '2026-10-27', val: 76.8 },
-        { date: '2026-11-03', val: 77.2 },
-        { date: '2026-11-10', val: 77.5 }
-      ],
-      bicep: [{ date: '2026-10-20', val: 38.0 }],
-      chest: [{ date: '2026-10-20', val: 106.0 }],
-      waist: [{ date: '2026-10-20', val: 84.0 }],
-      hips: [{ date: '2026-10-20', val: 100.0 }],
-      thigh: [{ date: '2026-10-20', val: 60.0 }]
-    };
-
-    try {
-      const savedM = localStorage.getItem(measurementsKey);
-      if (savedM) measurementsData = JSON.parse(savedM);
-    } catch (e) {}
 
     function saveMeasurementsToStorage() {
       try {
         localStorage.setItem(measurementsKey, JSON.stringify(measurementsData));
       } catch (e) {}
+      syncSaveToServer();
     }
 
     function getItemSpecs(it) {
@@ -855,21 +966,18 @@
     function getItemEffectiveKcal(it) {
       const specs = getItemSpecs(it);
       const effBase = getItemEffectiveBase(it);
-      if (specs.base > 0) {
-        return Math.round((effBase / specs.base) * specs.kcal);
-      }
+      if (specs.base > 0) return Math.round((effBase / specs.base) * specs.kcal);
       return specs.kcal;
     }
 
     function getItemEffectiveProtein(it) {
       const specs = getItemSpecs(it);
       const effBase = getItemEffectiveBase(it);
-      if (specs.base > 0) {
-        return Math.round((effBase / specs.base) * specs.protein * 10) / 10;
-      }
+      if (specs.base > 0) return Math.round((effBase / specs.base) * specs.protein * 10) / 10;
       return specs.protein;
     }
 
+    // Build DOM structure
     function buildCalculatorDOM() {
       const container = document.getElementById('categories-container');
       container.innerHTML = '';
@@ -940,6 +1048,7 @@
               </div>
             </div>
 
+            <!-- Drawer for Slider and Manual Input -->
             <div id="drawer-${it.id}" class="drawer-controls hidden pt-2.5 mt-1.5 border-t border-gray-100 dark:border-slate-700/60">
               <div class="flex items-center space-x-2.5">
                 <div class="slider-container flex-1">
@@ -1004,9 +1113,7 @@
       MASTER_CATEGORIES.forEach(cat => {
         const isVisible = (currentFilter === 'all' || currentFilter === cat.id);
         const section = document.getElementById('category-' + cat.id);
-        if (section) {
-          section.style.display = isVisible ? 'block' : 'none';
-        }
+        if (section) section.style.display = isVisible ? 'block' : 'none';
 
         let catFraction = 0;
         cat.items.forEach(it => {
@@ -1078,9 +1185,7 @@
           const slider = document.getElementById('slider-' + it.id);
           const numInput = document.getElementById('input-' + it.id);
 
-          if (nameEl) {
-            nameEl.textContent = specs.name;
-          }
+          if (nameEl) nameEl.textContent = specs.name;
 
           if (card) {
             if (isItemOverBudget) {
@@ -1098,12 +1203,8 @@
               ? 'text-amber-600 dark:text-amber-400 font-bold'
               : (isConsumed ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-900 dark:text-white font-bold');
           }
-          if (maxEl) {
-            maxEl.textContent = isConsumed ? maxAllowedWeight : remainingWeight;
-          }
-          if (baseLabel) {
-            baseLabel.textContent = `${baseWeight} ${it.unit}`;
-          }
+          if (maxEl) maxEl.textContent = isConsumed ? maxAllowedWeight : remainingWeight;
+          if (baseLabel) baseLabel.textContent = `${baseWeight} ${it.unit}`;
           if (noteEl) {
             if (isItemOverBudget) {
               noteEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-semibold">+${itemWeight - maxAllowedWeight}${it.unit}</span>`;
@@ -1154,36 +1255,6 @@
       updateReminderBadges();
     }
 
-    function updateReminderBadges() {
-      const redDot = document.getElementById('tab-measurement-red-dot');
-      const reminderBanner = document.getElementById('weekly-reminder-banner');
-      
-      const weightHistory = measurementsData.weight || [];
-      if (weightHistory.length === 0) {
-        if (redDot) redDot.classList.add('hidden');
-        if (reminderBanner) reminderBanner.classList.add('hidden');
-        return;
-      }
-
-      const firstDate = new Date(weightHistory[0].date);
-      const reminderDayOfWeek = isNaN(firstDate.getTime()) ? 1 : firstDate.getDay();
-
-      const now = new Date();
-      const currentDayOfWeek = now.getDay();
-
-      const latestDate = new Date(weightHistory[weightHistory.length - 1].date);
-      const daysSinceLatest = isNaN(latestDate.getTime()) ? 0 : Math.floor((now - latestDate) / (1000 * 60 * 60 * 24));
-
-      const isReminderDay = (currentDayOfWeek === reminderDayOfWeek) && (daysSinceLatest >= 5);
-
-      if (redDot) {
-        redDot.classList.toggle('hidden', !isReminderDay);
-      }
-      if (reminderBanner) {
-        reminderBanner.classList.toggle('hidden', !isReminderDay);
-      }
-    }
-
     let saveTimeout = null;
     function triggerAutoSave(totalKcal, totalProtein) {
       const badge = document.getElementById('autosave-badge');
@@ -1205,6 +1276,7 @@
         localStorage.setItem(userStateKey, JSON.stringify(payload));
         updateDailyHistoryAuto(totalKcal, totalProtein);
       } catch (e) {}
+      syncSaveToServer();
     }
 
     function updateDailyHistoryAuto(totalKcal, totalProtein) {
@@ -1266,6 +1338,7 @@
       } catch (e) {}
     }
 
+    // Single-active accordion & click-outside-to-collapse
     function attachListenersOnce() {
       document.querySelectorAll('.item-toggle-row').forEach(row => {
         row.addEventListener('click', (e) => {
@@ -1282,7 +1355,7 @@
       });
 
       document.addEventListener('click', (e) => {
-        if (!e.target.closest('.product-card')) {
+        if (!e.target.closest('.product-card') && !e.target.closest('#onboarding-modal') && !e.target.closest('#add-measurement-modal') && !e.target.closest('#target-weight-modal')) {
           closeAllProductDrawers();
         }
       });
@@ -1378,6 +1451,7 @@
       }
     }
 
+    // Goal change handler
     document.querySelectorAll('.goal-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const targetBtn = e.target.closest('.goal-btn');
@@ -1413,6 +1487,7 @@
       document.getElementById('athlete-profile-summary').textContent = `${genderText}, ${meta.age} р, ${userProfile.height} см • ${userProfile.weight} кг`;
     }
 
+    // Filter pills
     document.querySelectorAll('.cat-pill').forEach(pill => {
       pill.addEventListener('click', (e) => {
         currentFilter = e.target.getAttribute('data-cat-filter');
@@ -1425,6 +1500,7 @@
       });
     });
 
+    // Reset Day Flow
     const resetModal = document.getElementById('reset-modal');
     document.getElementById('reset-day-btn').addEventListener('click', () => {
       resetModal.classList.remove('hidden');
@@ -1448,6 +1524,29 @@
     // ==========================================
     // BODY MEASUREMENTS (ЗАМІРИ) MODULE
     // ==========================================
+    function updateReminderBadges() {
+      const redDot = document.getElementById('tab-measurement-red-dot');
+      const banner = document.getElementById('weekly-reminder-banner');
+      const weightHistory = measurementsData.weight || [];
+
+      if (weightHistory.length === 0) {
+        if (redDot) redDot.classList.add('hidden');
+        if (banner) banner.classList.add('hidden');
+        return;
+      }
+
+      const firstDate = new Date(weightHistory[0].date);
+      const reminderDayOfWeek = isNaN(firstDate.getTime()) ? 1 : firstDate.getDay();
+      const now = new Date();
+      const currentDayOfWeek = now.getDay();
+      const latestDate = new Date(weightHistory[weightHistory.length - 1].date);
+      const daysSinceLatest = isNaN(latestDate.getTime()) ? 0 : Math.floor((now - latestDate) / (1000 * 60 * 60 * 24));
+      const isReminderDay = (currentDayOfWeek === reminderDayOfWeek) && (daysSinceLatest >= 5);
+
+      if (redDot) redDot.classList.toggle('hidden', !isReminderDay);
+      if (banner) banner.classList.toggle('hidden', !isReminderDay);
+    }
+
     function renderMeasurementsList() {
       const container = document.getElementById('measurements-container');
       container.innerHTML = '';
@@ -1504,8 +1603,6 @@
 
         container.appendChild(row);
       });
-
-      updateReminderBadges();
     }
 
     function openMetricDetail(metricId) {
@@ -1666,7 +1763,7 @@
       let dotsHtml = '';
       points.forEach((pt) => {
         dotsHtml += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="2" class="cursor-pointer hover:r-6 transition-all" />
+          <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="2" class="cursor-pointer" />
           <text x="${pt.x}" y="${pt.y - 7}" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563EB">${pt.val}</text>
           <text x="${pt.x}" y="${height - 7}" text-anchor="middle" font-size="9" font-weight="500" fill="#94A3B8">${pt.date.slice(5)}</text>
         `;
@@ -1676,8 +1773,8 @@
         <svg viewBox="0 0 ${width} ${height}" class="w-full h-full overflow-visible">
           <defs>
             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#2563EB" stroke-opacity="0.25"/>
-              <stop offset="100%" stop-color="#2563EB" stroke-opacity="0.0"/>
+              <stop offset="0%" stop-color="#2563EB" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0"/>
             </linearGradient>
           </defs>
           <line x1="${pLeft}" y1="${pTop}" x2="${width - pRight}" y2="${pTop}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
@@ -1780,6 +1877,7 @@
       renderMetricDetailView();
     });
 
+    // Target Weight Edit Modal logic
     const twModal = document.getElementById('target-weight-modal');
     document.getElementById('edit-target-weight-btn').addEventListener('click', () => {
       document.getElementById('tw-modal-input').value = userProfile.targetWeight || '';
@@ -1825,6 +1923,7 @@
       }
     });
 
+    // Add Measurement Modal logic
     const addModal = document.getElementById('add-measurement-modal');
     document.getElementById('open-add-measurement-modal-btn').addEventListener('click', () => {
       const metric = MEASUREMENTS_CONFIG.find(m => m.id === selectedMetricId);
@@ -1891,6 +1990,7 @@
       renderMeasurementsList();
     });
 
+    // Tab Navigation
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetView = btn.getAttribute('data-view');
@@ -2072,6 +2172,7 @@
       try {
         localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
       } catch (e) {}
+      syncSaveToServer();
       updateValuesInPlace();
       showToast('Норми збережено!');
       switchView('calculator');
@@ -2082,6 +2183,7 @@
       try {
         localStorage.removeItem(userBaseKey);
       } catch (e) {}
+      syncSaveToServer();
       renderSettings();
       updateValuesInPlace();
       showToast('Скинуто до розрахункових значень');
@@ -2091,23 +2193,22 @@
       openOnboardingModal();
     });
 
-    // Onboarding Verification: Only triggers if never completed before
+    // ==========================================
+    // ONBOARDING WIZARD LOGIC
+    // ==========================================
     function checkOnboardingNeeded() {
-      const isDone = userProfile.hasCompletedOnboarding === true ||
-                     localStorage.getItem(globalOnboardedKey) === 'true' ||
-                     localStorage.getItem('diet_global_onboarded') === 'true';
-
-      const modal = document.getElementById('onboarding-modal');
-      if (!isDone) {
+      const isLocallyOnboarded = localStorage.getItem("diet_global_onboarded") || 
+                                 localStorage.getItem("diet_onboarded_" + userId) || 
+                                 userProfile.hasCompletedOnboarding;
+      if (!isLocallyOnboarded) {
         openOnboardingModal();
-      } else {
-        if (modal) modal.classList.add('hidden');
       }
     }
 
     function openOnboardingModal() {
       const modal = document.getElementById('onboarding-modal');
-      document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`).checked = true;
+      const radio = document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`);
+      if (radio) radio.checked = true;
       document.getElementById('ob-birthday').value = userProfile.birthday || '1991-05-15';
       document.getElementById('ob-height').value = userProfile.height || 183;
       document.getElementById('ob-weight').value = userProfile.weight || 76.6;
@@ -2145,7 +2246,8 @@
       userProfile.targetWeight = targetWeight;
       userProfile.hasCompletedOnboarding = true;
 
-      // Lock onboarding permanently
+      localStorage.setItem("diet_global_onboarded", "true");
+      localStorage.setItem("diet_onboarded_" + userId, "true");
       saveUserProfile();
 
       const todayStr = new Date().toISOString().split('T')[0];
@@ -2198,13 +2300,22 @@
       }, 2000);
     }
 
-    // Init App
-    updateGoalButtonsUI();
-    buildCalculatorDOM();
-    updateValuesInPlace();
-    renderMeasurementsList();
-    updateReminderBadges();
-    checkOnboardingNeeded();
+    // Init App with safe bootstrap sequence
+    async function initApp() {
+      try {
+        await syncLoadFromServer();
+        updateGoalButtonsUI();
+        buildCalculatorDOM();
+        updateValuesInPlace();
+        renderMeasurementsList();
+        updateReminderBadges();
+        checkOnboardingNeeded();
+      } catch (err) {
+        console.error('Initialization error:', err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
