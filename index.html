@@ -2,24 +2,48 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Калькулятор раціону харчування</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --text-secondary: #64748b;
+      --border-color: #e2e8f0;
+    }
+    .dark {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+    }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #f1f5f9;
-      color: #0f172a;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
-    /* Custom range slider styling */
+    /* Ultra smooth slider */
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
       background: transparent;
+      touch-action: pan-y;
     }
     input[type=range]:focus {
       outline: none;
@@ -28,48 +52,33 @@
       width: 100%;
       height: 6px;
       cursor: pointer;
-      background: #e2e8f0;
+      background: #cbd5e1;
       border-radius: 9999px;
-      transition: background 0.2s ease;
+    }
+    .dark input[type=range]::-webkit-slider-runnable-track {
+      background: #475569;
     }
     input[type=range]::-webkit-slider-thumb {
-      height: 20px;
-      width: 20px;
+      height: 22px;
+      width: 22px;
       border-radius: 50%;
       background: #2563eb;
       cursor: pointer;
       -webkit-appearance: none;
-      margin-top: -7px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 0 0 2px white;
-      transition: transform 0.15s ease, background-color 0.15s ease;
+      margin-top: -8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 0 0 2px white;
+      transition: transform 0.1s ease;
     }
-    input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.15);
+    .dark input[type=range]::-webkit-slider-thumb {
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 0 2px #1e293b;
     }
     input[type=range]::-webkit-slider-thumb:active {
-      transform: scale(1.25);
+      transform: scale(1.2);
     }
     input[type=range]:disabled::-webkit-slider-thumb {
       background: #94a3b8;
       cursor: not-allowed;
       transform: none;
-    }
-    /* Firefox slider */
-    input[type=range]::-moz-range-track {
-      width: 100%;
-      height: 6px;
-      cursor: pointer;
-      background: #e2e8f0;
-      border-radius: 9999px;
-    }
-    input[type=range]::-moz-range-thumb {
-      height: 20px;
-      width: 20px;
-      border-radius: 50%;
-      background: #2563eb;
-      cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -80,116 +89,200 @@
     }
   </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen pb-24">
 
-  <div class="max-w-xl mx-auto bg-white min-h-screen shadow-xl flex flex-col">
+  <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors">
     
     <!-- Top Sticky Header -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 pt-3.5 pb-3 shadow-xs">
-      <!-- Title row -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 pt-3 pb-2.5 shadow-xs transition-colors">
+      
+      <!-- Top controls: title, athlete profile badge, theme toggle, reset -->
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center space-x-2">
-          <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 hover:text-gray-800 transition rounded-lg hover:bg-gray-100" title="На головну">
+          <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Закрити / Назад">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <h1 class="text-xl font-bold text-gray-900 tracking-tight">Раціон</h1>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <h1 class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none">Раціон</h1>
+              <span id="user-name-display" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
+            </div>
+            <div class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
+              Чоловік, 35 р, 183 см • 3 трен./тижд.
+            </div>
+          </div>
         </div>
-        
+
         <div class="flex items-center space-x-1.5">
-          <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 active:scale-95 px-3 py-1.5 rounded-full transition flex items-center space-x-1">
+          <!-- Dark Mode Toggle Button -->
+          <button id="theme-toggle-btn" type="button" class="p-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition" title="Змінити тему">
+            <svg id="theme-icon-sun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <svg id="theme-icon-moon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+          </button>
+
+          <!-- Reset button -->
+          <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
-            <span>Скинути все</span>
+            <span>Скинути</span>
           </button>
         </div>
       </div>
 
-      <!-- Protein Counter (Like screenshot) -->
-      <div class="text-center my-1.5">
-        <div class="text-3xl font-extrabold text-gray-900 tracking-tight" id="top-protein-value">0 грам</div>
-        <div class="text-xs font-medium text-gray-400 mt-0.5 uppercase tracking-wider">білків</div>
+      <!-- Goal Selector Segmented Control (With Smart Nutrition Ratios) -->
+      <div id="goal-selector-container" class="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl flex items-center justify-between text-xs font-semibold mb-2">
+        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="deficit">
+          Схуднення <span class="text-[10px] block font-normal opacity-85">~2 250 ккал (↑Б ↓А)</span>
+        </button>
+        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="maintenance">
+          Підтримка <span class="text-[10px] block font-normal opacity-85">2 822 ккал (100%)</span>
+        </button>
+        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="surplus">
+          Набір м'язів <span class="text-[10px] block font-normal opacity-85">~3 300 ккал (↑А ↑Б)</span>
+        </button>
       </div>
 
-      <!-- Calories Bar -->
-      <div class="mt-2">
-        <div class="flex justify-between items-center text-xs font-medium text-gray-500 mb-1.5">
-          <span>Калорії</span>
-          <span><strong id="top-calories-value" class="text-gray-900 font-bold text-sm">0</strong> <span class="text-gray-400">/ 2822 ккал</span></span>
+      <!-- Dynamic Top Summary (Hidden on History/Settings view) -->
+      <div id="top-nutrition-summary">
+        <!-- Protein Counter -->
+        <div class="text-center my-1">
+          <div class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="top-protein-value">0 грам</div>
+          <div class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">білків спожито</div>
         </div>
-        <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-          <div id="top-calories-bar" class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-        </div>
-        <div class="flex justify-between items-center text-[11px] text-gray-400 mt-1">
-          <span id="top-calories-percent">0% від норми</span>
-          <span id="top-calories-remaining">Залишок: 2822 ккал</span>
-        </div>
-      </div>
 
-      <!-- Category Navigation Pills -->
-      <nav class="flex space-x-1.5 overflow-x-auto no-scrollbar pt-3 pb-0.5 mt-1 border-t border-gray-100 text-xs font-semibold">
-        <button type="button" data-cat-filter="all" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-900 text-white transition shadow-xs">Всі</button>
-        <button type="button" data-cat-filter="A" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition">А • Вуглеводи</button>
-        <button type="button" data-cat-filter="B" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-rose-50 hover:text-rose-600 transition">Б • Білки</button>
-        <button type="button" data-cat-filter="V" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition">В • Овочі</button>
-        <button type="button" data-cat-filter="G" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-amber-50 hover:text-amber-600 transition">Г • Жири</button>
-        <button type="button" data-cat-filter="D" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition">Д • Молочка</button>
-        <button type="button" data-cat-filter="E" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-pink-50 hover:text-pink-600 transition">Е • Фрукти</button>
-        <button type="button" data-cat-filter="YE" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-slate-50 hover:text-slate-600 transition">Є • Горіхи</button>
-        <button type="button" data-cat-filter="ZH" class="cat-pill px-3 py-1.5 rounded-full whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition">Ж • Інше</button>
-      </nav>
+        <!-- Calories Bar -->
+        <div class="mt-1">
+          <div class="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <span>Калорії</span>
+            <span><strong id="top-calories-value" class="text-gray-900 dark:text-white font-bold text-sm">0</strong> <span id="top-target-label" class="text-gray-400 dark:text-gray-500">/ 2822 ккал</span></span>
+          </div>
+          <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+            <div id="top-calories-bar" class="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between items-center text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+            <span id="top-calories-percent">0% від норми</span>
+            <span id="top-calories-remaining">Залишок: 2822 ккал</span>
+          </div>
+        </div>
+
+        <!-- Category Navigation Pills -->
+        <nav class="flex space-x-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5 mt-1 border-t border-gray-100 dark:border-slate-800 text-xs font-semibold">
+          <button type="button" data-cat-filter="all" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs">Всі</button>
+          <button type="button" data-cat-filter="A" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600 transition">А • Вуглеводи</button>
+          <button type="button" data-cat-filter="B" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-rose-50 hover:text-rose-600 transition">Б • Білки</button>
+          <button type="button" data-cat-filter="V" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 hover:text-emerald-600 transition">В • Овочі</button>
+          <button type="button" data-cat-filter="G" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition">Г • Жири</button>
+          <button type="button" data-cat-filter="D" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-purple-50 hover:text-purple-600 transition">Д • Молочка</button>
+          <button type="button" data-cat-filter="E" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-pink-50 hover:text-pink-600 transition">Е • Фрукти</button>
+          <button type="button" data-cat-filter="YE" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-slate-50 hover:text-slate-600 transition">Є • Горіхи</button>
+          <button type="button" data-cat-filter="ZH" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-orange-50 hover:text-orange-600 transition">Ж • Інше</button>
+        </nav>
+      </div>
     </header>
 
-    <!-- Interactive Info Banner -->
-    <div class="px-4 py-2.5 bg-blue-50/70 border-b border-blue-100 flex items-start space-x-2 text-xs text-blue-900">
-      <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-      <div>
-        <span class="font-semibold">Принцип взаємозамінності:</span> кожна категорія має 100% бюджету. Вказуючи вагу одного продукту (наприклад, 50% картоплі), доступний залишок по всіх інших продуктах у цій категорії пропорційно зменшується.
-      </div>
-    </div>
+    <!-- Main Screens Container -->
+    <main class="flex-1 px-4 py-4 space-y-5">
+      
+      <!-- 1. Ration Calculator View -->
+      <div id="view-calculator" class="space-y-5">
+        <!-- Info notice on manual input allowance -->
+        <div class="px-3 py-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-xl flex items-center justify-between text-xs text-blue-900 dark:text-blue-300">
+          <div class="flex items-center space-x-1.5">
+            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Повзунок регулює в межах залишку, а у віконечку можна вводити будь-яку більшу вагу.</span>
+          </div>
+        </div>
 
-    <!-- Product Categories List Container -->
-    <main class="flex-1 px-4 py-4 space-y-6" id="categories-container">
-      <!-- Populated dynamically by JavaScript -->
+        <div id="categories-container" class="space-y-5"></div>
+      </div>
+
+      <!-- 2. History View -->
+      <div id="view-history" class="space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
+          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-medium">Очистити історію</button>
+        </div>
+        <div id="history-list" class="space-y-3">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- 3. Base Settings View (Personal baseline grams per user) -->
+      <div id="view-settings" class="space-y-4 hidden">
+        <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700">
+          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Персональні базові норми продуктів</h2>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Тут кожен користувач може налаштувати власну еталонну порцію для кожного продукту (за підтримки ваги).</p>
+        </div>
+
+        <div id="settings-categories-container" class="space-y-4">
+          <!-- Populated dynamically for editing base values -->
+        </div>
+
+        <div class="pt-2 flex space-x-2">
+          <button id="save-settings-btn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-sm">
+            Зберегти мої базові норми
+          </button>
+          <button id="reset-defaults-btn" type="button" class="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-gray-200 transition">
+            Скинути до вихідних
+          </button>
+        </div>
+      </div>
+
     </main>
 
-    <!-- Bottom summary bar -->
-    <footer class="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-2.5 flex items-center justify-between text-xs shadow-lg">
-      <div class="flex items-center space-x-3">
-        <div>
-          <span class="text-gray-400">Спожито:</span>
-          <span id="footer-consumed-summary" class="font-bold text-gray-800 ml-1">0 ккал</span>
-        </div>
-        <div class="h-3 w-px bg-gray-200"></div>
-        <div>
-          <span class="text-gray-400">Білок:</span>
-          <span id="footer-protein-summary" class="font-bold text-gray-800 ml-1">0 г</span>
-        </div>
-      </div>
-      <button id="save-day-btn" type="button" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center space-x-1">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Bottom Navigation Tabs (Раціон, Історія, Налаштування) -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-6 py-2 flex items-center justify-around text-[11px] font-medium z-40 transition-colors shadow-lg">
+      <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold" data-view="calculator">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+        </svg>
+        <span>Раціон</span>
+      </button>
+
+      <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" data-view="history">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>Історія</span>
+      </button>
+
+      <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" data-view="settings">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        <span>Мої норми</span>
+      </button>
+
+      <button id="save-day-btn" type="button" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold px-3.5 py-1.5 rounded-xl transition shadow-xs flex items-center space-x-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>
         <span>Зберегти день</span>
       </button>
-    </footer>
+    </nav>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-14 left-1/2 -translate-x-1/2 bg-gray-900/90 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50">
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 text-xs font-semibold px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50">
       Збережено!
     </div>
 
     <!-- Reset Confirmation Modal -->
-    <div id="reset-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-        <h3 class="text-base font-bold text-gray-900">Скинути всі внесені дані?</h3>
-        <p class="text-xs text-gray-600">Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.</p>
+    <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-gray-100 dark:border-slate-700">
+        <h3 class="text-base font-bold text-gray-900 dark:text-white">Скинути всі внесені дані?</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-300">Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.</p>
         <div class="flex justify-end space-x-2 pt-2">
-          <button id="modal-cancel-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition">Скасувати</button>
+          <button id="modal-cancel-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition">Скасувати</button>
           <button id="modal-confirm-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition">Скинути</button>
         </div>
       </div>
@@ -198,140 +291,183 @@
   </div>
 
   <script>
-    const DATA = [{"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "color": "#2F80ED", "bgLight": "#EFF6FF", "borderColor": "#BFDBFE", "badgeBg": "#2563EB", "items": [{"id": "a_bobovi", "name": "Бобові", "base": 170, "unit": "г", "step": 5, "kcal": 527, "protein": 34, "note": ""}, {"id": "a_krupa", "name": "Будь-яка крупа", "base": 165, "unit": "г", "step": 5, "kcal": 545, "protein": 16.5, "note": ""}, {"id": "a_kartoplia", "name": "Картопля", "base": 700, "unit": "г", "step": 10, "kcal": 539, "protein": 14, "note": ""}, {"id": "a_kukurudza", "name": "Кукурудза свіжа", "base": 630, "unit": "г", "step": 10, "kcal": 542, "protein": 20.8, "note": ""}, {"id": "a_lavash", "name": "Лаваш", "base": 225, "unit": "г", "step": 5, "kcal": 540, "protein": 18, "note": ""}, {"id": "a_makarony", "name": "Макарони т.с.", "base": 160, "unit": "г", "step": 5, "kcal": 544, "protein": 19.2, "note": ""}, {"id": "a_rys", "name": "Рис (не шліфований)", "base": 165, "unit": "г", "step": 5, "kcal": 545, "protein": 12.4, "note": ""}, {"id": "a_hlibtsi", "name": "Хлібці", "base": 170, "unit": "г", "step": 5, "kcal": 544, "protein": 17, "note": ""}, {"id": "a_boroshno", "name": "Цільнозернове борошно", "base": 170, "unit": "г", "step": 5, "kcal": 544, "protein": 18.7, "note": ""}, {"id": "a_hlib", "name": "Цільнозерновий хліб", "base": 215, "unit": "г", "step": 5, "kcal": 538, "protein": 19.3, "note": ""}]}, {"id": "B", "name": "Категорія Б", "desc": "Білки (м'ясо, птиця, риба, морепродукти, яйця)", "color": "#EB5757", "bgLight": "#FEF2F2", "borderColor": "#FECACA", "badgeBg": "#DC2626", "items": [{"id": "b_file", "name": "Куряче або індиче філе", "base": 325, "unit": "г", "step": 5, "kcal": 358, "protein": 71.5, "note": ""}, {"id": "b_moreprodukty", "name": "Морепродукти", "base": 355, "unit": "г", "step": 5, "kcal": 355, "protein": 71, "note": ""}, {"id": "b_pechinka", "name": "Печінка", "base": 275, "unit": "г", "step": 5, "kcal": 358, "protein": 49.5, "note": ""}, {"id": "b_ryba_fat", "name": "Риба (від 5% жиру)", "base": 210, "unit": "г", "step": 5, "kcal": 357, "protein": 37.8, "note": ""}, {"id": "b_ryba_lean", "name": "Риба (до 5% жиру)", "base": 325, "unit": "г", "step": 5, "kcal": 358, "protein": 65, "note": ""}, {"id": "b_teliatyna", "name": "Телятина", "base": 210, "unit": "г", "step": 5, "kcal": 357, "protein": 42, "note": ""}, {"id": "b_yaytsya", "name": "Яйця (цілі)", "base": 5, "unit": "шт", "step": 1, "kcal": 393, "protein": 31.3, "note": ""}]}, {"id": "V", "name": "Категорія В", "desc": "Клітковина (овочі, зелень, квашенина, гриби)", "color": "#27AE60", "bgLight": "#F0FDF4", "borderColor": "#BBF7D0", "badgeBg": "#16A34A", "items": [{"id": "v_gryby", "name": "Гриби", "base": 600, "unit": "г", "step": 10, "kcal": 120, "protein": 21, "note": ""}, {"id": "v_ovochi", "name": "Овочі (квашені також і зелень)", "base": 600, "unit": "г", "step": 10, "kcal": 120, "protein": 9, "note": ""}]}, {"id": "G", "name": "Категорія Г", "desc": "Корисні жири та соуси (олія, авокадо, оливки, соуси)", "color": "#D97706", "bgLight": "#FFFBEB", "borderColor": "#FDE68A", "badgeBg": "#D97706", "items": [{"id": "g_avokado", "name": "Авокадо", "base": 145, "unit": "г", "step": 5, "kcal": 232, "protein": 2.9, "note": ""}, {"id": "g_oliya", "name": "Будь-яка олія (рекомендуємо лляну)", "base": 26, "unit": "г", "step": 1, "kcal": 234, "protein": 0, "note": "Рекомендуємо лляну"}, {"id": "g_girchytsya", "name": "Гірчиця", "base": 175, "unit": "г", "step": 5, "kcal": 114, "protein": 8.8, "note": ""}, {"id": "g_ketchup", "name": "Кетчуп", "base": 115, "unit": "г", "step": 5, "kcal": 115, "protein": 1.2, "note": ""}, {"id": "g_mayonez", "name": "Майонез", "base": 40, "unit": "г", "step": 2, "kcal": 240, "protein": 0.4, "note": ""}, {"id": "g_olyvky", "name": "Оливки", "base": 200, "unit": "г", "step": 5, "kcal": 230, "protein": 2, "note": ""}]}, {"id": "D", "name": "Категорія Д", "desc": "Молочні та кисломолочні продукти (сир, молоко, йогурт, кефір)", "color": "#9333EA", "bgLight": "#FAF5FF", "borderColor": "#E9D5FF", "badgeBg": "#9333EA", "items": [{"id": "d_kefir", "name": "Кефір 2,5%", "base": 480, "unit": "г", "step": 10, "kcal": 240, "protein": 14.4, "note": ""}, {"id": "d_moloko", "name": "Молоко 2,5%", "base": 480, "unit": "г", "step": 10, "kcal": 240, "protein": 14.4, "note": ""}, {"id": "d_yogurt", "name": "Несолодкий йогурт 2% жиру", "base": 400, "unit": "г", "step": 10, "kcal": 240, "protein": 16.8, "note": ""}, {"id": "d_syr_kislo", "name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 300, "unit": "г", "step": 10, "kcal": 240, "protein": 54, "note": ""}, {"id": "d_syry_tverdi", "name": "Сири м'які, тверді, плавлені", "base": 70, "unit": "г", "step": 5, "kcal": 245, "protein": 14, "note": ""}, {"id": "d_smetana", "name": "Сметана 15%", "base": 160, "unit": "г", "step": 5, "kcal": 240, "protein": 12.8, "note": ""}]}, {"id": "E", "name": "Категорія Е", "desc": "Фрукти та ягоди (денна фруктова порція)", "color": "#DB2777", "bgLight": "#FDF2F8", "borderColor": "#FBCFE8", "badgeBg": "#DB2777", "items": [{"id": "e_banany", "name": "Банани, виноград, хурма", "base": 495, "unit": "г", "step": 10, "kcal": 470, "protein": 5, "note": ""}, {"id": "e_frukty", "name": "Фрукти та ягоди", "base": 940, "unit": "г", "step": 10, "kcal": 470, "protein": 9.4, "note": ""}]}, {"id": "YE", "name": "Категорія Є", "desc": "Горіхи та насіння (джерело мікроелементів та жирів)", "color": "#475569", "bgLight": "#F8FAFC", "borderColor": "#E2E8F0", "badgeBg": "#475569", "items": [{"id": "ye_gorikhy", "name": "Будь-які горіхи (рекомендуємо грецькі)", "base": 25, "unit": "г", "step": 1, "kcal": 150, "protein": 5, "note": "Рекомендуємо грецькі"}, {"id": "ye_nasinnya", "name": "Насіння", "base": 25, "unit": "г", "step": 1, "kcal": 150, "protein": 5, "note": ""}]}, {"id": "ZH", "name": "Категорія Ж", "desc": "Снеки, солодощі, десерти або напої", "color": "#EA580C", "bgLight": "#FFF7ED", "borderColor": "#FFEDD5", "badgeBg": "#EA580C", "items": [{"id": "zh_banany", "name": "Банани, виноград, хурма", "base": 710, "unit": "г", "step": 10, "kcal": 675, "protein": 7.1, "note": ""}, {"id": "zh_solodoshchi", "name": "Будь-що (солодощі, снеки, ковбаса тощо) / фр...", "base": 135, "unit": "г", "step": 5, "kcal": 675, "protein": 6.8, "note": ""}, {"id": "zh_alcohol_hard", "name": "Міцні алкогольні напої (НЕ КОЖНОГО ДНЯ!)", "base": 50, "unit": "г", "step": 5, "kcal": 110, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_pyvo", "name": "Пиво (НЕ КОЖНОГО ДНЯ!)", "base": 240, "unit": "г", "step": 10, "kcal": 103, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_vyno", "name": "Сухе вино (НЕ КОЖНОГО ДНЯ!)", "base": 150, "unit": "г", "step": 10, "kcal": 104, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_frukty", "name": "Фрукти та ягоди", "base": 1350, "unit": "г", "step": 25, "kcal": 675, "protein": 13.5, "note": ""}]}];
-    const TARGET_CALORIES = 2822;
+    const DEFAULT_CATEGORIES = [{"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [{"id": "a_bobovi", "name": "Бобові", "base": 170, "unit": "г", "kcal": 527, "protein": 34, "note": ""}, {"id": "a_krupa", "name": "Будь-яка крупа", "base": 165, "unit": "г", "kcal": 545, "protein": 16.5, "note": ""}, {"id": "a_kartoplia", "name": "Картопля", "base": 700, "unit": "г", "kcal": 539, "protein": 14, "note": ""}, {"id": "a_kukurudza", "name": "Кукурудза свіжа", "base": 630, "unit": "г", "kcal": 542, "protein": 20.8, "note": ""}, {"id": "a_lavash", "name": "Лаваш", "base": 225, "unit": "г", "kcal": 540, "protein": 18, "note": ""}, {"id": "a_makarony", "name": "Макарони т.с.", "base": 160, "unit": "г", "kcal": 544, "protein": 19.2, "note": ""}, {"id": "a_rys", "name": "Рис (не шліфований)", "base": 165, "unit": "г", "kcal": 545, "protein": 12.4, "note": ""}, {"id": "a_hlibtsi", "name": "Хлібці", "base": 170, "unit": "г", "kcal": 544, "protein": 17, "note": ""}, {"id": "a_boroshno", "name": "Цільнозернове борошно", "base": 170, "unit": "г", "kcal": 544, "protein": 18.7, "note": ""}, {"id": "a_hlib", "name": "Цільнозерновий хліб", "base": 215, "unit": "г", "kcal": 538, "protein": 19.3, "note": ""}]}, {"id": "B", "name": "Категорія Б", "desc": "Білки (м'ясо, птиця, риба, морепродукти, яйця)", "badgeBg": "#DC2626", "items": [{"id": "b_file", "name": "Куряче або індиче філе", "base": 325, "unit": "г", "kcal": 358, "protein": 71.5, "note": ""}, {"id": "b_moreprodukty", "name": "Морепродукти", "base": 355, "unit": "г", "kcal": 355, "protein": 71, "note": ""}, {"id": "b_pechinka", "name": "Печінка", "base": 275, "unit": "г", "kcal": 358, "protein": 49.5, "note": ""}, {"id": "b_ryba_fat", "name": "Риба (від 5% жиру)", "base": 210, "unit": "г", "kcal": 357, "protein": 37.8, "note": ""}, {"id": "b_ryba_lean", "name": "Риба (до 5% жиру)", "base": 325, "unit": "г", "kcal": 358, "protein": 65, "note": ""}, {"id": "b_teliatyna", "name": "Телятина", "base": 210, "unit": "г", "kcal": 357, "protein": 42, "note": ""}, {"id": "b_yaytsya", "name": "Яйця (цілі)", "base": 5, "unit": "шт", "kcal": 393, "protein": 31.3, "note": ""}]}, {"id": "V", "name": "Категорія В", "desc": "Клітковина (овочі, зелень, квашенина, гриби)", "badgeBg": "#16A34A", "items": [{"id": "v_gryby", "name": "Гриби", "base": 600, "unit": "г", "kcal": 120, "protein": 21, "note": ""}, {"id": "v_ovochi", "name": "Овочі (квашені також і зелень)", "base": 600, "unit": "г", "kcal": 120, "protein": 9, "note": ""}]}, {"id": "G", "name": "Категорія Г", "desc": "Корисні жири та соуси (олія, авокадо, оливки, соуси)", "badgeBg": "#D97706", "items": [{"id": "g_avokado", "name": "Авокадо", "base": 145, "unit": "г", "kcal": 232, "protein": 2.9, "note": ""}, {"id": "g_oliya", "name": "Будь-яка олія (рекомендуємо лляну)", "base": 26, "unit": "г", "kcal": 234, "protein": 0, "note": "Рекомендуємо лляну"}, {"id": "g_girchytsya", "name": "Гірчиця", "base": 175, "unit": "г", "kcal": 114, "protein": 8.8, "note": ""}, {"id": "g_ketchup", "name": "Кетчуп", "base": 115, "unit": "г", "kcal": 115, "protein": 1.2, "note": ""}, {"id": "g_mayonez", "name": "Майонез", "base": 40, "unit": "г", "kcal": 240, "protein": 0.4, "note": ""}, {"id": "g_olyvky", "name": "Оливки", "base": 200, "unit": "г", "kcal": 230, "protein": 2, "note": ""}]}, {"id": "D", "name": "Категорія Д", "desc": "Молочні та кисломолочні продукти (сир, молоко, йогурт, кефір)", "badgeBg": "#9333EA", "items": [{"id": "d_kefir", "name": "Кефір 2,5%", "base": 480, "unit": "г", "kcal": 240, "protein": 14.4, "note": ""}, {"id": "d_moloko", "name": "Молоко 2,5%", "base": 480, "unit": "г", "kcal": 240, "protein": 14.4, "note": ""}, {"id": "d_yogurt", "name": "Несолодкий йогурт 2% жиру", "base": 400, "unit": "г", "kcal": 240, "protein": 16.8, "note": ""}, {"id": "d_syr_kislo", "name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 300, "unit": "г", "kcal": 240, "protein": 54, "note": ""}, {"id": "d_syry_tverdi", "name": "Сири м'які, тверді, плавлені", "base": 70, "unit": "г", "kcal": 245, "protein": 14, "note": ""}, {"id": "d_smetana", "name": "Сметана 15%", "base": 160, "unit": "г", "kcal": 240, "protein": 12.8, "note": ""}]}, {"id": "E", "name": "Категорія Е", "desc": "Фрукти та ягоди (денна фруктова порція)", "badgeBg": "#DB2777", "items": [{"id": "e_banany", "name": "Банани, виноград, хурма", "base": 495, "unit": "г", "kcal": 470, "protein": 5, "note": ""}, {"id": "e_frukty", "name": "Фрукти та ягоди", "base": 940, "unit": "г", "kcal": 470, "protein": 9.4, "note": ""}]}, {"id": "YE", "name": "Категорія Є", "desc": "Горіхи та насіння (джерело мікроелементів та жирів)", "badgeBg": "#475569", "items": [{"id": "ye_gorikhy", "name": "Будь-які горіхи (рекомендуємо грецькі)", "base": 25, "unit": "г", "kcal": 150, "protein": 5, "note": "Рекомендуємо грецькі"}, {"id": "ye_nasinnya", "name": "Насіння", "base": 25, "unit": "г", "kcal": 150, "protein": 5, "note": ""}]}, {"id": "ZH", "name": "Категорія Ж", "desc": "Снеки, солодощі, десерти або напої", "badgeBg": "#EA580C", "items": [{"id": "zh_banany", "name": "Банани, виноград, хурма", "base": 710, "unit": "г", "kcal": 675, "protein": 7.1, "note": ""}, {"id": "zh_solodoshchi", "name": "Будь-що (солодощі, снеки, ковбаса тощо) / фр...", "base": 135, "unit": "г", "kcal": 675, "protein": 6.8, "note": ""}, {"id": "zh_alcohol_hard", "name": "Міцні алкогольні напої (НЕ КОЖНОГО ДНЯ!)", "base": 50, "unit": "г", "kcal": 110, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_pyvo", "name": "Пиво (НЕ КОЖНОГО ДНЯ!)", "base": 240, "unit": "г", "kcal": 103, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_vyno", "name": "Сухе вино (НЕ КОЖНОГО ДНЯ!)", "base": 150, "unit": "г", "kcal": 104, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_frukty", "name": "Фрукти та ягоди", "base": 1350, "unit": "г", "kcal": 675, "protein": 13.5, "note": ""}]}];
 
-    // State: consumed weight in grams/pieces by item id
+    // Smart Nutrition Goal Multipliers:
+    // Схуднення: Вуглеводи (А) суттєво менше (0.65), Білок (Б) збережено та збільшено (1.05) для утримання м'язів!
+    // Набір м'язів: Вуглеводи (А) збільшено (1.25) для прогресу в залі, Білок (Б) 1.10.
+    const GOALS = {
+      deficit: {
+        name: "Схуднення",
+        targetKcal: 2250,
+        desc: "Дефіцит: білок підвищено (+5%), вуглеводи скорочено (-35%)",
+        multipliers: { A: 0.65, B: 1.05, V: 1.10, G: 0.75, D: 0.85, E: 0.70, YE: 0.75, ZH: 0.40 }
+      },
+      maintenance: {
+        name: "Підтримка",
+        targetKcal: 2822,
+        desc: "Базовий раціон для збереження ваги",
+        multipliers: { A: 1.0, B: 1.0, V: 1.0, G: 1.0, D: 1.0, E: 1.0, YE: 1.0, ZH: 1.0 }
+      },
+      surplus: {
+        name: "Набір м'язів",
+        targetKcal: 3300,
+        desc: "Профіцит: більше енергії з вуглеводів (+25%) та якісний білок",
+        multipliers: { A: 1.25, B: 1.10, V: 1.0, G: 1.15, D: 1.15, E: 1.15, YE: 1.15, ZH: 1.0 }
+      }
+    };
+
+    let currentGoalKey = 'maintenance';
+    let currentFilter = 'all';
+    let currentView = 'calculator';
+
+    // User Identification from Telegram
+    const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    let userId = 'default_user';
+    let userName = 'Користувач';
+
+    if (tg) {
+      try {
+        tg.ready();
+        tg.expand();
+        if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+          const u = tg.initDataUnsafe.user;
+          userId = u.id ? String(u.id) : 'default_user';
+          userName = u.first_name || 'Користувач';
+        }
+        applyTelegramTheme();
+        tg.onEvent('themeChanged', applyTelegramTheme);
+      } catch (e) {}
+    }
+
+    document.getElementById('user-name-display').textContent = userName;
+
+    function applyTelegramTheme() {
+      const isDark = (tg && tg.colorScheme === 'dark') || 
+                     (!tg && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+
+    // User Custom Baseline storage
+    const userBaseKey = 'diet_user_base_' + userId;
+    let customBaseMap = {}; // itemId -> custom base weight in grams
+
+    try {
+      const savedBases = localStorage.getItem(userBaseKey);
+      if (savedBases) {
+        customBaseMap = JSON.parse(savedBases);
+      }
+    } catch (e) {}
+
+    // State: consumed weights
     let consumed = {};
-    // Initialize state
-    DATA.forEach(cat => {
-      cat.items.forEach(item => {
-        consumed[item.id] = 0;
+    DEFAULT_CATEGORIES.forEach(cat => {
+      cat.items.forEach(it => {
+        consumed[it.id] = 0;
       });
     });
 
-    // Load from localStorage if present
+    const userStateKey = 'diet_consumed_state_' + userId;
     try {
-      const saved = localStorage.getItem('diet_consumed_state');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        for (const k in parsed) {
-          if (consumed.hasOwnProperty(k)) {
-            consumed[k] = Number(parsed[k]) || 0;
+      const savedState = localStorage.getItem(userStateKey);
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed.consumed) {
+          for (const k in parsed.consumed) {
+            if (consumed.hasOwnProperty(k)) {
+              consumed[k] = Number(parsed.consumed[k]) || 0;
+            }
           }
         }
+        if (parsed.goal && GOALS[parsed.goal]) {
+          currentGoalKey = parsed.goal;
+        }
       }
-    } catch (e) {
-      console.warn('Storage unavailable', e);
+    } catch (e) {}
+
+    // User History storage
+    const historyKey = 'diet_history_' + userId;
+    let historyRecords = [];
+    try {
+      const savedHist = localStorage.getItem(historyKey);
+      if (savedHist) {
+        historyRecords = JSON.parse(savedHist);
+      }
+    } catch (e) {}
+
+    // Get effectively configured base for an item (user custom or default)
+    function getItemDefaultBase(item) {
+      if (customBaseMap[item.id] !== undefined && customBaseMap[item.id] > 0) {
+        return customBaseMap[item.id];
+      }
+      return item.base;
     }
 
-    let currentFilter = 'all';
-
-    // Helper: calculate category fractions
-    function getCategoryFractions(cat) {
-      let totalFraction = 0;
-      cat.items.forEach(item => {
-        const weight = consumed[item.id] || 0;
-        totalFraction += weight / item.base;
-      });
-      return {
-        totalFraction: Math.min(1.0, totalFraction),
-        remainingFraction: Math.max(0, 1.0 - totalFraction)
-      };
+    // Scaled base for current goal
+    function getScaledItemBase(catId, item) {
+      const baseVal = getItemDefaultBase(item);
+      const mult = GOALS[currentGoalKey].multipliers[catId] || 1.0;
+      if (item.unit === 'шт') {
+        return Math.max(1, Math.round(baseVal * mult));
+      }
+      return Math.round(baseVal * mult);
     }
 
-    // Render category cards
-    function renderApp() {
+    function getScaledItemKcal(catId, item) {
+      const mult = GOALS[currentGoalKey].multipliers[catId] || 1.0;
+      return Math.round(item.kcal * mult);
+    }
+
+    // Build DOM structure once
+    function buildCalculatorDOM() {
       const container = document.getElementById('categories-container');
       container.innerHTML = '';
 
-      let grandTotalCalories = 0;
-      let grandTotalProtein = 0;
-
-      DATA.forEach(cat => {
-        const isVisible = (currentFilter === 'all' || currentFilter === cat.id);
-        const { totalFraction, remainingFraction } = getCategoryFractions(cat);
-        const usedPct = Math.round(totalFraction * 100);
-        const remPct = Math.round(remainingFraction * 100);
-
-        // Sum consumed kcal and protein for this category
-        let catKcal = 0;
-        let catProtein = 0;
-        cat.items.forEach(item => {
-          const w = consumed[item.id] || 0;
-          const f = w / item.base;
-          catKcal += f * item.kcal;
-          catProtein += f * item.protein;
-        });
-
-        grandTotalCalories += catKcal;
-        grandTotalProtein += catProtein;
-
-        // Create category section wrapper
+      DEFAULT_CATEGORIES.forEach(cat => {
         const section = document.createElement('section');
         section.id = 'category-' + cat.id;
-        section.className = 'category-section space-y-2.5 ' + (isVisible ? '' : 'hidden');
+        section.className = 'category-section space-y-2.5';
 
-        // Category Header Block
         const headerDiv = document.createElement('div');
-        headerDiv.className = 'bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex flex-col space-y-1.5';
-        
-        const catBadgeClass = 'text-white font-bold text-xs w-6 h-6 rounded-md flex items-center justify-center shrink-0';
+        headerDiv.className = 'bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-100 dark:border-slate-700 flex flex-col space-y-1.5';
         headerDiv.innerHTML = `
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="${catBadgeClass}" style="background-color: ${cat.badgeBg};">${cat.id}</span>
+              <span class="text-white font-bold text-xs w-6 h-6 rounded-md flex items-center justify-center shrink-0" style="background-color: ${cat.badgeBg};">${cat.id}</span>
               <div>
-                <h2 class="text-sm font-bold text-gray-900 leading-tight">${cat.name}</h2>
-                <p class="text-[11px] text-gray-500 leading-tight">${cat.desc}</p>
+                <h2 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">${cat.name}</h2>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">${cat.desc}</p>
               </div>
             </div>
             <div class="text-right">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                usedPct >= 100 ? 'bg-emerald-100 text-emerald-800' : (usedPct > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700')
-              }">
-                ${usedPct >= 100 ? 'Заповнено 100%' : 'Залишок: ' + remPct + '%'}
+              <span id="cat-badge-${cat.id}" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
+                Залишок: 100%
               </span>
             </div>
           </div>
-          <!-- Category mini progress bar -->
-          <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-200" style="width: ${usedPct}%; background-color: ${cat.badgeBg};"></div>
+          <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+            <div id="cat-progress-${cat.id}" class="h-full rounded-full transition-all duration-100" style="width: 0%; background-color: ${cat.badgeBg};"></div>
           </div>
         `;
         section.appendChild(headerDiv);
 
-        // Products List in this Category
         const listDiv = document.createElement('div');
         listDiv.className = 'space-y-2';
 
-        cat.items.forEach(item => {
-          const itemWeight = consumed[item.id] || 0;
-          const otherItemsFraction = cat.items.reduce((acc, cur) => {
-            if (cur.id === item.id) return acc;
-            return acc + (consumed[cur.id] || 0) / cur.base;
-          }, 0);
-
-          // Max fraction this item can reach given other items' consumption
-          const maxFraction = Math.max(0, 1.0 - otherItemsFraction);
-          const maxAllowedWeight = Math.round(maxFraction * item.base * 10) / 10;
-          
-          // Remaining available weight if untouched
-          const remainingWeightAvailable = Math.round(remainingFraction * item.base * 10) / 10;
-
-          // Item's current contribution
-          const itemFraction = itemWeight / item.base;
-          const itemCurrentKcal = Math.round(itemFraction * item.kcal);
-          const itemCurrentProtein = Math.round(itemFraction * item.protein * 10) / 10;
-
-          const isConsumed = itemWeight > 0;
-          const isFull = itemWeight >= maxAllowedWeight && maxAllowedWeight > 0;
-          const isDisabled = maxAllowedWeight <= 0 && itemWeight === 0;
-
+        cat.items.forEach(it => {
           const card = document.createElement('div');
-          card.className = `product-card bg-white border ${
-            isConsumed ? 'border-blue-300 ring-1 ring-blue-100 shadow-sm' : 'border-gray-200/90'
-          } rounded-xl p-3.5 transition-all hover:border-gray-300 relative ${isDisabled ? 'opacity-50' : ''}`;
+          card.id = 'card-' + it.id;
+          card.className = 'product-card bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 transition-colors';
 
           card.innerHTML = `
             <div class="flex items-start justify-between">
@@ -340,75 +476,63 @@
                   ${cat.id}
                 </span>
                 <div class="min-w-0 flex-1">
-                  <h3 class="text-sm font-semibold text-gray-900 leading-snug">${item.name}</h3>
-                  <div class="text-[11px] text-gray-500 mt-0.5">
-                    ${isConsumed 
-                      ? `<span class="text-blue-600 font-medium">Спожито: ${itemCurrentKcal} ккал • ${itemCurrentProtein} г білка</span>` 
-                      : `<span class="text-gray-400">${item.kcal} ккал • ${item.protein} г білка (порція ${item.base}${item.unit})</span>`
-                    }
-                    ${item.note ? `<span class="text-amber-600 font-medium ml-1">(${item.note})</span>` : ''}
-                  </div>
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug">${it.name}</h3>
+                  <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5" id="stats-${it.id}"></div>
                 </div>
               </div>
 
-              <!-- Top Right Weight Display (Matches Screenshot 0 / 170 г) -->
               <div class="text-right shrink-0">
-                <div class="text-sm font-bold ${isConsumed ? 'text-blue-600' : 'text-gray-800'}">
-                  <span>${itemWeight}</span>
+                <div class="text-sm font-bold" id="weight-display-${it.id}">
+                  <span id="consumed-${it.id}" class="text-gray-900 dark:text-white">0</span>
                   <span class="text-gray-400 font-normal"> / </span>
-                  <span class="${isConsumed ? 'text-gray-900' : 'text-gray-600'}">${
-                    isConsumed ? maxAllowedWeight : remainingWeightAvailable
-                  }</span>
-                  <span class="text-xs text-gray-500 font-normal">${item.unit}</span>
+                  <span id="max-${it.id}" class="text-gray-600 dark:text-gray-300">0</span>
+                  <span class="text-xs text-gray-500 font-normal">${it.unit}</span>
                 </div>
-                <div class="text-[10px] text-gray-400 mt-0.5">
-                  ${isConsumed 
-                    ? `Зайнято ${Math.round(itemFraction * 100)}% категорії` 
-                    : `Залишок ${Math.round(remainingFraction * 100)}% від бази ${item.base}${item.unit}`}
+                <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5" id="quota-note-${it.id}">
+                  Залишок 100%
                 </div>
               </div>
             </div>
 
-            <!-- Slider Control Row -->
-            <div class="mt-3">
+            <div class="mt-2.5">
               <div class="flex items-center space-x-3">
                 <input 
                   type="range" 
-                  id="slider-${item.id}" 
-                  data-item-id="${item.id}"
+                  id="slider-${it.id}" 
+                  data-item-id="${it.id}"
+                  data-cat-id="${cat.id}"
                   min="0" 
-                  max="${maxAllowedWeight}" 
-                  step="${item.step}"
-                  value="${itemWeight}"
-                  ${isDisabled ? 'disabled' : ''}
+                  max="100" 
+                  step="1"
+                  value="0"
                   class="flex-1"
                 >
+                <!-- Manual input: NO artificial upper limit! User can freely exceed target -->
                 <div class="flex items-center space-x-1 shrink-0">
                   <input 
                     type="number" 
-                    id="input-${item.id}" 
-                    data-item-id="${item.id}"
+                    id="input-${it.id}" 
+                    data-item-id="${it.id}"
+                    data-cat-id="${cat.id}"
                     min="0" 
-                    max="${maxAllowedWeight}" 
-                    step="${item.step}"
-                    value="${itemWeight}"
-                    ${isDisabled ? 'disabled' : ''}
-                    class="w-14 text-center py-1 px-1 text-xs font-semibold text-gray-900 border border-gray-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    step="1"
+                    value="0"
+                    title="Можна ввести будь-яке число більше ліміту"
+                    class="w-16 text-center py-1 px-1 text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   >
-                  <span class="text-xs text-gray-400 font-medium">${item.unit}</span>
+                  <span class="text-xs text-gray-400 font-medium">${it.unit}</span>
                 </div>
               </div>
 
-              <!-- Quick action chips -->
-              <div class="flex items-center justify-between mt-2 pt-1 border-t border-gray-100/80 text-[11px]">
+              <div class="flex items-center justify-between mt-2 pt-1 border-t border-gray-100 dark:border-slate-700/80 text-[11px]">
                 <div class="flex items-center space-x-1">
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition font-medium" data-action="reset" data-item-id="${item.id}">0</button>
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition font-medium" data-action="quarter" data-item-id="${item.id}">25%</button>
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition font-medium" data-action="half" data-item-id="${item.id}">50%</button>
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition font-medium" data-action="max" data-item-id="${item.id}">Макс</button>
+                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="reset" data-item-id="${it.id}">0</button>
+                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="quarter" data-item-id="${it.id}">25%</button>
+                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="half" data-item-id="${it.id}">50%</button>
+                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="max" data-item-id="${it.id}">Макс</button>
                 </div>
-                <div class="text-[11px] text-gray-400">
-                  База: <span class="font-medium text-gray-600">${item.base} ${item.unit}</span>
+                <div class="text-[11px] text-gray-400 dark:text-gray-500">
+                  База: <span id="base-label-${it.id}" class="font-medium text-gray-600 dark:text-gray-300">0 ${it.unit}</span>
                 </div>
               </div>
             </div>
@@ -421,87 +545,186 @@
         container.appendChild(section);
       });
 
-      // Update Top sticky bar
+      attachListenersOnce();
+    }
+
+    // In-place updates: 60 FPS, allows exceeding category limits via manual input
+    function updateValuesInPlace(activeItemId = null) {
+      const targetCalories = GOALS[currentGoalKey].targetKcal;
+      let grandTotalCalories = 0;
+      let grandTotalProtein = 0;
+
+      DEFAULT_CATEGORIES.forEach(cat => {
+        const isVisible = (currentFilter === 'all' || currentFilter === cat.id);
+        const section = document.getElementById('category-' + cat.id);
+        if (section) {
+          section.style.display = isVisible ? 'block' : 'none';
+        }
+
+        let catFraction = 0;
+        cat.items.forEach(it => {
+          const baseWeight = getScaledItemBase(cat.id, it);
+          const w = consumed[it.id] || 0;
+          catFraction += baseWeight > 0 ? (w / baseWeight) : 0;
+        });
+
+        const isExceeded = catFraction > 1.001;
+        const usedPct = Math.round(catFraction * 100);
+        const remainingFraction = Math.max(0, 1.0 - catFraction);
+        const remPct = Math.max(0, Math.round(remainingFraction * 100));
+
+        const catBadge = document.getElementById('cat-badge-' + cat.id);
+        const catProg = document.getElementById('cat-progress-' + cat.id);
+        if (catBadge) {
+          if (isExceeded) {
+            catBadge.textContent = `Перевищено: ${usedPct}%`;
+            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 animate-pulse';
+          } else if (usedPct >= 100) {
+            catBadge.textContent = 'Заповнено 100%';
+            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300';
+          } else if (usedPct > 0) {
+            catBadge.textContent = `Залишок: ${remPct}%`;
+            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300';
+          } else {
+            catBadge.textContent = `Залишок: 100%`;
+            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300';
+          }
+        }
+        if (catProg) {
+          catProg.style.width = Math.min(100, usedPct) + '%';
+          catProg.style.backgroundColor = isExceeded ? '#EA580C' : cat.badgeBg;
+        }
+
+        cat.items.forEach(it => {
+          const baseWeight = getScaledItemBase(cat.id, it);
+          const baseKcal = getScaledItemKcal(cat.id, it);
+          const itemWeight = consumed[it.id] || 0;
+
+          const otherFractions = cat.items.reduce((acc, cur) => {
+            if (cur.id === it.id) return acc;
+            return acc + (consumed[cur.id] || 0) / getScaledItemBase(cat.id, cur);
+          }, 0);
+
+          const maxFraction = Math.max(0, 1.0 - otherFractions);
+          const maxAllowedWeight = Math.round(maxFraction * baseWeight);
+          const remainingWeight = Math.round(remainingFraction * baseWeight);
+
+          const itemFraction = baseWeight > 0 ? (itemWeight / baseWeight) : 0;
+          const curKcal = Math.round(itemFraction * baseKcal);
+          const curProtein = Math.round(itemFraction * it.protein * 10) / 10;
+
+          grandTotalCalories += curKcal;
+          grandTotalProtein += curProtein;
+
+          const isConsumed = itemWeight > 0;
+          const isItemOverBudget = itemWeight > maxAllowedWeight && maxAllowedWeight > 0;
+
+          const card = document.getElementById('card-' + it.id);
+          const consumedEl = document.getElementById('consumed-' + it.id);
+          const maxEl = document.getElementById('max-' + it.id);
+          const statsEl = document.getElementById('stats-' + it.id);
+          const noteEl = document.getElementById('quota-note-' + it.id);
+          const baseLabel = document.getElementById('base-label-' + it.id);
+          const slider = document.getElementById('slider-' + it.id);
+          const numInput = document.getElementById('input-' + it.id);
+
+          if (card) {
+            if (isItemOverBudget) {
+              card.className = 'product-card bg-amber-50/40 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-700 rounded-xl p-3.5 transition-colors shadow-xs';
+            } else if (isConsumed) {
+              card.className = 'product-card bg-white dark:bg-slate-800/90 border border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/50 rounded-xl p-3.5 transition-colors shadow-xs';
+            } else {
+              card.className = 'product-card bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 transition-colors';
+            }
+          }
+
+          if (consumedEl) {
+            consumedEl.textContent = itemWeight;
+            consumedEl.className = isItemOverBudget 
+              ? 'text-amber-600 dark:text-amber-400 font-bold'
+              : (isConsumed ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-900 dark:text-white font-bold');
+          }
+          if (maxEl) {
+            maxEl.textContent = isConsumed ? maxAllowedWeight : remainingWeight;
+          }
+          if (baseLabel) {
+            baseLabel.textContent = `${baseWeight} ${it.unit}`;
+          }
+          if (noteEl) {
+            if (isItemOverBudget) {
+              noteEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-semibold">+${itemWeight - maxAllowedWeight}${it.unit} понад норму</span>`;
+            } else if (isConsumed) {
+              noteEl.textContent = `Зайнято ${Math.round(itemFraction * 100)}% категорії`;
+            } else {
+              noteEl.textContent = `Залишок ${remPct}% від ${baseWeight}${it.unit}`;
+            }
+          }
+          if (statsEl) {
+            statsEl.innerHTML = isConsumed 
+              ? `<span class="text-blue-600 dark:text-blue-400 font-medium">Спожито: ${curKcal} ккал • ${curProtein} г білка</span>`
+              : `<span class="text-gray-400 dark:text-gray-500">${baseKcal} ккал • ${it.protein} г білка</span>`;
+          }
+
+          // Slider max reflects available category budget (or item weight if user manually exceeded)
+          if (slider) {
+            slider.max = Math.max(itemWeight, maxAllowedWeight);
+            if (activeItemId !== it.id) {
+              slider.value = itemWeight;
+            }
+          }
+          // Number input has NO maximum restriction, freely accepting manual input
+          if (numInput) {
+            if (activeItemId !== it.id) {
+              numInput.value = itemWeight;
+            }
+          }
+        });
+      });
+
       const topProtein = Math.round(grandTotalProtein * 10) / 10;
       const topCalories = Math.round(grandTotalCalories);
-      const caloriesPct = Math.min(100, Math.round((topCalories / TARGET_CALORIES) * 100));
+      const caloriesPct = Math.min(100, Math.round((topCalories / targetCalories) * 100));
 
       document.getElementById('top-protein-value').textContent = `${topProtein} грам`;
       document.getElementById('top-calories-value').textContent = topCalories.toLocaleString('uk-UA');
       document.getElementById('top-calories-bar').style.width = `${caloriesPct}%`;
       document.getElementById('top-calories-percent').textContent = `${caloriesPct}% від норми`;
-      
-      const remainingKcal = Math.max(0, TARGET_CALORIES - topCalories);
+
+      const remainingKcal = Math.max(0, targetCalories - topCalories);
       document.getElementById('top-calories-remaining').textContent = `Залишок: ${remainingKcal.toLocaleString('uk-UA')} ккал`;
 
-      // Update Footer summary
-      document.getElementById('footer-consumed-summary').textContent = `${topCalories.toLocaleString('uk-UA')} ккал`;
-      document.getElementById('footer-protein-summary').textContent = `${topProtein} г`;
-
-      // Attach event listeners to newly created controls
-      attachControlListeners();
+      saveCurrentState();
     }
 
-    // Update item weight
-    function updateItemWeight(itemId, newWeight) {
-      // Find category and item
-      let targetCat = null;
-      let targetItem = null;
-
-      for (const cat of DATA) {
-        for (const it of cat.items) {
-          if (it.id === itemId) {
-            targetCat = cat;
-            targetItem = it;
-            break;
-          }
-        }
-        if (targetCat) break;
-      }
-
-      if (!targetItem) return;
-
-      // Calculate max weight allowed for this item given others in category
-      const otherFractions = targetCat.items.reduce((acc, cur) => {
-        if (cur.id === itemId) return acc;
-        return acc + (consumed[cur.id] || 0) / cur.base;
-      }, 0);
-
-      const maxFraction = Math.max(0, 1.0 - otherFractions);
-      const maxAllowed = Math.round(maxFraction * targetItem.base * 10) / 10;
-
-      let clamped = Math.max(0, Math.min(maxAllowed, Number(newWeight) || 0));
-      // Round to 1 decimal place or step
-      clamped = Math.round(clamped * 10) / 10;
-      consumed[itemId] = clamped;
-
-      // Save to localStorage
+    function saveCurrentState() {
       try {
-        localStorage.setItem('diet_consumed_state', JSON.stringify(consumed));
+        const payload = {
+          goal: currentGoalKey,
+          consumed: consumed
+        };
+        localStorage.setItem(userStateKey, JSON.stringify(payload));
       } catch (e) {}
-
-      renderApp();
     }
 
-    // Attach listeners
-    function attachControlListeners() {
-      // Slider inputs
+    function attachListenersOnce() {
       document.querySelectorAll('input[type=range][data-item-id]').forEach(slider => {
         slider.addEventListener('input', (e) => {
           const id = e.target.getAttribute('data-item-id');
-          updateItemWeight(id, e.target.value);
+          consumed[id] = Number(e.target.value) || 0;
+          updateValuesInPlace(id);
         });
       });
 
-      // Number inputs
+      // Manual number input allows ANY value (including exceeding limits!)
       document.querySelectorAll('input[type=number][data-item-id]').forEach(numInput => {
-        numInput.addEventListener('change', (e) => {
+        numInput.addEventListener('input', (e) => {
           const id = e.target.getAttribute('data-item-id');
-          updateItemWeight(id, e.target.value);
+          const val = Math.max(0, Number(e.target.value) || 0);
+          consumed[id] = val;
+          updateValuesInPlace(id);
         });
       });
 
-      // Quick buttons
       document.querySelectorAll('.quick-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const id = e.target.getAttribute('data-item-id');
@@ -509,7 +732,7 @@
           
           let targetCat = null;
           let targetItem = null;
-          for (const cat of DATA) {
+          for (const cat of DEFAULT_CATEGORIES) {
             for (const it of cat.items) {
               if (it.id === id) {
                 targetCat = cat;
@@ -519,43 +742,66 @@
             }
             if (targetCat) break;
           }
-
           if (!targetItem) return;
 
+          const baseWeight = getScaledItemBase(targetCat.id, targetItem);
           const otherFractions = targetCat.items.reduce((acc, cur) => {
             if (cur.id === id) return acc;
-            return acc + (consumed[cur.id] || 0) / cur.base;
+            return acc + (consumed[cur.id] || 0) / getScaledItemBase(targetCat.id, cur);
           }, 0);
           const maxFraction = Math.max(0, 1.0 - otherFractions);
-          const maxAllowed = maxFraction * targetItem.base;
+          const maxAllowed = Math.round(maxFraction * baseWeight);
 
           if (action === 'reset') {
-            updateItemWeight(id, 0);
+            consumed[id] = 0;
           } else if (action === 'quarter') {
-            updateItemWeight(id, Math.min(maxAllowed, targetItem.base * 0.25));
+            consumed[id] = Math.min(maxAllowed, Math.round(baseWeight * 0.25));
           } else if (action === 'half') {
-            updateItemWeight(id, Math.min(maxAllowed, targetItem.base * 0.5));
+            consumed[id] = Math.min(maxAllowed, Math.round(baseWeight * 0.5));
           } else if (action === 'max') {
-            updateItemWeight(id, maxAllowed);
+            consumed[id] = maxAllowed;
           }
+          updateValuesInPlace();
         });
       });
+    }
+
+    // Goal change handler
+    document.querySelectorAll('.goal-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const targetBtn = e.target.closest('.goal-btn');
+        const goal = targetBtn.getAttribute('data-goal');
+        if (GOALS[goal]) {
+          currentGoalKey = goal;
+          updateGoalButtonsUI();
+          updateValuesInPlace();
+          showToast(`Ціль: ${GOALS[goal].name} (${GOALS[goal].targetKcal} ккал)`);
+        }
+      });
+    });
+
+    function updateGoalButtonsUI() {
+      document.querySelectorAll('.goal-btn').forEach(btn => {
+        const g = btn.getAttribute('data-goal');
+        if (g === currentGoalKey) {
+          btn.className = 'goal-btn flex-1 py-1 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold';
+        } else {
+          btn.className = 'goal-btn flex-1 py-1 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400 font-semibold';
+        }
+      });
+      const target = GOALS[currentGoalKey].targetKcal;
+      document.getElementById('top-target-label').textContent = `/ ${target.toLocaleString('uk-UA')} ккал`;
     }
 
     // Filter pills
     document.querySelectorAll('.cat-pill').forEach(pill => {
       pill.addEventListener('click', (e) => {
-        const filter = e.target.getAttribute('data-cat-filter');
-        currentFilter = filter;
-
+        currentFilter = e.target.getAttribute('data-cat-filter');
         document.querySelectorAll('.cat-pill').forEach(p => {
-          p.classList.remove('bg-gray-900', 'text-white');
-          p.classList.add('bg-gray-100', 'text-gray-600');
+          p.className = 'cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 transition';
         });
-        e.target.classList.remove('bg-gray-100', 'text-gray-600');
-        e.target.classList.add('bg-gray-900', 'text-white');
-
-        renderApp();
+        e.target.className = 'cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs';
+        updateValuesInPlace();
       });
     });
 
@@ -570,33 +816,252 @@
     });
 
     document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-      DATA.forEach(cat => {
+      DEFAULT_CATEGORIES.forEach(cat => {
         cat.items.forEach(it => {
           consumed[it.id] = 0;
         });
       });
-      try {
-        localStorage.removeItem('diet_consumed_state');
-      } catch (e) {}
       resetModal.classList.add('hidden');
-      renderApp();
+      updateValuesInPlace();
       showToast('Дані успішно скинуто!');
     });
 
-    // Save Day button
+    // Save Day & Record to History
     document.getElementById('save-day-btn').addEventListener('click', () => {
+      let totalKcal = 0;
+      let totalProtein = 0;
+      const consumedList = [];
+
+      DEFAULT_CATEGORIES.forEach(cat => {
+        cat.items.forEach(it => {
+          const w = consumed[it.id] || 0;
+          if (w > 0) {
+            const baseW = getScaledItemBase(cat.id, it);
+            const baseK = getScaledItemKcal(cat.id, it);
+            const f = baseW > 0 ? (w / baseW) : 0;
+            const k = Math.round(f * baseK);
+            const p = Math.round(f * it.protein * 10) / 10;
+            totalKcal += k;
+            totalProtein += p;
+            consumedList.push({
+              category: cat.id,
+              name: it.name,
+              weight: w,
+              unit: it.unit,
+              kcal: k,
+              protein: p
+            });
+          }
+        });
+      });
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      const historyEntry = {
+        id: Date.now(),
+        date: dateStr,
+        userId: userId,
+        userName: userName,
+        goal: GOALS[currentGoalKey].name,
+        targetCalories: GOALS[currentGoalKey].targetKcal,
+        totalCalories: totalKcal,
+        totalProtein: Math.round(totalProtein * 10) / 10,
+        itemsCount: consumedList.length,
+        items: consumedList
+      };
+
+      // Prepend to history
+      historyRecords.unshift(historyEntry);
       try {
-        localStorage.setItem('diet_consumed_state', JSON.stringify(consumed));
+        localStorage.setItem(historyKey, JSON.stringify(historyRecords));
       } catch (e) {}
-      showToast('Раціон збережено!');
+
+      // Send to Telegram Bot if available
+      if (tg && typeof tg.sendData === 'function') {
+        try {
+          tg.sendData(JSON.stringify(historyEntry));
+          showToast('Збережено та надіслано в бот!');
+          return;
+        } catch (err) {}
+      }
+
+      showToast('Раціон збережено в історію!');
     });
 
-    // Back button
+    // Tab Navigation: Calculator vs History vs Settings
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const targetView = btn.getAttribute('data-view');
+        switchView(targetView);
+      });
+    });
+
+    function switchView(viewName) {
+      currentView = viewName;
+      document.getElementById('view-calculator').classList.toggle('hidden', viewName !== 'calculator');
+      document.getElementById('view-history').classList.toggle('hidden', viewName !== 'history');
+      document.getElementById('view-settings').classList.toggle('hidden', viewName !== 'settings');
+
+      document.getElementById('top-nutrition-summary').classList.toggle('hidden', viewName !== 'calculator');
+      document.getElementById('goal-selector-container').classList.toggle('hidden', viewName !== 'calculator');
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const v = b.getAttribute('data-view');
+        if (v === viewName) {
+          b.className = 'tab-btn flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold';
+        } else {
+          b.className = 'tab-btn flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white';
+        }
+      });
+
+      if (viewName === 'history') {
+        renderHistory();
+      } else if (viewName === 'settings') {
+        renderSettings();
+      }
+    }
+
+    // Render History list
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      list.innerHTML = '';
+
+      if (historyRecords.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-12 text-gray-400 dark:text-gray-500 text-xs">
+            Історія поки що порожня.<br>Натискайте «Зберегти день» у раціоні, щоб фіксувати результати.
+          </div>
+        `;
+        return;
+      }
+
+      historyRecords.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2 shadow-xs';
+        
+        let itemsHtml = entry.items.map(it => `
+          <div class="flex justify-between items-center text-xs py-0.5 border-b border-gray-100 dark:border-slate-700/50">
+            <span class="text-gray-700 dark:text-gray-300">• ${it.name}</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
+              <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                ${entry.goal}
+              </span>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-extrabold text-gray-900 dark:text-white">${entry.totalCalories}</span>
+              <span class="text-xs text-gray-400"> / ${entry.targetCalories} ккал</span>
+            </div>
+          </div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-3">
+            <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
+            <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
+          </div>
+          <div class="pt-1.5 space-y-0.5">
+            ${itemsHtml}
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    // Clear history
+    document.getElementById('clear-history-btn').addEventListener('click', () => {
+      historyRecords = [];
+      try {
+        localStorage.removeItem(historyKey);
+      } catch (e) {}
+      renderHistory();
+      showToast('Історію очищено');
+    });
+
+    // Render User Settings (Baseline configuration)
+    function renderSettings() {
+      const container = document.getElementById('settings-categories-container');
+      container.innerHTML = '';
+
+      DEFAULT_CATEGORIES.forEach(cat => {
+        const catBox = document.createElement('div');
+        catBox.className = 'border border-gray-200 dark:border-slate-700 rounded-xl p-3 bg-white dark:bg-slate-800 space-y-2';
+
+        let rowsHtml = '';
+        cat.items.forEach(it => {
+          const currentBase = getItemDefaultBase(it);
+          rowsHtml += `
+            <div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-slate-700/60 last:border-0">
+              <span class="text-gray-800 dark:text-gray-200 font-medium">${it.name}</span>
+              <div class="flex items-center space-x-1">
+                <input 
+                  type="number" 
+                  data-base-item-id="${it.id}" 
+                  value="${currentBase}" 
+                  class="w-16 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                >
+                <span class="text-gray-400 text-xs">${it.unit}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        catBox.innerHTML = `
+          <div class="flex items-center space-x-2 mb-1.5">
+            <span class="w-5 h-5 rounded flex items-center justify-center font-bold text-white text-[11px]" style="background-color: ${cat.badgeBg};">${cat.id}</span>
+            <h3 class="text-xs font-bold text-gray-900 dark:text-white">${cat.name}</h3>
+          </div>
+          <div class="space-y-0.5">
+            ${rowsHtml}
+          </div>
+        `;
+        container.appendChild(catBox);
+      });
+    }
+
+    // Save custom settings
+    document.getElementById('save-settings-btn').addEventListener('click', () => {
+      document.querySelectorAll('input[data-base-item-id]').forEach(input => {
+        const id = input.getAttribute('data-base-item-id');
+        const val = Number(input.value) || 0;
+        if (val > 0) {
+          customBaseMap[id] = val;
+        }
+      });
+      try {
+        localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
+      } catch (e) {}
+      updateValuesInPlace();
+      showToast('Ваші персональні норми збережено!');
+      switchView('calculator');
+    });
+
+    // Reset settings to default
+    document.getElementById('reset-defaults-btn').addEventListener('click', () => {
+      customBaseMap = {};
+      try {
+        localStorage.removeItem(userBaseKey);
+      } catch (e) {}
+      renderSettings();
+      updateValuesInPlace();
+      showToast('Скинуто до стандартних значень');
+    });
+
+    // Header Back
     document.getElementById('header-back-btn').addEventListener('click', () => {
-      showToast('Ви вже на головному екрані раціону');
+      if (currentView !== 'calculator') {
+        switchView('calculator');
+      } else if (tg && typeof tg.close === 'function') {
+        tg.close();
+      } else {
+        showToast('Головний екран раціону');
+      }
     });
 
-    // Toast helper
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
@@ -605,11 +1070,13 @@
       setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 2000);
+      }, 2200);
     }
 
-    // Initial render
-    renderApp();
+    // Initialize App
+    updateGoalButtonsUI();
+    buildCalculatorDOM();
+    updateValuesInPlace();
   </script>
 </body>
 </html>
