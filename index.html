@@ -38,19 +38,25 @@
       user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
-    /* Ultra smooth slider */
+    /* Sleek, non-interfering slider styling */
+    .slider-container {
+      touch-action: pan-y;
+      padding: 6px 0;
+    }
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
+      height: 18px;
       background: transparent;
       touch-action: pan-y;
+      cursor: pointer;
     }
     input[type=range]:focus {
       outline: none;
     }
     input[type=range]::-webkit-slider-runnable-track {
       width: 100%;
-      height: 6px;
+      height: 4px;
       cursor: pointer;
       background: #cbd5e1;
       border-radius: 9999px;
@@ -59,26 +65,46 @@
       background: #475569;
     }
     input[type=range]::-webkit-slider-thumb {
-      height: 22px;
-      width: 22px;
+      height: 16px;
+      width: 16px;
       border-radius: 50%;
       background: #2563eb;
       cursor: pointer;
       -webkit-appearance: none;
-      margin-top: -8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 0 0 2px white;
+      margin-top: -6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 0 0 1.5px white;
       transition: transform 0.1s ease;
     }
     .dark input[type=range]::-webkit-slider-thumb {
-      box-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 0 2px #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 0 0 1.5px #1e293b;
     }
     input[type=range]::-webkit-slider-thumb:active {
-      transform: scale(1.2);
+      transform: scale(1.15);
     }
     input[type=range]:disabled::-webkit-slider-thumb {
       background: #94a3b8;
       cursor: not-allowed;
       transform: none;
+    }
+    /* Firefox */
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 4px;
+      cursor: pointer;
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .dark input[type=range]::-moz-range-track {
+      background: #475569;
+    }
+    input[type=range]::-moz-range-thumb {
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      border: 1.5px solid white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -93,23 +119,23 @@
 
   <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors">
     
-    <!-- Top Sticky Header -->
-    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 pt-3 pb-2.5 shadow-xs transition-colors">
+    <!-- Top Header (Natural scroll - NOT sticky to preserve screen space!) -->
+    <header class="relative bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-3.5 pt-3 pb-2 transition-colors">
       
       <!-- Top controls: title, athlete profile badge, theme toggle, reset -->
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center space-x-2">
           <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Закрити / Назад">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
           <div>
             <div class="flex items-center space-x-1.5">
-              <h1 class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none">Раціон</h1>
-              <span id="user-name-display" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
+              <h1 class="text-base font-bold text-gray-900 dark:text-white tracking-tight leading-none">Раціон</h1>
+              <span id="user-name-display" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400"></span>
             </div>
-            <div class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 leading-tight mt-0.5">
               Чоловік, 35 р, 183 см • 3 трен./тижд.
             </div>
           </div>
@@ -117,7 +143,7 @@
 
         <div class="flex items-center space-x-1.5">
           <!-- Dark Mode Toggle Button -->
-          <button id="theme-toggle-btn" type="button" class="p-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition" title="Змінити тему">
+          <button id="theme-toggle-btn" type="button" class="p-1 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition" title="Змінити тему">
             <svg id="theme-icon-sun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
             </svg>
@@ -127,8 +153,8 @@
           </button>
 
           <!-- Reset button -->
-          <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button id="reset-day-btn" type="button" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             <span>Скинути</span>
@@ -137,102 +163,102 @@
       </div>
 
       <!-- Goal Selector Segmented Control (With Smart Nutrition Ratios) -->
-      <div id="goal-selector-container" class="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl flex items-center justify-between text-xs font-semibold mb-2">
-        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="deficit">
-          Схуднення <span class="text-[10px] block font-normal opacity-85">~2 250 ккал (↑Б ↓А)</span>
+      <div id="goal-selector-container" class="bg-gray-100 dark:bg-slate-800 p-0.5 rounded-lg flex items-center justify-between text-[11px] font-semibold mb-1.5">
+        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-md text-center transition text-gray-600 dark:text-gray-400" data-goal="deficit">
+          Схуднення <span class="text-[9px] block font-normal opacity-80">~2 250 ккал (↑Б ↓А)</span>
         </button>
-        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="maintenance">
-          Підтримка <span class="text-[10px] block font-normal opacity-85">2 822 ккал (100%)</span>
+        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-md text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="maintenance">
+          Підтримка <span class="text-[9px] block font-normal opacity-80">2 822 ккал (100%)</span>
         </button>
-        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="surplus">
-          Набір м'язів <span class="text-[10px] block font-normal opacity-85">~3 300 ккал (↑А ↑Б)</span>
+        <button type="button" class="goal-btn flex-1 py-1 px-1 rounded-md text-center transition text-gray-600 dark:text-gray-400" data-goal="surplus">
+          Набір м'язів <span class="text-[9px] block font-normal opacity-80">~3 300 ккал (↑А ↑Б)</span>
         </button>
       </div>
 
       <!-- Dynamic Top Summary (Hidden on History/Settings view) -->
       <div id="top-nutrition-summary">
         <!-- Protein Counter -->
-        <div class="text-center my-1">
-          <div class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="top-protein-value">0 грам</div>
-          <div class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">білків спожито</div>
+        <div class="text-center my-0.5">
+          <div class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight" id="top-protein-value">0 грам</div>
+          <div class="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">білків спожито</div>
         </div>
 
         <!-- Calories Bar -->
         <div class="mt-1">
-          <div class="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <div class="flex justify-between items-center text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-0.5">
             <span>Калорії</span>
-            <span><strong id="top-calories-value" class="text-gray-900 dark:text-white font-bold text-sm">0</strong> <span id="top-target-label" class="text-gray-400 dark:text-gray-500">/ 2822 ккал</span></span>
+            <span><strong id="top-calories-value" class="text-gray-900 dark:text-white font-bold text-xs">0</strong> <span id="top-target-label" class="text-gray-400 dark:text-gray-500">/ 2822 ккал</span></span>
           </div>
-          <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+          <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
             <div id="top-calories-bar" class="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
           </div>
-          <div class="flex justify-between items-center text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+          <div class="flex justify-between items-center text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
             <span id="top-calories-percent">0% від норми</span>
             <span id="top-calories-remaining">Залишок: 2822 ккал</span>
           </div>
         </div>
 
         <!-- Category Navigation Pills -->
-        <nav class="flex space-x-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5 mt-1 border-t border-gray-100 dark:border-slate-800 text-xs font-semibold">
-          <button type="button" data-cat-filter="all" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs">Всі</button>
-          <button type="button" data-cat-filter="A" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600 transition">А • Вуглеводи</button>
-          <button type="button" data-cat-filter="B" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-rose-50 hover:text-rose-600 transition">Б • Білки</button>
-          <button type="button" data-cat-filter="V" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 hover:text-emerald-600 transition">В • Овочі</button>
-          <button type="button" data-cat-filter="G" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition">Г • Жири</button>
-          <button type="button" data-cat-filter="D" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-purple-50 hover:text-purple-600 transition">Д • Молочка</button>
-          <button type="button" data-cat-filter="E" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-pink-50 hover:text-pink-600 transition">Е • Фрукти</button>
-          <button type="button" data-cat-filter="YE" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-slate-50 hover:text-slate-600 transition">Є • Горіхи</button>
-          <button type="button" data-cat-filter="ZH" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-orange-50 hover:text-orange-600 transition">Ж • Інше</button>
+        <nav class="flex space-x-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5 mt-1 border-t border-gray-100 dark:border-slate-800 text-[11px] font-medium">
+          <button type="button" data-cat-filter="all" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs font-semibold">Всі</button>
+          <button type="button" data-cat-filter="A" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600 transition">А • Вуглеводи</button>
+          <button type="button" data-cat-filter="B" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-rose-50 hover:text-rose-600 transition">Б • Білки</button>
+          <button type="button" data-cat-filter="V" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 hover:text-emerald-600 transition">В • Овочі</button>
+          <button type="button" data-cat-filter="G" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition">Г • Жири</button>
+          <button type="button" data-cat-filter="D" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-purple-50 hover:text-purple-600 transition">Д • Молочка</button>
+          <button type="button" data-cat-filter="E" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-pink-50 hover:text-pink-600 transition">Е • Фрукти</button>
+          <button type="button" data-cat-filter="YE" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-slate-50 hover:text-slate-600 transition">Є • Горіхи</button>
+          <button type="button" data-cat-filter="ZH" class="cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-orange-50 hover:text-orange-600 transition">Ж • Інше</button>
         </nav>
       </div>
     </header>
 
     <!-- Main Screens Container -->
-    <main class="flex-1 px-4 py-4 space-y-5">
+    <main class="flex-1 px-3 py-3 space-y-4">
       
       <!-- 1. Ration Calculator View -->
-      <div id="view-calculator" class="space-y-5">
+      <div id="view-calculator" class="space-y-4">
         <!-- Info notice on manual input allowance -->
-        <div class="px-3 py-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-xl flex items-center justify-between text-xs text-blue-900 dark:text-blue-300">
+        <div class="px-2.5 py-1.5 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-lg flex items-center justify-between text-[11px] text-blue-900 dark:text-blue-300">
           <div class="flex items-center space-x-1.5">
-            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <span>Повзунок регулює в межах залишку, а у віконечку можна вводити будь-яку більшу вагу.</span>
+            <span>Повзунок синхронізований з віконечком. Для скролінгу гортайте по картках.</span>
           </div>
         </div>
 
-        <div id="categories-container" class="space-y-5"></div>
+        <div id="categories-container" class="space-y-4"></div>
       </div>
 
       <!-- 2. History View -->
-      <div id="view-history" class="space-y-4 hidden">
+      <div id="view-history" class="space-y-3 hidden">
         <div class="flex items-center justify-between">
-          <h2 class="text-base font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
+          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
           <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-medium">Очистити історію</button>
         </div>
-        <div id="history-list" class="space-y-3">
+        <div id="history-list" class="space-y-2.5">
           <!-- Populated dynamically -->
         </div>
       </div>
 
       <!-- 3. Base Settings View (Personal baseline grams per user) -->
-      <div id="view-settings" class="space-y-4 hidden">
-        <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700">
-          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Персональні базові норми продуктів</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Тут кожен користувач може налаштувати власну еталонну порцію для кожного продукту (за підтримки ваги).</p>
+      <div id="view-settings" class="space-y-3 hidden">
+        <div class="bg-gray-50 dark:bg-slate-800/60 p-3 rounded-xl border border-gray-200 dark:border-slate-700">
+          <h2 class="text-xs font-bold text-gray-900 dark:text-white">Персональні базові норми продуктів</h2>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Тут можна змінити стандартну порцію для кожного продукту (при підтримці ваги).</p>
         </div>
 
-        <div id="settings-categories-container" class="space-y-4">
+        <div id="settings-categories-container" class="space-y-3">
           <!-- Populated dynamically for editing base values -->
         </div>
 
         <div class="pt-2 flex space-x-2">
-          <button id="save-settings-btn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-sm">
-            Зберегти мої базові норми
+          <button id="save-settings-btn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-xs transition shadow-sm">
+            Зберегти норми
           </button>
-          <button id="reset-defaults-btn" type="button" class="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-gray-200 transition">
-            Скинути до вихідних
+          <button id="reset-defaults-btn" type="button" class="px-3 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold rounded-lg text-xs hover:bg-gray-200 transition">
+            Скинути
           </button>
         </div>
       </div>
@@ -240,31 +266,31 @@
     </main>
 
     <!-- Bottom Navigation Tabs (Раціон, Історія, Налаштування) -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-6 py-2 flex items-center justify-around text-[11px] font-medium z-40 transition-colors shadow-lg">
+    <nav class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-5 py-2 flex items-center justify-around text-[10px] font-medium z-40 transition-colors shadow-lg">
       <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold" data-view="calculator">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
         </svg>
         <span>Раціон</span>
       </button>
 
       <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" data-view="history">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
         <span>Історія</span>
       </button>
 
       <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" data-view="settings">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
         </svg>
         <span>Мої норми</span>
       </button>
 
-      <button id="save-day-btn" type="button" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold px-3.5 py-1.5 rounded-xl transition shadow-xs flex items-center space-x-1.5">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button id="save-day-btn" type="button" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs flex items-center space-x-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>
         <span>Зберегти день</span>
@@ -272,18 +298,18 @@
     </nav>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 text-xs font-semibold px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50">
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50">
       Збережено!
     </div>
 
     <!-- Reset Confirmation Modal -->
     <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-gray-100 dark:border-slate-700">
-        <h3 class="text-base font-bold text-gray-900 dark:text-white">Скинути всі внесені дані?</h3>
-        <p class="text-xs text-gray-600 dark:text-gray-300">Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.</p>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button id="modal-cancel-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition">Скасувати</button>
-          <button id="modal-confirm-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition">Скинути</button>
+      <div class="bg-white dark:bg-slate-800 rounded-xl max-w-sm w-full p-4 shadow-2xl space-y-3 border border-gray-100 dark:border-slate-700">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Скинути всі внесені дані?</h3>
+        <p class="text-[11px] text-gray-600 dark:text-gray-300">Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.</p>
+        <div class="flex justify-end space-x-2 pt-1">
+          <button id="modal-cancel-btn" type="button" class="px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition">Скасувати</button>
+          <button id="modal-confirm-btn" type="button" class="px-3 py-1 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition">Скинути</button>
         </div>
       </div>
     </div>
@@ -293,9 +319,6 @@
   <script>
     const DEFAULT_CATEGORIES = [{"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [{"id": "a_bobovi", "name": "Бобові", "base": 170, "unit": "г", "kcal": 527, "protein": 34, "note": ""}, {"id": "a_krupa", "name": "Будь-яка крупа", "base": 165, "unit": "г", "kcal": 545, "protein": 16.5, "note": ""}, {"id": "a_kartoplia", "name": "Картопля", "base": 700, "unit": "г", "kcal": 539, "protein": 14, "note": ""}, {"id": "a_kukurudza", "name": "Кукурудза свіжа", "base": 630, "unit": "г", "kcal": 542, "protein": 20.8, "note": ""}, {"id": "a_lavash", "name": "Лаваш", "base": 225, "unit": "г", "kcal": 540, "protein": 18, "note": ""}, {"id": "a_makarony", "name": "Макарони т.с.", "base": 160, "unit": "г", "kcal": 544, "protein": 19.2, "note": ""}, {"id": "a_rys", "name": "Рис (не шліфований)", "base": 165, "unit": "г", "kcal": 545, "protein": 12.4, "note": ""}, {"id": "a_hlibtsi", "name": "Хлібці", "base": 170, "unit": "г", "kcal": 544, "protein": 17, "note": ""}, {"id": "a_boroshno", "name": "Цільнозернове борошно", "base": 170, "unit": "г", "kcal": 544, "protein": 18.7, "note": ""}, {"id": "a_hlib", "name": "Цільнозерновий хліб", "base": 215, "unit": "г", "kcal": 538, "protein": 19.3, "note": ""}]}, {"id": "B", "name": "Категорія Б", "desc": "Білки (м'ясо, птиця, риба, морепродукти, яйця)", "badgeBg": "#DC2626", "items": [{"id": "b_file", "name": "Куряче або індиче філе", "base": 325, "unit": "г", "kcal": 358, "protein": 71.5, "note": ""}, {"id": "b_moreprodukty", "name": "Морепродукти", "base": 355, "unit": "г", "kcal": 355, "protein": 71, "note": ""}, {"id": "b_pechinka", "name": "Печінка", "base": 275, "unit": "г", "kcal": 358, "protein": 49.5, "note": ""}, {"id": "b_ryba_fat", "name": "Риба (від 5% жиру)", "base": 210, "unit": "г", "kcal": 357, "protein": 37.8, "note": ""}, {"id": "b_ryba_lean", "name": "Риба (до 5% жиру)", "base": 325, "unit": "г", "kcal": 358, "protein": 65, "note": ""}, {"id": "b_teliatyna", "name": "Телятина", "base": 210, "unit": "г", "kcal": 357, "protein": 42, "note": ""}, {"id": "b_yaytsya", "name": "Яйця (цілі)", "base": 5, "unit": "шт", "kcal": 393, "protein": 31.3, "note": ""}]}, {"id": "V", "name": "Категорія В", "desc": "Клітковина (овочі, зелень, квашенина, гриби)", "badgeBg": "#16A34A", "items": [{"id": "v_gryby", "name": "Гриби", "base": 600, "unit": "г", "kcal": 120, "protein": 21, "note": ""}, {"id": "v_ovochi", "name": "Овочі (квашені також і зелень)", "base": 600, "unit": "г", "kcal": 120, "protein": 9, "note": ""}]}, {"id": "G", "name": "Категорія Г", "desc": "Корисні жири та соуси (олія, авокадо, оливки, соуси)", "badgeBg": "#D97706", "items": [{"id": "g_avokado", "name": "Авокадо", "base": 145, "unit": "г", "kcal": 232, "protein": 2.9, "note": ""}, {"id": "g_oliya", "name": "Будь-яка олія (рекомендуємо лляну)", "base": 26, "unit": "г", "kcal": 234, "protein": 0, "note": "Рекомендуємо лляну"}, {"id": "g_girchytsya", "name": "Гірчиця", "base": 175, "unit": "г", "kcal": 114, "protein": 8.8, "note": ""}, {"id": "g_ketchup", "name": "Кетчуп", "base": 115, "unit": "г", "kcal": 115, "protein": 1.2, "note": ""}, {"id": "g_mayonez", "name": "Майонез", "base": 40, "unit": "г", "kcal": 240, "protein": 0.4, "note": ""}, {"id": "g_olyvky", "name": "Оливки", "base": 200, "unit": "г", "kcal": 230, "protein": 2, "note": ""}]}, {"id": "D", "name": "Категорія Д", "desc": "Молочні та кисломолочні продукти (сир, молоко, йогурт, кефір)", "badgeBg": "#9333EA", "items": [{"id": "d_kefir", "name": "Кефір 2,5%", "base": 480, "unit": "г", "kcal": 240, "protein": 14.4, "note": ""}, {"id": "d_moloko", "name": "Молоко 2,5%", "base": 480, "unit": "г", "kcal": 240, "protein": 14.4, "note": ""}, {"id": "d_yogurt", "name": "Несолодкий йогурт 2% жиру", "base": 400, "unit": "г", "kcal": 240, "protein": 16.8, "note": ""}, {"id": "d_syr_kislo", "name": "Сир кисломолочний нежирний (0,2% жиру)", "base": 300, "unit": "г", "kcal": 240, "protein": 54, "note": ""}, {"id": "d_syry_tverdi", "name": "Сири м'які, тверді, плавлені", "base": 70, "unit": "г", "kcal": 245, "protein": 14, "note": ""}, {"id": "d_smetana", "name": "Сметана 15%", "base": 160, "unit": "г", "kcal": 240, "protein": 12.8, "note": ""}]}, {"id": "E", "name": "Категорія Е", "desc": "Фрукти та ягоди (денна фруктова порція)", "badgeBg": "#DB2777", "items": [{"id": "e_banany", "name": "Банани, виноград, хурма", "base": 495, "unit": "г", "kcal": 470, "protein": 5, "note": ""}, {"id": "e_frukty", "name": "Фрукти та ягоди", "base": 940, "unit": "г", "kcal": 470, "protein": 9.4, "note": ""}]}, {"id": "YE", "name": "Категорія Є", "desc": "Горіхи та насіння (джерело мікроелементів та жирів)", "badgeBg": "#475569", "items": [{"id": "ye_gorikhy", "name": "Будь-які горіхи (рекомендуємо грецькі)", "base": 25, "unit": "г", "kcal": 150, "protein": 5, "note": "Рекомендуємо грецькі"}, {"id": "ye_nasinnya", "name": "Насіння", "base": 25, "unit": "г", "kcal": 150, "protein": 5, "note": ""}]}, {"id": "ZH", "name": "Категорія Ж", "desc": "Снеки, солодощі, десерти або напої", "badgeBg": "#EA580C", "items": [{"id": "zh_banany", "name": "Банани, виноград, хурма", "base": 710, "unit": "г", "kcal": 675, "protein": 7.1, "note": ""}, {"id": "zh_solodoshchi", "name": "Будь-що (солодощі, снеки, ковбаса тощо) / фр...", "base": 135, "unit": "г", "kcal": 675, "protein": 6.8, "note": ""}, {"id": "zh_alcohol_hard", "name": "Міцні алкогольні напої (НЕ КОЖНОГО ДНЯ!)", "base": 50, "unit": "г", "kcal": 110, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_pyvo", "name": "Пиво (НЕ КОЖНОГО ДНЯ!)", "base": 240, "unit": "г", "kcal": 103, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_vyno", "name": "Сухе вино (НЕ КОЖНОГО ДНЯ!)", "base": 150, "unit": "г", "kcal": 104, "protein": 0, "note": "НЕ КОЖНОГО ДНЯ!"}, {"id": "zh_frukty", "name": "Фрукти та ягоди", "base": 1350, "unit": "г", "kcal": 675, "protein": 13.5, "note": ""}]}];
 
-    // Smart Nutrition Goal Multipliers:
-    // Схуднення: Вуглеводи (А) суттєво менше (0.65), Білок (Б) збережено та збільшено (1.05) для утримання м'язів!
-    // Набір м'язів: Вуглеводи (А) збільшено (1.25) для прогресу в залі, Білок (Б) 1.10.
     const GOALS = {
       deficit: {
         name: "Схуднення",
@@ -360,7 +383,7 @@
 
     // User Custom Baseline storage
     const userBaseKey = 'diet_user_base_' + userId;
-    let customBaseMap = {}; // itemId -> custom base weight in grams
+    let customBaseMap = {};
 
     try {
       const savedBases = localStorage.getItem(userBaseKey);
@@ -405,7 +428,6 @@
       }
     } catch (e) {}
 
-    // Get effectively configured base for an item (user custom or default)
     function getItemDefaultBase(item) {
       if (customBaseMap[item.id] !== undefined && customBaseMap[item.id] > 0) {
         return customBaseMap[item.id];
@@ -413,7 +435,6 @@
       return item.base;
     }
 
-    // Scaled base for current goal
     function getScaledItemBase(catId, item) {
       const baseVal = getItemDefaultBase(item);
       const mult = GOALS[currentGoalKey].multipliers[catId] || 1.0;
@@ -436,78 +457,81 @@
       DEFAULT_CATEGORIES.forEach(cat => {
         const section = document.createElement('section');
         section.id = 'category-' + cat.id;
-        section.className = 'category-section space-y-2.5';
+        section.className = 'category-section space-y-2';
 
         const headerDiv = document.createElement('div');
-        headerDiv.className = 'bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-100 dark:border-slate-700 flex flex-col space-y-1.5';
+        headerDiv.className = 'bg-gray-50/90 dark:bg-slate-800/80 rounded-lg p-2.5 border border-gray-100 dark:border-slate-700 flex flex-col space-y-1';
         headerDiv.innerHTML = `
           <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="text-white font-bold text-xs w-6 h-6 rounded-md flex items-center justify-center shrink-0" style="background-color: ${cat.badgeBg};">${cat.id}</span>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-white font-bold text-[10px] w-5 h-5 rounded flex items-center justify-center shrink-0" style="background-color: ${cat.badgeBg};">${cat.id}</span>
               <div>
-                <h2 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">${cat.name}</h2>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">${cat.desc}</p>
+                <h2 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">${cat.name}</h2>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">${cat.desc}</p>
               </div>
             </div>
             <div class="text-right">
-              <span id="cat-badge-${cat.id}" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
+              <span id="cat-badge-${cat.id}" class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
                 Залишок: 100%
               </span>
             </div>
           </div>
-          <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+          <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1 overflow-hidden">
             <div id="cat-progress-${cat.id}" class="h-full rounded-full transition-all duration-100" style="width: 0%; background-color: ${cat.badgeBg};"></div>
           </div>
         `;
         section.appendChild(headerDiv);
 
         const listDiv = document.createElement('div');
-        listDiv.className = 'space-y-2';
+        listDiv.className = 'space-y-1.5';
 
         cat.items.forEach(it => {
           const card = document.createElement('div');
           card.id = 'card-' + it.id;
-          card.className = 'product-card bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 transition-colors';
+          card.className = 'product-card bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 transition-colors';
 
           card.innerHTML = `
-            <div class="flex items-start justify-between">
-              <div class="flex items-start space-x-2.5 flex-1 min-w-0 pr-2">
-                <span class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs shrink-0 mt-0.5" style="background-color: ${cat.badgeBg};">
+            <div class="flex items-start justify-between cursor-pointer card-header-area">
+              <div class="flex items-start space-x-2 flex-1 min-w-0 pr-1.5">
+                <span class="w-6 h-6 rounded flex items-center justify-center font-bold text-white text-[10px] shrink-0 mt-0.5" style="background-color: ${cat.badgeBg};">
                   ${cat.id}
                 </span>
                 <div class="min-w-0 flex-1">
-                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug">${it.name}</h3>
-                  <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5" id="stats-${it.id}"></div>
+                  <h3 class="text-xs font-semibold text-gray-900 dark:text-white leading-snug">${it.name}</h3>
+                  <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5" id="stats-${it.id}"></div>
                 </div>
               </div>
 
               <div class="text-right shrink-0">
-                <div class="text-sm font-bold" id="weight-display-${it.id}">
+                <div class="text-xs font-bold" id="weight-display-${it.id}">
                   <span id="consumed-${it.id}" class="text-gray-900 dark:text-white">0</span>
                   <span class="text-gray-400 font-normal"> / </span>
                   <span id="max-${it.id}" class="text-gray-600 dark:text-gray-300">0</span>
-                  <span class="text-xs text-gray-500 font-normal">${it.unit}</span>
+                  <span class="text-[10px] text-gray-500 font-normal">${it.unit}</span>
                 </div>
-                <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5" id="quota-note-${it.id}">
+                <div class="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5" id="quota-note-${it.id}">
                   Залишок 100%
                 </div>
               </div>
             </div>
 
-            <div class="mt-2.5">
-              <div class="flex items-center space-x-3">
-                <input 
-                  type="range" 
-                  id="slider-${it.id}" 
-                  data-item-id="${it.id}"
-                  data-cat-id="${cat.id}"
-                  min="0" 
-                  max="100" 
-                  step="1"
-                  value="0"
-                  class="flex-1"
-                >
-                <!-- Manual input: NO artificial upper limit! User can freely exceed target -->
+            <div class="mt-2">
+              <div class="flex items-center space-x-2">
+                <!-- Slider container with touch-action: pan-y to prevent accidental dragging during scroll -->
+                <div class="slider-container flex-1">
+                  <input 
+                    type="range" 
+                    id="slider-${it.id}" 
+                    data-item-id="${it.id}"
+                    data-cat-id="${cat.id}"
+                    min="0" 
+                    max="100" 
+                    step="1"
+                    value="0"
+                  >
+                </div>
+                
+                <!-- Manual number input: typing here immediately moves slider and recalculates! -->
                 <div class="flex items-center space-x-1 shrink-0">
                   <input 
                     type="number" 
@@ -517,21 +541,21 @@
                     min="0" 
                     step="1"
                     value="0"
-                    title="Можна ввести будь-яке число більше ліміту"
-                    class="w-16 text-center py-1 px-1 text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    title="Введіть вагу"
+                    class="w-14 text-center py-1 px-1 text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   >
-                  <span class="text-xs text-gray-400 font-medium">${it.unit}</span>
+                  <span class="text-[10px] text-gray-400 font-medium">${it.unit}</span>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between mt-2 pt-1 border-t border-gray-100 dark:border-slate-700/80 text-[11px]">
+              <div class="flex items-center justify-between mt-1 pt-1 border-t border-gray-100 dark:border-slate-700/80 text-[10px]">
                 <div class="flex items-center space-x-1">
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="reset" data-item-id="${it.id}">0</button>
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="quarter" data-item-id="${it.id}">25%</button>
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="half" data-item-id="${it.id}">50%</button>
-                  <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="max" data-item-id="${it.id}">Макс</button>
+                  <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="reset" data-item-id="${it.id}">0</button>
+                  <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="quarter" data-item-id="${it.id}">25%</button>
+                  <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="half" data-item-id="${it.id}">50%</button>
+                  <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="max" data-item-id="${it.id}">Макс</button>
                 </div>
-                <div class="text-[11px] text-gray-400 dark:text-gray-500">
+                <div class="text-[10px] text-gray-400 dark:text-gray-500">
                   База: <span id="base-label-${it.id}" class="font-medium text-gray-600 dark:text-gray-300">0 ${it.unit}</span>
                 </div>
               </div>
@@ -548,8 +572,8 @@
       attachListenersOnce();
     }
 
-    // In-place updates: 60 FPS, allows exceeding category limits via manual input
-    function updateValuesInPlace(activeItemId = null) {
+    // In-place updates: 60 FPS, syncs slider with manual input, no lag
+    function updateValuesInPlace(sourceType = null, activeItemId = null) {
       const targetCalories = GOALS[currentGoalKey].targetKcal;
       let grandTotalCalories = 0;
       let grandTotalProtein = 0;
@@ -578,16 +602,16 @@
         if (catBadge) {
           if (isExceeded) {
             catBadge.textContent = `Перевищено: ${usedPct}%`;
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 animate-pulse';
+            catBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 animate-pulse';
           } else if (usedPct >= 100) {
             catBadge.textContent = 'Заповнено 100%';
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300';
+            catBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300';
           } else if (usedPct > 0) {
             catBadge.textContent = `Залишок: ${remPct}%`;
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300';
+            catBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300';
           } else {
             catBadge.textContent = `Залишок: 100%`;
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300';
+            catBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300';
           }
         }
         if (catProg) {
@@ -630,11 +654,11 @@
 
           if (card) {
             if (isItemOverBudget) {
-              card.className = 'product-card bg-amber-50/40 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-700 rounded-xl p-3.5 transition-colors shadow-xs';
+              card.className = 'product-card bg-amber-50/40 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-700 rounded-lg p-2.5 transition-colors shadow-xs';
             } else if (isConsumed) {
-              card.className = 'product-card bg-white dark:bg-slate-800/90 border border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/50 rounded-xl p-3.5 transition-colors shadow-xs';
+              card.className = 'product-card bg-white dark:bg-slate-800/90 border border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/50 rounded-lg p-2.5 transition-colors shadow-xs';
             } else {
-              card.className = 'product-card bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 transition-colors';
+              card.className = 'product-card bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 transition-colors';
             }
           }
 
@@ -665,16 +689,22 @@
               : `<span class="text-gray-400 dark:text-gray-500">${baseKcal} ккал • ${it.protein} г білка</span>`;
           }
 
-          // Slider max reflects available category budget (or item weight if user manually exceeded)
+          // Synchronize slider and input!
           if (slider) {
-            slider.max = Math.max(itemWeight, maxAllowedWeight);
-            if (activeItemId !== it.id) {
-              slider.value = itemWeight;
+            const sliderMax = Math.max(itemWeight, maxAllowedWeight, 1);
+            slider.max = sliderMax;
+            // If the user typed in the input, move the slider!
+            if (sourceType === 'input' && activeItemId === it.id) {
+              slider.value = Math.min(sliderMax, itemWeight);
+            } else if (activeItemId !== it.id) {
+              slider.value = Math.min(sliderMax, itemWeight);
             }
           }
-          // Number input has NO maximum restriction, freely accepting manual input
           if (numInput) {
-            if (activeItemId !== it.id) {
+            // If user moved the slider, update the input!
+            if (sourceType === 'slider' && activeItemId === it.id) {
+              numInput.value = itemWeight;
+            } else if (activeItemId !== it.id) {
               numInput.value = itemWeight;
             }
           }
@@ -707,21 +737,22 @@
     }
 
     function attachListenersOnce() {
+      // Slider listener
       document.querySelectorAll('input[type=range][data-item-id]').forEach(slider => {
         slider.addEventListener('input', (e) => {
           const id = e.target.getAttribute('data-item-id');
           consumed[id] = Number(e.target.value) || 0;
-          updateValuesInPlace(id);
+          updateValuesInPlace('slider', id);
         });
       });
 
-      // Manual number input allows ANY value (including exceeding limits!)
+      // Manual number input listener: immediately moves the slider and updates math!
       document.querySelectorAll('input[type=number][data-item-id]').forEach(numInput => {
         numInput.addEventListener('input', (e) => {
           const id = e.target.getAttribute('data-item-id');
           const val = Math.max(0, Number(e.target.value) || 0);
           consumed[id] = val;
-          updateValuesInPlace(id);
+          updateValuesInPlace('input', id);
         });
       });
 
@@ -784,9 +815,9 @@
       document.querySelectorAll('.goal-btn').forEach(btn => {
         const g = btn.getAttribute('data-goal');
         if (g === currentGoalKey) {
-          btn.className = 'goal-btn flex-1 py-1 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold';
+          btn.className = 'goal-btn flex-1 py-1 px-1 rounded-md text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold';
         } else {
-          btn.className = 'goal-btn flex-1 py-1 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400 font-semibold';
+          btn.className = 'goal-btn flex-1 py-1 px-1 rounded-md text-center transition text-gray-600 dark:text-gray-400 font-semibold';
         }
       });
       const target = GOALS[currentGoalKey].targetKcal;
@@ -798,9 +829,9 @@
       pill.addEventListener('click', (e) => {
         currentFilter = e.target.getAttribute('data-cat-filter');
         document.querySelectorAll('.cat-pill').forEach(p => {
-          p.className = 'cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 transition';
+          p.className = 'cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 transition font-medium';
         });
-        e.target.className = 'cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs';
+        e.target.className = 'cat-pill px-2.5 py-0.5 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs font-semibold';
         updateValuesInPlace();
       });
     });
@@ -856,7 +887,7 @@
       });
 
       const now = new Date();
-      const dateStr = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
       const historyEntry = {
         id: Date.now(),
@@ -871,13 +902,11 @@
         items: consumedList
       };
 
-      // Prepend to history
       historyRecords.unshift(historyEntry);
       try {
         localStorage.setItem(historyKey, JSON.stringify(historyRecords));
       } catch (e) {}
 
-      // Send to Telegram Bot if available
       if (tg && typeof tg.sendData === 'function') {
         try {
           tg.sendData(JSON.stringify(historyEntry));
@@ -889,7 +918,7 @@
       showToast('Раціон збережено в історію!');
     });
 
-    // Tab Navigation: Calculator vs History vs Settings
+    // Tab Navigation
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const targetView = btn.getAttribute('data-view');
@@ -922,14 +951,13 @@
       }
     }
 
-    // Render History list
     function renderHistory() {
       const list = document.getElementById('history-list');
       list.innerHTML = '';
 
       if (historyRecords.length === 0) {
         list.innerHTML = `
-          <div class="text-center py-12 text-gray-400 dark:text-gray-500 text-xs">
+          <div class="text-center py-10 text-gray-400 dark:text-gray-500 text-xs">
             Історія поки що порожня.<br>Натискайте «Зберегти день» у раціоні, щоб фіксувати результати.
           </div>
         `;
@@ -938,10 +966,10 @@
 
       historyRecords.forEach(entry => {
         const card = document.createElement('div');
-        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2 shadow-xs';
+        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 space-y-1.5 shadow-xs';
         
         let itemsHtml = entry.items.map(it => `
-          <div class="flex justify-between items-center text-xs py-0.5 border-b border-gray-100 dark:border-slate-700/50">
+          <div class="flex justify-between items-center text-[11px] py-0.5 border-b border-gray-100 dark:border-slate-700/50">
             <span class="text-gray-700 dark:text-gray-300">• ${it.name}</span>
             <span class="font-semibold text-gray-900 dark:text-white">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
           </div>
@@ -951,20 +979,20 @@
           <div class="flex justify-between items-start">
             <div>
               <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
-              <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+              <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
                 ${entry.goal}
               </span>
             </div>
             <div class="text-right">
-              <span class="text-sm font-extrabold text-gray-900 dark:text-white">${entry.totalCalories}</span>
-              <span class="text-xs text-gray-400"> / ${entry.targetCalories} ккал</span>
+              <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.totalCalories}</span>
+              <span class="text-[10px] text-gray-400"> / ${entry.targetCalories} ккал</span>
             </div>
           </div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-3">
+          <div class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center space-x-2">
             <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
             <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
           </div>
-          <div class="pt-1.5 space-y-0.5">
+          <div class="pt-1 space-y-0.5">
             ${itemsHtml}
           </div>
         `;
@@ -972,7 +1000,6 @@
       });
     }
 
-    // Clear history
     document.getElementById('clear-history-btn').addEventListener('click', () => {
       historyRecords = [];
       try {
@@ -982,38 +1009,37 @@
       showToast('Історію очищено');
     });
 
-    // Render User Settings (Baseline configuration)
     function renderSettings() {
       const container = document.getElementById('settings-categories-container');
       container.innerHTML = '';
 
       DEFAULT_CATEGORIES.forEach(cat => {
         const catBox = document.createElement('div');
-        catBox.className = 'border border-gray-200 dark:border-slate-700 rounded-xl p-3 bg-white dark:bg-slate-800 space-y-2';
+        catBox.className = 'border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 bg-white dark:bg-slate-800 space-y-1.5';
 
         let rowsHtml = '';
         cat.items.forEach(it => {
           const currentBase = getItemDefaultBase(it);
           rowsHtml += `
-            <div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-slate-700/60 last:border-0">
-              <span class="text-gray-800 dark:text-gray-200 font-medium">${it.name}</span>
+            <div class="flex items-center justify-between text-xs py-0.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
+              <span class="text-gray-800 dark:text-gray-200 text-[11px] font-medium">${it.name}</span>
               <div class="flex items-center space-x-1">
                 <input 
                   type="number" 
                   data-base-item-id="${it.id}" 
                   value="${currentBase}" 
-                  class="w-16 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  class="w-14 py-0.5 px-1 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                <span class="text-gray-400 text-xs">${it.unit}</span>
+                <span class="text-gray-400 text-[10px]">${it.unit}</span>
               </div>
             </div>
           `;
         });
 
         catBox.innerHTML = `
-          <div class="flex items-center space-x-2 mb-1.5">
-            <span class="w-5 h-5 rounded flex items-center justify-center font-bold text-white text-[11px]" style="background-color: ${cat.badgeBg};">${cat.id}</span>
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white">${cat.name}</h3>
+          <div class="flex items-center space-x-1.5 mb-1">
+            <span class="w-4 h-4 rounded flex items-center justify-center font-bold text-white text-[9px]" style="background-color: ${cat.badgeBg};">${cat.id}</span>
+            <h3 class="text-[11px] font-bold text-gray-900 dark:text-white">${cat.name}</h3>
           </div>
           <div class="space-y-0.5">
             ${rowsHtml}
@@ -1023,7 +1049,6 @@
       });
     }
 
-    // Save custom settings
     document.getElementById('save-settings-btn').addEventListener('click', () => {
       document.querySelectorAll('input[data-base-item-id]').forEach(input => {
         const id = input.getAttribute('data-base-item-id');
@@ -1036,11 +1061,10 @@
         localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
       } catch (e) {}
       updateValuesInPlace();
-      showToast('Ваші персональні норми збережено!');
+      showToast('Норми збережено!');
       switchView('calculator');
     });
 
-    // Reset settings to default
     document.getElementById('reset-defaults-btn').addEventListener('click', () => {
       customBaseMap = {};
       try {
@@ -1051,7 +1075,6 @@
       showToast('Скинуто до стандартних значень');
     });
 
-    // Header Back
     document.getElementById('header-back-btn').addEventListener('click', () => {
       if (currentView !== 'calculator') {
         switchView('calculator');
@@ -1070,10 +1093,9 @@
       setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 2200);
+      }, 2000);
     }
 
-    // Initialize App
     updateGoalButtonsUI();
     buildCalculatorDOM();
     updateValuesInPlace();
