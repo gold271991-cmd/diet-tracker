@@ -39,7 +39,7 @@
       --border-color: #334155;
     }
     #app-header {
-      padding-top: calc(0.875rem + var(--app-top-inset));
+      padding-top: calc(0.75rem + var(--app-top-inset));
     }
     #bottom-nav {
       padding-bottom: calc(0.625rem + var(--app-bottom-inset));
@@ -126,8 +126,8 @@
 
   <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors relative">
     
-    <!-- Top Header -->
-    <header id="app-header" class="relative bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 transition-colors">
+    <!-- Top Header (Sticky & opaque with safe area padding for Android status bar & Telegram overlay buttons) -->
+    <header id="app-header" class="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 transition-colors shadow-xs">
       
       <!-- Top controls -->
       <div class="flex items-center justify-between mb-2.5">
@@ -167,7 +167,7 @@
             </svg>
           </button>
 
-          <!-- Reset button (only on calculator view) -->
+          <!-- Reset button -->
           <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -284,7 +284,7 @@
             </button>
           </div>
 
-          <!-- Target Weight Progress Widget (Only shown on "weight" metric!) -->
+          <!-- Target Weight Progress Widget (Only shown on "weight" metric) -->
           <div id="target-weight-widget" class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/80 border border-blue-200/80 dark:border-slate-700 rounded-2xl p-4 shadow-xs space-y-2.5 hidden">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1.5">
@@ -374,8 +374,11 @@
       <!-- 3. History View -->
       <div id="view-history" class="space-y-3 hidden">
         <div class="flex items-center justify-between">
-          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
-          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-medium">Очистити історію</button>
+          <div>
+            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">Доба раціону рахується з 03:00 до 02:59 • Натисніть на день, щоб розгорнути</p>
+          </div>
+          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-medium shrink-0">Очистити</button>
         </div>
         <div id="history-list" class="space-y-2.5"></div>
       </div>
@@ -646,9 +649,8 @@
 
     let activeDietDay = getDietDayKey();
 
-    // Надійне отримання єдиного ID користувача для ВСІХ пристроїв
+    // Надійне отримання єдиного ID користувача для всіх пристроїв
     function getSyncUserId() {
-      // 1. Перевірка параметра ?tgId= або ?userId= у посиланні браузера
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const qId = urlParams.get('tgId') || urlParams.get('userId');
@@ -659,7 +661,6 @@
         }
       } catch (e) {}
 
-      // 2. Отримання з Telegram WebApp SDK
       if (window.Telegram && window.Telegram.WebApp) {
         const initData = window.Telegram.WebApp.initDataUnsafe;
         if (initData && initData.user && initData.user.id) {
@@ -669,11 +670,9 @@
         }
       }
 
-      // 3. Збережений постійний Telegram ID
       const cachedTgId = localStorage.getItem("diet_permanent_tg_id");
-      if (cachedTgId) return cachedTgId;
+      if (cachedTgId) return String(cachedTgId).replace('tg_', '');
 
-      // 4. Постійний ID за замовчуванням (ваш основний ID)
       return "167040233";
     }
 
@@ -746,7 +745,7 @@
       {"id": "thigh", "name": "Обхват стегна", "unit": "см", "step": "0.5", "icon": "thigh", "target": "60.0"}
     ];
 
-    // User Profile Configuration (Reference male: 35yo, 183cm, 76.6kg)
+    // User Profile Configuration
     let userProfile = {
       gender: 'male',
       birthday: '1991-05-15',
@@ -765,15 +764,20 @@
     let editingRecordOriginalDate = null;
     let currentlyExpandedId = null;
 
-    // Telegram User ID
+    // Telegram WebApp setup
     const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-    let userId = 'default_user';
+    let userId = getSyncUserId();
     let userName = 'Користувач';
 
-    // Розрахунок безпечних відступів для статус-бару Android та кнопок Telegram у повноекранному режимі
+    // Розрахунок безпечних відступів для статус-бару Android та кнопок Telegram («Закрити» та меню бота)
     function applySafeAreaInsets() {
       let topInset = 0;
       let bottomInset = 0;
+
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isMobile = isAndroid || isIOS;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
       if (tg) {
         const sysTop = (tg.safeAreaInset && typeof tg.safeAreaInset.top === 'number') ? tg.safeAreaInset.top : 0;
@@ -783,19 +787,20 @@
         topInset = sysTop + contentTop;
         bottomInset = sysBottom;
 
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        if (tg.isFullscreen || isStandalone) {
-          const minFullscreenTop = isAndroid ? 86 : 76;
-          if (topInset < minFullscreenTop) {
-            topInset = minFullscreenTop;
+        // При запуску ярлика з робочого столу Android Telegram відкриває WebView на весь екран від y=0
+        const screenDiff = (window.screen && window.screen.height) ? (window.screen.height - window.innerHeight) : 999;
+        const isEdgeToEdge = tg.isFullscreen || isStandalone || (isMobile && screenDiff < 95);
+
+        if (isEdgeToEdge) {
+          const minTop = isAndroid ? 92 : 84;
+          if (topInset < minTop) {
+            topInset = minTop;
           }
+        } else if (isMobile && topInset < 12) {
+          topInset = 12;
         }
-      } else {
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        if (isStandalone) {
-          topInset = 36;
-        }
+      } else if (isStandalone || isMobile) {
+        topInset = isStandalone ? 44 : 8;
       }
 
       const rootStyles = getComputedStyle(document.documentElement);
@@ -819,9 +824,11 @@
 
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
           const u = tg.initDataUnsafe.user;
-          userId = u.id ? String(u.id) : 'default_user';
+          if (u.id) {
+            userId = String(u.id);
+            localStorage.setItem("diet_permanent_tg_id", userId);
+          }
           userName = u.first_name || 'Користувач';
-          localStorage.setItem("diet_permanent_tg_id", "tg_" + userId);
         }
         applyTelegramTheme();
         applySafeAreaInsets();
@@ -833,13 +840,6 @@
       } catch (e) {}
     }
 
-    applySafeAreaInsets();
-    window.addEventListener('resize', applySafeAreaInsets);
-    setTimeout(applySafeAreaInsets, 150);
-    setTimeout(applySafeAreaInsets, 600);
-
-    document.getElementById('user-name-display').textContent = userName;
-
     function applyTelegramTheme() {
       const isDark = (tg && tg.colorScheme === 'dark') || 
                      (!tg && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -850,215 +850,32 @@
       }
     }
 
+    document.getElementById('user-name-display').textContent = userName;
+    applyTelegramTheme();
+    applySafeAreaInsets();
+    window.addEventListener('resize', applySafeAreaInsets);
+    setTimeout(applySafeAreaInsets, 150);
+    setTimeout(applySafeAreaInsets, 600);
+    setTimeout(applySafeAreaInsets, 1500);
+
     document.getElementById('theme-toggle-btn').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
     });
 
-    // State: consumed weights
-    let consumed = {};
-    MASTER_CATEGORIES.forEach(cat => {
-      cat.items.forEach(it => {
-        consumed[it.id] = 0;
-      });
-    });
-
-    const userBaseKey = 'diet_user_base_' + userId;
-    let customBaseMap = {};
-
+    // Storage Keys
     const profileKey = 'diet_user_profile_' + userId;
+    const userBaseKey = 'diet_user_base_' + userId;
     const userStateKey = 'diet_consumed_state_' + userId;
     const historyKey = 'diet_history_' + userId;
-    let historyRecords = [];
-
     const measurementsKey = 'diet_measurements_' + userId;
-    let measurementsData = {
-      weight: [
-        { date: '2026-10-20', val: 76.6 },
-        { date: '2026-10-27', val: 76.8 },
-        { date: '2026-11-03', val: 77.2 },
-        { date: '2026-11-10', val: 77.5 }
-      ],
-      bicep: [{ date: '2026-10-20', val: 38.0 }],
-      chest: [{ date: '2026-10-20', val: 106.0 }],
-      waist: [{ date: '2026-10-20', val: 84.0 }],
-      hips: [{ date: '2026-10-20', val: 100.0 }],
-      thigh: [{ date: '2026-10-20', val: 60.0 }]
-    };
 
-    // Load Local Fallbacks
+    // Load User Profile from localStorage
     try {
       const savedProfile = localStorage.getItem(profileKey);
-      if (savedProfile) userProfile = Object.assign(userProfile, JSON.parse(savedProfile));
-      const savedBases = localStorage.getItem(userBaseKey);
-      if (savedBases) customBaseMap = JSON.parse(savedBases);
-      const savedHist = localStorage.getItem(historyKey);
-      if (savedHist) historyRecords = JSON.parse(savedHist);
-
-      const savedState = localStorage.getItem(userStateKey);
-      const currentDietDay = getDietDayKey();
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
-        const savedDay = parsed.activeDietDay || null;
-        const isLegacyStaleDay = !savedDay && historyRecords.length > 0 && historyRecords[0].shortDate !== getDietDayFormatted();
-
-        if ((savedDay && savedDay !== currentDietDay) || isLegacyStaleDay) {
-          // Настав новий день після 03:00 — скидаємо спожиті продукти за день
-          Object.keys(consumed).forEach(k => { consumed[k] = 0; });
-          activeDietDay = currentDietDay;
-          localStorage.setItem(userStateKey, JSON.stringify({
-            goal: parsed.goal || currentGoalKey,
-            activeDietDay: activeDietDay,
-            consumed: consumed
-          }));
-        } else {
-          if (parsed.consumed) {
-            for (const k in parsed.consumed) {
-              if (consumed.hasOwnProperty(k)) consumed[k] = Number(parsed.consumed[k]) || 0;
-            }
-          }
-          activeDietDay = savedDay || currentDietDay;
-        }
-        if (parsed.goal) currentGoalKey = parsed.goal;
+      if (savedProfile) {
+        userProfile = Object.assign(userProfile, JSON.parse(savedProfile));
       }
-      const savedM = localStorage.getItem(measurementsKey);
-      if (savedM) measurementsData = JSON.parse(savedM);
     } catch (e) {}
-
-    // Cloud Sync Loader
-    async function syncLoadFromServer() {
-      const syncId = getSyncUserId();
-      const syncStatusEl = document.getElementById('sync-status-text');
-      if (syncStatusEl) syncStatusEl.textContent = 'Синхронізація...';
-
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-        const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
-          method: "GET",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (!resp.ok) {
-          if (syncStatusEl) syncStatusEl.textContent = 'Локально';
-          return false;
-        }
-
-        const json = await resp.json();
-        if (json && json.exists && json.data) {
-          const remote = json.data;
-          const currentDietDay = getDietDayKey();
-          const remoteDietDay = remote.activeDietDay || null;
-          
-          if (remote.userProfile) {
-            userProfile = Object.assign(userProfile, remote.userProfile);
-            userProfile.hasCompletedOnboarding = true;
-            localStorage.setItem(profileKey, JSON.stringify(userProfile));
-          }
-          if (remote.historyRecords && Array.isArray(remote.historyRecords)) {
-            const mergedMap = new Map();
-            [...remote.historyRecords, ...historyRecords].forEach(rec => {
-              if (rec && rec.shortDate && !mergedMap.has(rec.shortDate)) {
-                mergedMap.set(rec.shortDate, rec);
-              }
-            });
-            historyRecords = Array.from(mergedMap.values()).slice(0, 30);
-            localStorage.setItem(historyKey, JSON.stringify(historyRecords));
-          }
-
-          const isRemoteLegacyStale = !remoteDietDay && historyRecords.length > 0 && historyRecords[0].shortDate !== getDietDayFormatted();
-
-          if ((remoteDietDay && remoteDietDay !== currentDietDay) || isRemoteLegacyStale) {
-            // На сервері збережено вчорашній раціон — скидаємо для нового дня (після 03:00)
-            Object.keys(consumed).forEach(k => { consumed[k] = 0; });
-            activeDietDay = currentDietDay;
-            localStorage.setItem(userStateKey, JSON.stringify({
-              goal: remote.goal || currentGoalKey,
-              activeDietDay: activeDietDay,
-              consumed: consumed
-            }));
-            syncSaveToServer();
-          } else if (remote.consumed) {
-            consumed = Object.assign(consumed, remote.consumed);
-            activeDietDay = remoteDietDay || currentDietDay;
-            localStorage.setItem(userStateKey, JSON.stringify({
-              goal: remote.goal || currentGoalKey,
-              activeDietDay: activeDietDay,
-              consumed: consumed
-            }));
-          }
-          if (remote.measurementsData) {
-            measurementsData = remote.measurementsData;
-            localStorage.setItem(measurementsKey, JSON.stringify(measurementsData));
-          }
-          if (remote.customBaseMap) {
-            customBaseMap = remote.customBaseMap;
-            localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
-          }
-          if (remote.goal) {
-            currentGoalKey = remote.goal;
-          }
-
-          localStorage.setItem("diet_global_onboarded", "true");
-          localStorage.setItem("diet_onboarded_" + userId, "true");
-
-          if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
-          return true;
-        } else {
-          if (syncStatusEl) syncStatusEl.textContent = 'Новий профіль';
-        }
-      } catch (e) {
-        if (syncStatusEl) syncStatusEl.textContent = 'Локально';
-      }
-      return false;
-    }
-
-    let cloudSyncTimer = null;
-    function syncSaveToServer() {
-      const syncStatusEl = document.getElementById('sync-status-text');
-      if (syncStatusEl) syncStatusEl.textContent = 'Збереження...';
-      
-      clearTimeout(cloudSyncTimer);
-      cloudSyncTimer = setTimeout(async () => {
-        const syncId = getSyncUserId();
-        const payload = {
-          userProfile,
-          consumed,
-          activeDietDay: getDietDayKey(),
-          historyRecords,
-          goal: currentGoalKey,
-          measurementsData,
-          customBaseMap,
-          lastUpdated: new Date().toISOString()
-        };
-
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-          const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify({ userId: syncId, payload }),
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-
-          if (resp.ok) {
-            if (syncStatusEl) syncStatusEl.textContent = 'Збережено';
-          } else {
-            if (syncStatusEl) syncStatusEl.textContent = 'Локально';
-          }
-        } catch (e) {
-          if (syncStatusEl) syncStatusEl.textContent = 'Локально';
-        }
-      }, 600);
-    }
 
     function calculateAge(birthdayStr) {
       if (!birthdayStr) return 35;
@@ -1066,7 +883,9 @@
       const now = new Date();
       let age = now.getFullYear() - birth.getFullYear();
       const m = now.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+        age--;
+      }
       return Math.max(16, age);
     }
 
@@ -1078,6 +897,7 @@
       } else {
         bmr = 10 * userProfile.weight + 6.25 * userProfile.height - 5 * age + 5;
       }
+
       const userTDEE = Math.round(bmr * 1.62);
       const scaleRatio = userTDEE / 2822.0;
 
@@ -1110,16 +930,244 @@
       try {
         localStorage.setItem(profileKey, JSON.stringify(userProfile));
       } catch (e) {}
-      syncSaveToServer();
     }
+
+    // Load Custom Baselines
+    let customBaseMap = {};
+    try {
+      const savedBases = localStorage.getItem(userBaseKey);
+      if (savedBases) customBaseMap = JSON.parse(savedBases);
+    } catch (e) {}
+
+    // State: consumed weights (initialized to 0; only loaded if dietDayKey matches current day)
+    let consumed = {};
+    function resetConsumedObject() {
+      MASTER_CATEGORIES.forEach(cat => {
+        cat.items.forEach(it => {
+          consumed[it.id] = 0;
+        });
+      });
+    }
+    resetConsumedObject();
+
+    try {
+      const savedState = localStorage.getItem(userStateKey);
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed.goal) {
+          currentGoalKey = parsed.goal;
+        }
+        const savedDay = parsed.dietDayKey || (parsed.savedAt ? getDietDayKey(new Date(parsed.savedAt)) : null);
+        if (savedDay === activeDietDay && parsed.consumed) {
+          for (const k in parsed.consumed) {
+            if (consumed.hasOwnProperty(k)) {
+              consumed[k] = Number(parsed.consumed[k]) || 0;
+            }
+          }
+        } else {
+          // Настав новий день (після 03:00) — обнуляємо поточний раціон
+          resetConsumedObject();
+          localStorage.setItem(userStateKey, JSON.stringify({
+            dietDayKey: activeDietDay,
+            savedAt: new Date().toISOString(),
+            goal: currentGoalKey,
+            consumed: consumed
+          }));
+        }
+      }
+    } catch (e) {}
+
+    // User History storage
+    let historyRecords = [];
+    try {
+      const savedHist = localStorage.getItem(historyKey);
+      if (savedHist) historyRecords = JSON.parse(savedHist);
+    } catch (e) {}
+
+    // User Body Measurements storage
+    let measurementsData = {
+      weight: [{ date: getDietDayKey(), val: userProfile.weight || 76.6 }],
+      bicep: [{ date: getDietDayKey(), val: 38.0 }],
+      chest: [{ date: getDietDayKey(), val: 106.0 }],
+      waist: [{ date: getDietDayKey(), val: 84.0 }],
+      hips: [{ date: getDietDayKey(), val: 100.0 }],
+      thigh: [{ date: getDietDayKey(), val: 60.0 }]
+    };
+
+    try {
+      const savedM = localStorage.getItem(measurementsKey);
+      if (savedM) measurementsData = JSON.parse(savedM);
+    } catch (e) {}
 
     function saveMeasurementsToStorage() {
       try {
         localStorage.setItem(measurementsKey, JSON.stringify(measurementsData));
       } catch (e) {}
-      syncSaveToServer();
     }
 
+    // Update weekly measurement reminder dot & banner
+    function updateReminderBadges() {
+      const dotEl = document.getElementById('tab-measurement-red-dot');
+      const bannerEl = document.getElementById('weekly-reminder-banner');
+      const weightHist = measurementsData.weight || [];
+
+      let needsReminder = false;
+      if (weightHist.length === 0) {
+        needsReminder = true;
+      } else {
+        const sorted = [...weightHist].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const lastDate = new Date(sorted[sorted.length - 1].date);
+        const diffDays = (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays >= 7) {
+          needsReminder = true;
+        }
+      }
+
+      if (dotEl) dotEl.classList.toggle('hidden', !needsReminder);
+      if (bannerEl) bannerEl.classList.toggle('hidden', !needsReminder);
+    }
+
+    // ==========================================
+    // ХМАРНА СИНХРОНІЗАЦІЯ (LOAD / SAVE)
+    // ==========================================
+    function setSyncBadgeState(state) {
+      const badge = document.getElementById('autosave-badge');
+      const textEl = document.getElementById('sync-status-text');
+      if (!badge || !textEl) return;
+
+      if (state === 'syncing') {
+        badge.style.opacity = '0.75';
+        textEl.textContent = 'Синхрон...';
+      } else if (state === 'offline') {
+        badge.style.opacity = '1';
+        textEl.textContent = 'Локально';
+      } else {
+        badge.style.opacity = '1';
+        textEl.textContent = 'Збережено';
+      }
+    }
+
+    async function syncLoadFromServer() {
+      const syncId = getSyncUserId();
+      setSyncBadgeState('syncing');
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!resp.ok) {
+          setSyncBadgeState('offline');
+          return false;
+        }
+
+        const json = await resp.json();
+        if (json.exists && json.data) {
+          const remote = json.data;
+
+          if (remote.userProfile) {
+            userProfile = Object.assign(userProfile, remote.userProfile);
+            saveUserProfile();
+          }
+          if (remote.customBaseMap) {
+            customBaseMap = remote.customBaseMap;
+            localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
+          }
+          if (remote.measurementsData) {
+            measurementsData = remote.measurementsData;
+            saveMeasurementsToStorage();
+          }
+          if (Array.isArray(remote.historyRecords)) {
+            historyRecords = remote.historyRecords;
+            localStorage.setItem(historyKey, JSON.stringify(historyRecords));
+          }
+          if (remote.currentGoal) {
+            currentGoalKey = remote.currentGoal;
+          }
+
+          // Перевіряємо, до якої доби раціону (з 03:00 до 02:59) належать дані на сервері
+          const currentDay = getDietDayKey();
+          const remoteDay = remote.dietDayKey || (remote.lastUpdated ? getDietDayKey(new Date(remote.lastUpdated)) : null);
+
+          if (remoteDay === currentDay && remote.consumed) {
+            for (const k in remote.consumed) {
+              if (consumed.hasOwnProperty(k)) {
+                consumed[k] = Number(remote.consumed[k]) || 0;
+              }
+            }
+          } else {
+            // Якщо на сервері збережено вчорашній день (до 03:00), не переносимо вчорашню їжу на сьогодні
+            resetConsumedObject();
+          }
+
+          localStorage.setItem(userStateKey, JSON.stringify({
+            dietDayKey: currentDay,
+            savedAt: new Date().toISOString(),
+            goal: currentGoalKey,
+            consumed: consumed
+          }));
+
+          setSyncBadgeState('saved');
+          return true;
+        }
+
+        setSyncBadgeState('saved');
+        return false;
+      } catch (e) {
+        clearTimeout(timeoutId);
+        setSyncBadgeState('offline');
+        return false;
+      }
+    }
+
+    let cloudSyncTimer = null;
+    function syncSaveToServer() {
+      clearTimeout(cloudSyncTimer);
+      setSyncBadgeState('syncing');
+
+      cloudSyncTimer = setTimeout(async () => {
+        const syncId = getSyncUserId();
+        const payload = {
+          dietDayKey: getDietDayKey(),
+          userProfile: userProfile,
+          customBaseMap: customBaseMap,
+          consumed: consumed,
+          measurementsData: measurementsData,
+          historyRecords: historyRecords,
+          currentGoal: currentGoalKey,
+          lastUpdated: new Date().toISOString()
+        };
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        try {
+          const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: syncId, payload: payload }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+
+          if (resp.ok) {
+            setSyncBadgeState('saved');
+          } else {
+            setSyncBadgeState('offline');
+          }
+        } catch (e) {
+          clearTimeout(timeoutId);
+          setSyncBadgeState('offline');
+        }
+      }, 1200);
+    }
+
+    // Helper: calculate scaled item specifications based on personal metabolism
     function getItemSpecs(it) {
       const meta = calculateUserMetabolism();
       const ratio = meta.scaleRatio;
@@ -1156,14 +1204,18 @@
     function getItemEffectiveKcal(it) {
       const specs = getItemSpecs(it);
       const effBase = getItemEffectiveBase(it);
-      if (specs.base > 0) return Math.round((effBase / specs.base) * specs.kcal);
+      if (specs.base > 0) {
+        return Math.round((effBase / specs.base) * specs.kcal);
+      }
       return specs.kcal;
     }
 
     function getItemEffectiveProtein(it) {
       const specs = getItemSpecs(it);
       const effBase = getItemEffectiveBase(it);
-      if (specs.base > 0) return Math.round((effBase / specs.base) * specs.protein * 10) / 10;
+      if (specs.base > 0) {
+        return Math.round((effBase / specs.base) * specs.protein * 10) / 10;
+      }
       return specs.protein;
     }
 
@@ -1303,7 +1355,9 @@
       MASTER_CATEGORIES.forEach(cat => {
         const isVisible = (currentFilter === 'all' || currentFilter === cat.id);
         const section = document.getElementById('category-' + cat.id);
-        if (section) section.style.display = isVisible ? 'block' : 'none';
+        if (section) {
+          section.style.display = isVisible ? 'block' : 'none';
+        }
 
         let catFraction = 0;
         cat.items.forEach(it => {
@@ -1375,7 +1429,9 @@
           const slider = document.getElementById('slider-' + it.id);
           const numInput = document.getElementById('input-' + it.id);
 
-          if (nameEl) nameEl.textContent = specs.name;
+          if (nameEl) {
+            nameEl.textContent = specs.name;
+          }
 
           if (card) {
             if (isItemOverBudget) {
@@ -1393,8 +1449,12 @@
               ? 'text-amber-600 dark:text-amber-400 font-bold'
               : (isConsumed ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-900 dark:text-white font-bold');
           }
-          if (maxEl) maxEl.textContent = isConsumed ? maxAllowedWeight : remainingWeight;
-          if (baseLabel) baseLabel.textContent = `${baseWeight} ${it.unit}`;
+          if (maxEl) {
+            maxEl.textContent = isConsumed ? maxAllowedWeight : remainingWeight;
+          }
+          if (baseLabel) {
+            baseLabel.textContent = `${baseWeight} ${it.unit}`;
+          }
           if (noteEl) {
             if (isItemOverBudget) {
               noteEl.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-semibold">+${itemWeight - maxAllowedWeight}${it.unit}</span>`;
@@ -1447,28 +1507,28 @@
 
     let saveTimeout = null;
     function triggerAutoSave(totalKcal, totalProtein) {
-      const badge = document.getElementById('autosave-badge');
-      if (badge) badge.style.opacity = '0.5';
+      setSyncBadgeState('syncing');
 
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
         saveCurrentStateToDisk(totalKcal, totalProtein);
-        if (badge) badge.style.opacity = '1';
+        syncSaveToServer();
       }, 250);
     }
 
     function saveCurrentStateToDisk(totalKcal, totalProtein) {
       try {
-        activeDietDay = getDietDayKey();
+        const currentDay = getDietDayKey();
+        activeDietDay = currentDay;
         const payload = {
+          dietDayKey: currentDay,
+          savedAt: new Date().toISOString(),
           goal: currentGoalKey,
-          activeDietDay: activeDietDay,
           consumed: consumed
         };
         localStorage.setItem(userStateKey, JSON.stringify(payload));
         updateDailyHistoryAuto(totalKcal, totalProtein);
       } catch (e) {}
-      syncSaveToServer();
     }
 
     function updateDailyHistoryAuto(totalKcal, totalProtein) {
@@ -1494,16 +1554,26 @@
         });
       });
 
-      if (consumedList.length === 0) return;
-
-      // Дата доби раціону з урахуванням зсуву на 03:00 ранку (03:00 - 02:59)
+      const currentDayKey = getDietDayKey();
       const todayDate = getDietDayFormatted();
+
+      if (consumedList.length === 0) {
+        const emptyIdx = historyRecords.findIndex(r => r.dietDayKey === currentDayKey || r.shortDate === todayDate);
+        if (emptyIdx !== -1) {
+          historyRecords.splice(emptyIdx, 1);
+          try {
+            localStorage.setItem(historyKey, JSON.stringify(historyRecords));
+          } catch (e) {}
+        }
+        return;
+      }
+
       const meta = calculateUserMetabolism();
-      
-      let todayEntry = historyRecords.find(r => r.shortDate === todayDate);
+      let todayEntry = historyRecords.find(r => r.dietDayKey === currentDayKey || r.shortDate === todayDate);
       if (!todayEntry) {
         todayEntry = {
           id: Date.now(),
+          dietDayKey: currentDayKey,
           shortDate: todayDate,
           date: todayDate,
           userId: userId,
@@ -1517,6 +1587,7 @@
         };
         historyRecords.unshift(todayEntry);
       } else {
+        todayEntry.dietDayKey = currentDayKey;
         todayEntry.goal = meta.goals[currentGoalKey].name;
         todayEntry.targetCalories = meta.goals[currentGoalKey].targetKcal;
         todayEntry.totalCalories = totalKcal;
@@ -1532,6 +1603,7 @@
     }
 
     // Single-active accordion & click-outside-to-collapse
+    let outsideClickBound = false;
     function attachListenersOnce() {
       document.querySelectorAll('.item-toggle-row').forEach(row => {
         row.addEventListener('click', (e) => {
@@ -1547,11 +1619,14 @@
         });
       });
 
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.product-card') && !e.target.closest('#onboarding-modal') && !e.target.closest('#add-measurement-modal') && !e.target.closest('#target-weight-modal')) {
-          closeAllProductDrawers();
-        }
-      });
+      if (!outsideClickBound) {
+        outsideClickBound = true;
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.product-card')) {
+            closeAllProductDrawers();
+          }
+        });
+      }
 
       document.querySelectorAll('input[type=range][data-item-id]').forEach(slider => {
         slider.addEventListener('input', (e) => {
@@ -1704,16 +1779,7 @@
     });
 
     document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-      MASTER_CATEGORIES.forEach(cat => {
-        cat.items.forEach(it => {
-          consumed[it.id] = 0;
-        });
-      });
-      const todayDate = getDietDayFormatted();
-      historyRecords = historyRecords.filter(r => r.shortDate !== todayDate);
-      try {
-        localStorage.setItem(historyKey, JSON.stringify(historyRecords));
-      } catch (e) {}
+      resetConsumedObject();
       resetModal.classList.add('hidden');
       updateValuesInPlace();
       showToast('Дані успішно скинуто!');
@@ -1722,29 +1788,6 @@
     // ==========================================
     // BODY MEASUREMENTS (ЗАМІРИ) MODULE
     // ==========================================
-    function updateReminderBadges() {
-      const redDot = document.getElementById('tab-measurement-red-dot');
-      const banner = document.getElementById('weekly-reminder-banner');
-      const weightHistory = measurementsData.weight || [];
-
-      if (weightHistory.length === 0) {
-        if (redDot) redDot.classList.add('hidden');
-        if (banner) banner.classList.add('hidden');
-        return;
-      }
-
-      const firstDate = new Date(weightHistory[0].date);
-      const reminderDayOfWeek = isNaN(firstDate.getTime()) ? 1 : firstDate.getDay();
-      const now = new Date();
-      const currentDayOfWeek = now.getDay();
-      const latestDate = new Date(weightHistory[weightHistory.length - 1].date);
-      const daysSinceLatest = isNaN(latestDate.getTime()) ? 0 : Math.floor((now - latestDate) / (1000 * 60 * 60 * 24));
-      const isReminderDay = (currentDayOfWeek === reminderDayOfWeek) && (daysSinceLatest >= 5);
-
-      if (redDot) redDot.classList.toggle('hidden', !isReminderDay);
-      if (banner) banner.classList.toggle('hidden', !isReminderDay);
-    }
-
     function renderMeasurementsList() {
       const container = document.getElementById('measurements-container');
       container.innerHTML = '';
@@ -1801,6 +1844,8 @@
 
         container.appendChild(row);
       });
+
+      updateReminderBadges();
     }
 
     function openMetricDetail(metricId) {
@@ -1817,6 +1862,7 @@
       renderMetricDetailView();
     }
 
+    // Target Weight Progress Widget
     function renderTargetWeightWidget(history) {
       const widget = document.getElementById('target-weight-widget');
       const prompt = document.getElementById('set-target-weight-prompt');
@@ -1961,7 +2007,7 @@
       let dotsHtml = '';
       points.forEach((pt) => {
         dotsHtml += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="2" class="cursor-pointer" />
+          <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="2" class="cursor-pointer transition-all" />
           <text x="${pt.x}" y="${pt.y - 7}" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563EB">${pt.val}</text>
           <text x="${pt.x}" y="${height - 7}" text-anchor="middle" font-size="9" font-weight="500" fill="#94A3B8">${pt.date.slice(5)}</text>
         `;
@@ -2042,6 +2088,7 @@
           if (idx !== -1) {
             measurementsData[selectedMetricId].splice(idx, 1);
             saveMeasurementsToStorage();
+            syncSaveToServer();
             renderMetricDetailView();
             renderMeasurementsList();
             showToast('Запис видалено');
@@ -2096,6 +2143,7 @@
     document.getElementById('tw-modal-delete-btn').addEventListener('click', () => {
       userProfile.targetWeight = null;
       saveUserProfile();
+      syncSaveToServer();
       twModal.classList.add('hidden');
       renderMetricDetailView();
       showToast('Цільову вагу видалено');
@@ -2104,6 +2152,7 @@
     document.getElementById('delete-target-weight-btn').addEventListener('click', () => {
       userProfile.targetWeight = null;
       saveUserProfile();
+      syncSaveToServer();
       renderMetricDetailView();
       showToast('Цільову вагу видалено');
     });
@@ -2113,6 +2162,7 @@
       if (val > 30 && val < 250) {
         userProfile.targetWeight = val;
         saveUserProfile();
+        syncSaveToServer();
         twModal.classList.add('hidden');
         renderMetricDetailView();
         showToast('Цільову вагу оновлено!');
@@ -2182,6 +2232,7 @@
       editingRecordOriginalDate = null;
       measurementsData[selectedMetricId].sort((a, b) => new Date(a.date) - new Date(b.date));
       saveMeasurementsToStorage();
+      syncSaveToServer();
 
       addModal.classList.add('hidden');
       renderMetricDetailView();
@@ -2235,6 +2286,7 @@
       updateReminderBadges();
     }
 
+    // History View with collapsible day items (collapsed by default, expands on click)
     function renderHistory() {
       const list = document.getElementById('history-list');
       list.innerHTML = '';
@@ -2242,7 +2294,7 @@
       if (historyRecords.length === 0) {
         list.innerHTML = `
           <div class="text-center py-10 text-gray-400 dark:text-gray-500 text-xs">
-            Історія поки що порожня.<br>Коли ви вносите продукти, вони автоматично зберігаються за поточний день.
+            Історія поки що порожня.<br>Коли ви вносите продукти, вони автоматично зберігаються за поточну добу (03:00 – 02:59).
           </div>
         `;
         return;
@@ -2252,54 +2304,49 @@
         const card = document.createElement('div');
         card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 shadow-xs transition-colors';
         
-        let itemsHtml = entry.items.map(it => `
-          <div class="flex justify-between items-center text-xs py-1 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-            <span class="text-gray-700 dark:text-gray-300">• ${it.name}</span>
-            <span class="font-semibold text-gray-900 dark:text-white">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
+        const itemsHtml = (entry.items || []).map(it => `
+          <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
+            <span class="text-gray-700 dark:text-gray-300 pr-2">• ${it.name}</span>
+            <span class="font-semibold text-gray-900 dark:text-white shrink-0">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
           </div>
         `).join('');
 
         card.innerHTML = `
-          <div class="history-card-header cursor-pointer select-none space-y-1.5">
-            <div class="flex justify-between items-start">
-              <div>
+          <div class="history-card-header flex justify-between items-center cursor-pointer select-none">
+            <div class="space-y-1 flex-1 min-w-0 pr-2">
+              <div class="flex items-center flex-wrap gap-1.5">
                 <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
-                <span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
                   ${entry.goal}
                 </span>
               </div>
-              <div class="flex items-center space-x-2">
-                <div class="text-right">
-                  <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.totalCalories}</span>
-                  <span class="text-[10px] text-gray-400"> / ${entry.targetCalories} ккал</span>
-                </div>
-                <svg class="history-chevron w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
-              <div class="flex items-center space-x-2">
+              <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center flex-wrap gap-x-3 gap-y-0.5">
+                <span>🔥 <strong class="text-gray-800 dark:text-gray-200">${entry.totalCalories}</strong> / ${entry.targetCalories} ккал</span>
                 <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
                 <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
               </div>
-              <span class="history-toggle-hint text-[11px] text-blue-600 dark:text-blue-400 font-medium">Розгорнути</span>
+            </div>
+            <div class="flex items-center space-x-1 text-gray-400 shrink-0 pl-1">
+              <svg class="history-chevron w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+              </svg>
             </div>
           </div>
-          <div class="history-items-container hidden pt-2 mt-2 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5">
+          <div class="history-items-drawer hidden pt-2.5 mt-2.5 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5">
             ${itemsHtml}
           </div>
         `;
 
         const headerEl = card.querySelector('.history-card-header');
-        const itemsContainer = card.querySelector('.history-items-container');
+        const drawerEl = card.querySelector('.history-items-drawer');
         const chevronEl = card.querySelector('.history-chevron');
-        const hintEl = card.querySelector('.history-toggle-hint');
 
         headerEl.addEventListener('click', () => {
-          const isHidden = itemsContainer.classList.toggle('hidden');
-          chevronEl.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-          hintEl.textContent = isHidden ? 'Розгорнути' : 'Згорнути';
+          const isHidden = drawerEl.classList.contains('hidden');
+          drawerEl.classList.toggle('hidden', !isHidden);
+          if (chevronEl) {
+            chevronEl.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+          }
         });
 
         list.appendChild(card);
@@ -2311,6 +2358,7 @@
       try {
         localStorage.removeItem(historyKey);
       } catch (e) {}
+      syncSaveToServer();
       renderHistory();
       showToast('Історію очищено');
     });
@@ -2392,7 +2440,6 @@
       try {
         localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
       } catch (e) {}
-      syncSaveToServer();
       updateValuesInPlace();
       showToast('Норми збережено!');
       switchView('calculator');
@@ -2403,12 +2450,12 @@
       try {
         localStorage.removeItem(userBaseKey);
       } catch (e) {}
-      syncSaveToServer();
       renderSettings();
       updateValuesInPlace();
       showToast('Скинуто до розрахункових значень');
     });
 
+    // Reopen Onboarding from settings
     document.getElementById('reopen-onboarding-btn').addEventListener('click', () => {
       openOnboardingModal();
     });
@@ -2417,18 +2464,14 @@
     // ONBOARDING WIZARD LOGIC
     // ==========================================
     function checkOnboardingNeeded() {
-      const isLocallyOnboarded = localStorage.getItem("diet_global_onboarded") || 
-                                 localStorage.getItem("diet_onboarded_" + userId) || 
-                                 userProfile.hasCompletedOnboarding;
-      if (!isLocallyOnboarded) {
+      if (!userProfile.hasCompletedOnboarding) {
         openOnboardingModal();
       }
     }
 
     function openOnboardingModal() {
       const modal = document.getElementById('onboarding-modal');
-      const radio = document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`);
-      if (radio) radio.checked = true;
+      document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`).checked = true;
       document.getElementById('ob-birthday').value = userProfile.birthday || '1991-05-15';
       document.getElementById('ob-height').value = userProfile.height || 183;
       document.getElementById('ob-weight').value = userProfile.weight || 76.6;
@@ -2466,8 +2509,6 @@
       userProfile.targetWeight = targetWeight;
       userProfile.hasCompletedOnboarding = true;
 
-      localStorage.setItem("diet_global_onboarded", "true");
-      localStorage.setItem("diet_onboarded_" + userId, "true");
       saveUserProfile();
 
       const todayStr = new Date().toISOString().split('T')[0];
@@ -2492,6 +2533,7 @@
       buildCalculatorDOM();
       updateValuesInPlace();
       renderMeasurementsList();
+      syncSaveToServer();
       showToast('Анкету заповнено! Раціон перераховано.');
     });
 
@@ -2521,39 +2563,56 @@
       }, 2000);
     }
 
-    // Автоматична перевірка переходу через 03:00 ранку, якщо додаток залишився відкритим
-    setInterval(() => {
+    // Автоматична перевірка переходу через 03:00 ранку
+    function checkDietDayRollover() {
       const nowDietDay = getDietDayKey();
-      if (activeDietDay && activeDietDay !== nowDietDay) {
+      if (nowDietDay !== activeDietDay) {
         activeDietDay = nowDietDay;
-        MASTER_CATEGORIES.forEach(cat => {
-          cat.items.forEach(it => {
-            consumed[it.id] = 0;
-          });
-        });
+        resetConsumedObject();
+        try {
+          localStorage.setItem(userStateKey, JSON.stringify({
+            dietDayKey: activeDietDay,
+            savedAt: new Date().toISOString(),
+            goal: currentGoalKey,
+            consumed: consumed
+          }));
+        } catch (e) {}
         updateValuesInPlace();
-        showToast('Розпочато новий день раціону (після 03:00)!');
-      }
-    }, 30000);
-
-    // Init App with safe bootstrap sequence
-    async function initApp() {
-      try {
-        // Спочатку синхронізуємо дані з сервера
-        await syncLoadFromServer();
-        
-        updateGoalButtonsUI();
-        buildCalculatorDOM();
-        updateValuesInPlace();
-        renderMeasurementsList();
-        updateReminderBadges();
-        checkOnboardingNeeded();
-      } catch (err) {
-        console.error('Initialization error:', err);
+        if (currentView === 'history') {
+          renderHistory();
+        }
+        showToast('Розпочато нову добу раціону (03:00)');
       }
     }
 
-    window.addEventListener('DOMContentLoaded', initApp);
+    setInterval(checkDietDayRollover, 30000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        checkDietDayRollover();
+        applySafeAreaInsets();
+      }
+    });
+    window.addEventListener('focus', () => {
+      checkDietDayRollover();
+      applySafeAreaInsets();
+    });
+
+    // Init App
+    async function initApp() {
+      try {
+        await syncLoadFromServer();
+      } catch (e) {}
+
+      checkDietDayRollover();
+      updateGoalButtonsUI();
+      buildCalculatorDOM();
+      updateValuesInPlace();
+      renderMeasurementsList();
+      updateReminderBadges();
+      checkOnboardingNeeded();
+    }
+
+    initApp();
   </script>
 </body>
 </html>
