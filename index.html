@@ -385,6 +385,28 @@
 
       <!-- 4. Base Settings View & Profile Configuration -->
       <div id="view-settings" class="space-y-3.5 hidden">
+        <!-- Cloud Sync & User ID Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Хмарна синхронізація та бекап</h2>
+              <p id="settings-sync-detail" class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Перевірка з'єднання...</p>
+            </div>
+            <button id="manual-sync-now-btn" type="button" class="text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 px-3 py-1.5 rounded-xl transition shadow-xs shrink-0">
+              Синхронізувати
+            </button>
+          </div>
+          <div class="pt-1 border-t border-gray-100 dark:border-slate-700/60">
+            <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Персональний ID синхронізації (однаковий на ПК і телефоні):</label>
+            <div class="flex space-x-2">
+              <input type="text" id="settings-sync-id-input" class="flex-1 py-1.5 px-2.5 text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button id="save-sync-id-btn" type="button" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-xl transition">
+                Застосувати ID
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Profile Card -->
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
           <div class="flex items-center justify-between">
@@ -624,7 +646,7 @@
     // ==========================================
     // СИНХРОНІЗАЦІЯ З СЕРВЕРОМ (PythonAnywhere)
     // ==========================================
-    const BACKEND_URL = "https://AnatoliiHordiienko.pythonanywhere.com";
+    const BACKEND_URL = "https://anatoliihordiienko.pythonanywhere.com";
 
     // ==========================================
     // ЛОГІКА ДОБИ РАЦІОНУ (Скидання о 03:00 ранку)
@@ -674,6 +696,14 @@
       if (cachedTgId) return String(cachedTgId).replace('tg_', '');
 
       return "167040233";
+    }
+
+    function setCustomSyncUserId(newId) {
+      const cleanId = String(newId || '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!cleanId) return false;
+      localStorage.setItem("diet_permanent_tg_id", cleanId);
+      userId = cleanId;
+      return true;
     }
 
     const MASTER_CATEGORIES = [
@@ -1030,20 +1060,35 @@
     // ==========================================
     // ХМАРНА СИНХРОНІЗАЦІЯ (LOAD / SAVE)
     // ==========================================
-    function setSyncBadgeState(state) {
+    let lastCloudSyncTime = null;
+    let lastCloudSyncError = null;
+
+    function setSyncBadgeState(state, detailMsg = '') {
       const badge = document.getElementById('autosave-badge');
       const textEl = document.getElementById('sync-status-text');
-      if (!badge || !textEl) return;
-
-      if (state === 'syncing') {
-        badge.style.opacity = '0.75';
-        textEl.textContent = 'Синхрон...';
-      } else if (state === 'offline') {
-        badge.style.opacity = '1';
-        textEl.textContent = 'Локально';
-      } else {
-        badge.style.opacity = '1';
-        textEl.textContent = 'Збережено';
+      const detailEl = document.getElementById('settings-sync-detail');
+      if (badge && textEl) {
+        if (state === 'syncing') {
+          badge.style.opacity = '0.75';
+          textEl.textContent = 'Синхрон...';
+        } else if (state === 'offline') {
+          badge.style.opacity = '1';
+          textEl.textContent = 'Локально';
+        } else {
+          badge.style.opacity = '1';
+          textEl.textContent = 'Збережено';
+        }
+      }
+      if (detailEl) {
+        if (detailMsg) {
+          detailEl.textContent = detailMsg;
+        } else if (state === 'syncing') {
+          detailEl.textContent = 'Обмін даними із сервером...';
+        } else if (state === 'offline') {
+          detailEl.textContent = `Немає зв'язку з сервером${lastCloudSyncError ? ' (' + lastCloudSyncError + ')' : ''}`;
+        } else if (lastCloudSyncTime) {
+          detailEl.textContent = `Синхронізовано о ${lastCloudSyncTime}`;
+        }
       }
     }
 
@@ -1052,21 +1097,26 @@
       setSyncBadgeState('syncing');
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
           method: 'GET',
+          cache: 'no-store',
           signal: controller.signal
         });
         clearTimeout(timeoutId);
 
         if (!resp.ok) {
+          lastCloudSyncError = `HTTP ${resp.status}`;
           setSyncBadgeState('offline');
           return false;
         }
 
         const json = await resp.json();
+        lastCloudSyncError = null;
+        lastCloudSyncTime = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+
         if (json.exists && json.data) {
           const remote = json.data;
 
@@ -1101,7 +1151,6 @@
               }
             }
           } else {
-            // Якщо на сервері збережено вчорашній день (до 03:00), не переносимо вчорашню їжу на сьогодні
             resetConsumedObject();
           }
 
@@ -1114,23 +1163,26 @@
 
           setSyncBadgeState('saved');
           return true;
+        } else {
+          // Файлу на сервері ще немає: якщо анкета вже заповнена локально — одразу створюємо бекап на сервері
+          setSyncBadgeState('saved', 'Створення першого бекапу на сервері...');
+          await syncSaveToServer(true);
+          return false;
         }
-
-        setSyncBadgeState('saved');
-        return false;
       } catch (e) {
         clearTimeout(timeoutId);
+        lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'мережа/CORS';
         setSyncBadgeState('offline');
         return false;
       }
     }
 
     let cloudSyncTimer = null;
-    function syncSaveToServer() {
+    function syncSaveToServer(immediate = false) {
       clearTimeout(cloudSyncTimer);
       setSyncBadgeState('syncing');
 
-      cloudSyncTimer = setTimeout(async () => {
+      const executeSave = async () => {
         const syncId = getSyncUserId();
         const payload = {
           dietDayKey: getDietDayKey(),
@@ -1144,7 +1196,7 @@
         };
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
           const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
@@ -1156,15 +1208,28 @@
           clearTimeout(timeoutId);
 
           if (resp.ok) {
+            lastCloudSyncError = null;
+            lastCloudSyncTime = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
             setSyncBadgeState('saved');
+            return true;
           } else {
+            lastCloudSyncError = `HTTP ${resp.status}`;
             setSyncBadgeState('offline');
+            return false;
           }
         } catch (e) {
           clearTimeout(timeoutId);
+          lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'мережа/CORS';
           setSyncBadgeState('offline');
+          return false;
         }
-      }, 1200);
+      };
+
+      if (immediate) {
+        return executeSave();
+      } else {
+        cloudSyncTimer = setTimeout(executeSave, 1000);
+      }
     }
 
     // Helper: calculate scaled item specifications based on personal metabolism
@@ -2279,12 +2344,37 @@
       } else if (viewName === 'history') {
         renderHistory();
       } else if (viewName === 'settings') {
+        const syncInput = document.getElementById('settings-sync-id-input');
+        if (syncInput) syncInput.value = getSyncUserId();
         renderProfileDetails();
         renderSettings();
       }
 
       updateReminderBadges();
     }
+
+    // Керування ID та ручною синхронізацією у вкладці «Мої норми»
+    document.getElementById('save-sync-id-btn').addEventListener('click', async () => {
+      const val = document.getElementById('settings-sync-id-input').value;
+      if (!setCustomSyncUserId(val)) {
+        showToast('Введіть коректний ID');
+        return;
+      }
+      showToast('ID оновлено, завантажуємо дані...');
+      const loaded = await syncLoadFromServer();
+      updateGoalButtonsUI();
+      buildCalculatorDOM();
+      updateValuesInPlace();
+      renderMeasurementsList();
+      renderProfileDetails();
+      showToast(loaded ? 'Дані завантажено із сервера!' : 'Новий профіль підключено до сервера');
+    });
+
+    document.getElementById('manual-sync-now-btn').addEventListener('click', async () => {
+      showToast('Синхронізація із сервером...');
+      const ok = await syncSaveToServer(true);
+      showToast(ok ? 'Дані та бекап збережено на сервері!' : 'Помилка з\'єднання із сервером');
+    });
 
     // History View with collapsible day items (collapsed by default, expands on click)
     function renderHistory() {
