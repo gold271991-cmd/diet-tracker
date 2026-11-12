@@ -55,13 +55,6 @@
     input, select, textarea {
       user-select: text;
     }
-    /* Mobile Keyboard Open UX: hide bottom bar and provide scroll clearance */
-    body.keyboard-open #bottom-nav {
-      display: none !important;
-    }
-    body.keyboard-open {
-      padding-bottom: 56vh !important;
-    }
     .slider-container {
       touch-action: pan-y;
       padding: 6px 0;
@@ -123,20 +116,30 @@
       border: 2px solid white;
       box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+    /* Мобільна клавіатура: компактна шапка, приховування нижнього меню та запас прокрутки */
+    body.keyboard-open #bottom-nav {
+      display: none !important;
+    }
+    body.keyboard-open #goal-selector-container,
+    body.keyboard-open #top-nutrition-summary,
+    body.keyboard-open #header-controls-row {
+      display: none !important;
+    }
+    body.keyboard-open #compact-keyboard-bar {
+      display: flex !important;
+    }
+    body.keyboard-open #app-header {
+      padding-bottom: 0.5rem;
+    }
+    body.keyboard-open {
+      padding-bottom: 62vh !important;
     }
   </style>
 </head>
@@ -147,8 +150,20 @@
     <!-- Top Header (Sticky & opaque with safe area padding for Android status bar & Telegram overlay buttons) -->
     <header id="app-header" class="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 transition-colors shadow-xs">
       
+      <!-- Compact single-line summary shown ONLY when mobile keyboard is open -->
+      <div id="compact-keyboard-bar" class="hidden items-center justify-between text-xs py-0.5">
+        <div class="flex items-center space-x-2 min-w-0">
+          <span class="font-bold text-gray-900 dark:text-white truncate" id="compact-kb-kcal">🔥 0 / 2 208 ккал</span>
+          <span class="text-gray-300 dark:text-slate-600">•</span>
+          <span class="font-bold text-blue-600 dark:text-blue-400 shrink-0" id="compact-kb-prot">🥩 0 г білка</span>
+        </div>
+        <button type="button" id="compact-kb-done-btn" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-[11px] shrink-0">
+          ✓ Готово
+        </button>
+      </div>
+
       <!-- Top controls -->
-      <div class="flex items-center justify-between mb-2.5">
+      <div id="header-controls-row" class="flex items-center justify-between mb-2.5">
         <div class="flex items-center space-x-2.5 min-w-0">
           <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 shrink-0" title="Закрити / Назад">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +172,7 @@
           </button>
           <div class="min-w-0">
             <div class="flex items-center space-x-2">
-              <h1 id="top-title-text" class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none truncate">Раціон</h1>
+              <h1 id="top-title-text" class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none">Раціон</h1>
               <span id="user-name-display" class="text-xs font-semibold text-blue-600 dark:text-blue-400 truncate"></span>
             </div>
             <div class="text-xs text-gray-400 dark:text-gray-500 leading-tight mt-1 truncate" id="athlete-profile-summary">
@@ -263,25 +278,44 @@
         <div id="categories-container" class="space-y-3.5"></div>
       </div>
 
-      <!-- 2. Measurements View (Заміри) -->
-      <div id="view-measurements" class="space-y-3 hidden">
+      <!-- 2. Measurements View (Заміри — Laconic Body Composition Dashboard) -->
+      <div id="view-measurements" class="space-y-3.5 hidden">
         
-        <!-- Screen 2A: List of Body Measurement Categories -->
-        <div id="measurements-list-screen" class="space-y-3">
-          <div class="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-800 flex items-center justify-between">
+        <!-- Screen 2A: Analytical Dashboard & 2x3 Bento Grid -->
+        <div id="measurements-list-screen" class="space-y-3.5">
+          <!-- Top Action Header: Unified Weekly Check-in -->
+          <div class="flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Контроль параметрів тіла</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Щотижнева динаміка ваги та обхватів</p>
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Композиція та заміри тіла</h2>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Натисніть на показник для детального графіка</p>
             </div>
-            <div id="weekly-reminder-banner" class="hidden">
-              <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 animate-pulse">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>День замірів!</span>
+            <div class="flex items-center space-x-1.5 shrink-0">
+              <span id="weekly-reminder-banner" class="hidden px-2 py-1 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 animate-pulse">
+                День замірів!
               </span>
+              <button id="open-weekly-checkin-btn" type="button" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold shadow-xs flex items-center space-x-1.5 transition">
+                <span>+ Тижневий чекін</span>
+              </button>
             </div>
           </div>
 
-          <div id="measurements-container" class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 divide-y divide-gray-100 dark:divide-slate-700/60 shadow-xs overflow-hidden">
+          <!-- Target Weight Progress & Pace Forecast Card -->
+          <div id="measurements-overview-target" class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/80 border border-blue-200/80 dark:border-slate-700 rounded-2xl p-3.5 shadow-xs space-y-2">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Two Smart Fitness Indices (WHtR & V-Taper) -->
+          <div id="measurements-indices-grid" class="grid grid-cols-2 gap-2.5">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Switchable Analytics Card: Radar Proportions ("Старт vs Зараз") & Dual-Axis Correlation -->
+          <div id="measurements-analytics-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2.5">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- 2x3 Bento Grid with Trend Sparklines -->
+          <div id="measurements-container" class="grid grid-cols-2 gap-2.5">
             <!-- Populated dynamically -->
           </div>
         </div>
@@ -389,31 +423,104 @@
 
       </div>
 
-      <!-- 3. History View -->
+      <!-- 3. History View (Discipline Analytics + Collapsible Daily Log) -->
       <div id="view-history" class="space-y-3 hidden">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
-            <p class="text-[11px] text-gray-400 dark:text-gray-500">Доба раціону рахується з 03:00 до 02:59 • Натисніть на день, щоб розгорнути</p>
+            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Аналітика та історія днів</h2>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">Доба рахується з 03:00 до 02:59 • Натисніть на день для деталей</p>
           </div>
-          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-medium shrink-0">Очистити</button>
+          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-semibold px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 transition shrink-0">Очистити</button>
         </div>
-        <div id="history-list" class="space-y-2.5"></div>
+
+        <!-- 7-Day Average Bento Summary (Calories & Protein g/kg) -->
+        <div id="history-bento-summary" class="grid grid-cols-2 gap-2.5">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- 28-Day Discipline Heatmap & Streak Card -->
+        <div id="history-heatmap-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2.5">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- 7-Day Bar Chart with Target Line -->
+        <div id="history-bar-chart-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Collapsible Daily Cards List -->
+        <div class="space-y-1.5 pt-0.5">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-bold text-gray-900 dark:text-white">Журнал по днях</span>
+            <span class="text-[11px] text-gray-400 dark:text-gray-500">Категорії та склад дня</span>
+          </div>
+          <div id="history-list" class="space-y-2.5"></div>
+        </div>
       </div>
 
-      <!-- 4. Base Settings View & Profile Configuration -->
+      <!-- 4. Base Settings View & Profile Configuration (Redesigned) -->
       <div id="view-settings" class="space-y-3.5 hidden">
-        <!-- Automatic Cloud Sync & Telegram Binding Card (No manual ID entry) -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-2.5">
+        <!-- 1. Metabolism Chain & Profile Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3 shadow-xs">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Енергообмін та профіль</h2>
+              <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Формула Міффліна-Сан Жеора (коеф. 1.62)</p>
+            </div>
+            <button id="reopen-onboarding-btn" type="button" class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition">
+              ✏️ Анкета
+            </button>
+          </div>
+
+          <!-- Visual 3-Step Metabolism Chain (BMR -> TDEE -> Active Goal) -->
+          <div id="metabolism-chain-box" class="grid grid-cols-3 gap-1.5 text-center">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Protein per kg Scale -->
+          <div id="protein-scale-box" class="bg-gray-50 dark:bg-slate-700/40 rounded-xl p-2.5 border border-gray-100 dark:border-slate-700/60 space-y-1.5">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Profile Summary Pills -->
+          <div id="profile-details-grid" class="grid grid-cols-3 gap-2 text-xs">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- 2. Categories Accordion (А–Ж) with Live Macro Preview & Visibility Toggle -->
+        <div class="space-y-2">
+          <div class="bg-gray-50 dark:bg-slate-800/60 p-3 rounded-xl border border-gray-200 dark:border-slate-700 flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Конструктор порцій та видимості</h2>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Натисніть на категорію, щоб змінити грамовку або приховати продукт (<span class="font-semibold">👁</span>) з раціону.</p>
+            </div>
+          </div>
+
+          <div id="settings-categories-container" class="space-y-2"></div>
+
+          <div class="pt-1 flex space-x-2">
+            <button id="save-settings-btn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold py-2.5 px-3 rounded-xl text-xs transition shadow-sm">
+              Зберегти норми
+            </button>
+            <button id="reset-defaults-btn" type="button" class="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-gray-200 dark:hover:bg-slate-700 transition">
+              Скинути до базових
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Clean Cloud Sync & JSON Backup Card (No manual ID entry) -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3 shadow-xs">
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Хмарна синхронізація та бекап</h2>
+              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Хмарний бекап та резервна копія</h2>
               <p id="settings-sync-detail" class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">Перевірка з'єднання...</p>
             </div>
             <button id="manual-sync-now-btn" type="button" class="text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 px-3 py-1.5 rounded-xl transition shadow-xs shrink-0">
               Синхронізувати
             </button>
           </div>
+
           <div class="pt-2 border-t border-gray-100 dark:border-slate-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
             <span class="flex items-center space-x-1.5">
               <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -422,33 +529,22 @@
               <span id="telegram-binding-status">Автоматична прив'язка до Telegram ID</span>
             </span>
           </div>
-        </div>
 
-        <!-- Profile Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Мій профіль та анкета</h2>
-            <button id="reopen-onboarding-btn" type="button" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Редагувати анкету</button>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="export-json-btn" type="button" class="py-2 px-3 rounded-xl bg-gray-100 dark:bg-slate-700/80 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 text-xs font-semibold flex items-center justify-center space-x-1.5 transition">
+              <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <span>Експорт JSON</span>
+            </button>
+            <label class="py-2 px-3 rounded-xl bg-gray-100 dark:bg-slate-700/80 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-gray-200 text-xs font-semibold flex items-center justify-center space-x-1.5 transition cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+              </svg>
+              <span>Імпорт JSON</span>
+              <input type="file" id="import-json-input" accept=".json,application/json" class="hidden">
+            </label>
           </div>
-          <div id="profile-details-grid" class="grid grid-cols-2 gap-2 text-xs">
-            <!-- Populated dynamically -->
-          </div>
-        </div>
-
-        <div class="bg-gray-50 dark:bg-slate-800/60 p-3 rounded-xl border border-gray-200 dark:border-slate-700">
-          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Персональні базові норми продуктів</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Налаштування індивідуальної порції для кожного продукту в поточному режимі.</p>
-        </div>
-
-        <div id="settings-categories-container" class="space-y-3"></div>
-
-        <div class="pt-1 flex space-x-2">
-          <button id="save-settings-btn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition shadow-sm">
-            Зберегти норми
-          </button>
-          <button id="reset-defaults-btn" type="button" class="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-gray-200 transition">
-            Скинути до вихідних
-          </button>
         </div>
       </div>
 
@@ -487,14 +583,14 @@
       </button>
     </nav>
 
-    <!-- ONBOARDING MODAL (Initial Questionnaire with Birthday & Optional Circumferences, No Activity Selector) -->
+    <!-- ONBOARDING MODAL (Full Initial Questionnaire for New Users: Birthday, Gender, Height, Weight, Target Weight, Optional Measurements) -->
     <div id="onboarding-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
       <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="text-center space-y-1">
           <div class="w-12 h-12 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">
             📋
           </div>
-          <h2 class="text-lg font-black text-gray-900 dark:text-white">Анкета нового користувача</h2>
+          <h2 class="text-lg font-black text-gray-900 dark:text-white">Анкета користувача</h2>
           <p class="text-xs text-gray-500 dark:text-gray-400">Введіть ваші параметри — раціон автоматично перерахується під ваше тіло</p>
         </div>
 
@@ -525,7 +621,7 @@
             </div>
           </div>
 
-          <!-- Birthday & Height (NO age field, NO activity field) -->
+          <!-- Birthday & Height -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Дата народження:</label>
@@ -533,7 +629,7 @@
             </div>
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Зріст (см):</label>
-              <input type="number" id="ob-height" value="183" min="120" max="230" inputmode="numeric" enterkeyhint="done" required class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" inputmode="numeric" enterkeyhint="next" id="ob-height" placeholder="183" required class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
@@ -541,39 +637,40 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Поточна вага (кг):</label>
-              <input type="number" step="0.1" id="ob-weight" value="76.6" inputmode="decimal" enterkeyhint="done" required class="w-full py-2 px-2.5 text-xs font-bold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" inputmode="decimal" enterkeyhint="next" id="ob-weight" placeholder="76.6" required class="w-full py-2 px-2.5 text-xs font-bold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Цільова вага (кг):</label>
-              <input type="number" step="0.1" id="ob-target-weight" value="82.0" placeholder="Наприклад 80.0" inputmode="decimal" enterkeyhint="done" class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" inputmode="decimal" enterkeyhint="done" id="ob-target-weight" placeholder="82.0" class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
-          <!-- Optional Body Circumferences -->
-          <div class="space-y-1.5 pt-1 border-t border-gray-100 dark:border-slate-700/70">
-            <span class="block font-bold text-gray-900 dark:text-white text-xs leading-snug">
-              Заміри обхватів (опціонально — можна заповнити пізніше у вкладці «Заміри»):
-            </span>
+          <!-- Optional Body Measurements Grid (Can be filled later in Заміри) -->
+          <div class="space-y-1.5 pt-1 border-t border-gray-100 dark:border-slate-700/60">
+            <div class="flex items-center justify-between">
+              <span class="block font-bold text-gray-900 dark:text-white text-xs">Обхвати тіла (опціонально):</span>
+              <span class="text-[10px] text-gray-400">Можна заповнити пізніше</span>
+            </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват талії (см):</label>
-                <input type="number" step="0.5" id="ob-waist" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Талія (см):</label>
+                <input type="text" inputmode="decimal" enterkeyhint="next" id="ob-waist" placeholder="84.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div>
-                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват стегон (см):</label>
-                <input type="number" step="0.5" id="ob-hips" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Стегна (см):</label>
+                <input type="text" inputmode="decimal" enterkeyhint="next" id="ob-hips" placeholder="100.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div>
-                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват плеча (см):</label>
-                <input type="number" step="0.5" id="ob-bicep" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Плече / біцепс (см):</label>
+                <input type="text" inputmode="decimal" enterkeyhint="next" id="ob-bicep" placeholder="38.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div>
-                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват грудей (см):</label>
-                <input type="number" step="0.5" id="ob-chest" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Груди (см):</label>
+                <input type="text" inputmode="decimal" enterkeyhint="next" id="ob-chest" placeholder="106.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div class="col-span-2">
-                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват стегна (см):</label>
-                <input type="number" step="0.5" id="ob-thigh" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Стегно (см):</label>
+                <input type="text" inputmode="decimal" enterkeyhint="done" id="ob-thigh" placeholder="60.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
             </div>
           </div>
@@ -588,7 +685,59 @@
       </div>
     </div>
 
-    <!-- Modal for Adding or Editing Body Measurement Record -->
+    <!-- Modal for Unified Weekly Check-in (All 6 metrics at once) -->
+    <div id="weekly-checkin-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3.5 border border-gray-100 dark:border-slate-700 my-auto">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Тижневий чекін замірів</h3>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">Підставлено попередні значення — змініть лише потрібні</p>
+          </div>
+          <button id="close-wc-modal-x" type="button" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg">✕</button>
+        </div>
+
+        <form id="weekly-checkin-form" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-gray-600 dark:text-gray-300 mb-1">Дата замірів:</label>
+            <input type="date" id="wc-date" required class="w-full py-2 px-3 text-xs font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Вага (кг):</label>
+              <input type="text" inputmode="decimal" enterkeyhint="next" id="wc-weight" placeholder="76.6" class="w-full py-2 px-2.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Талія (см):</label>
+              <input type="text" inputmode="decimal" enterkeyhint="next" id="wc-waist" placeholder="84.0" class="w-full py-2 px-2.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Груди (см):</label>
+              <input type="text" inputmode="decimal" enterkeyhint="next" id="wc-chest" placeholder="106.0" class="w-full py-2 px-2.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Стегна (см):</label>
+              <input type="text" inputmode="decimal" enterkeyhint="next" id="wc-hips" placeholder="100.0" class="w-full py-2 px-2.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Плече (см):</label>
+              <input type="text" inputmode="decimal" enterkeyhint="next" id="wc-bicep" placeholder="38.0" class="w-full py-2 px-2.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Стегно (см):</label>
+              <input type="text" inputmode="decimal" enterkeyhint="done" id="wc-thigh" placeholder="60.0" class="w-full py-2 px-2.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-2 pt-2">
+            <button id="wc-cancel-btn" type="button" class="px-4 py-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition">Скасувати</button>
+            <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm">Зберегти всі заміри</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal for Adding or Editing Single Body Measurement Record -->
     <div id="add-measurement-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
       <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-gray-100 dark:border-slate-700">
         <div class="flex items-center justify-between">
@@ -600,13 +749,12 @@
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Значення (<span id="modal-metric-unit">кг</span>):</label>
             <input 
-              type="number" 
-              id="modal-metric-input" 
-              step="0.1" 
+              type="text" 
               inputmode="decimal"
               enterkeyhint="done"
+              id="modal-metric-input" 
               class="w-full text-center text-xl font-bold py-2.5 px-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="0"
+              placeholder="0.0"
             >
           </div>
 
@@ -636,7 +784,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Вкажіть бажану вагу (кг):</label>
-          <input type="number" step="0.1" id="tw-modal-input" placeholder="Наприклад 80.0" inputmode="decimal" enterkeyhint="done" class="w-full text-center text-xl font-bold py-2.5 px-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <input type="text" inputmode="decimal" enterkeyhint="done" id="tw-modal-input" placeholder="Наприклад 80.0" class="w-full text-center text-xl font-bold py-2.5 px-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
         <div class="flex justify-end space-x-2 pt-1">
           <button id="tw-modal-delete-btn" type="button" class="px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition">Видалити ціль</button>
@@ -662,6 +810,18 @@
       </div>
     </div>
 
+    <!-- Clear History Confirmation Modal -->
+    <div id="clear-history-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3.5 border border-gray-100 dark:border-slate-700">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Очистити всю історію?</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-300">Усі збережені записи попередніх днів будуть видалені без можливості відновлення.</p>
+        <div class="flex justify-end space-x-2 pt-1">
+          <button id="clear-hist-cancel-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition">Скасувати</button>
+          <button id="clear-hist-confirm-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition">Очистити</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -670,38 +830,53 @@
     // ==========================================
     const BACKEND_URL = "https://anatoliihordiienko.pythonanywhere.com";
 
+    function parseDecimalInput(raw) {
+      if (raw === null || raw === undefined) return 0;
+      const normalized = String(raw).replace(",", ".").replace(/[^0-9.]/g, "");
+      const num = parseFloat(normalized);
+      return Number.isFinite(num) ? Math.max(0, num) : 0;
+    }
+
     // ==========================================
     // ЛОГІКА ДОБИ РАЦІОНУ (Скидання о 03:00 ранку)
     // ==========================================
     function getShiftedDietDate(dateObj = new Date()) {
-      // Зсуваємо час на 3 години назад: інтервал з 03:00 до 02:59 наступного дня належить до однієї доби раціону
       return new Date(dateObj.getTime() - 3 * 60 * 60 * 1000);
     }
 
     function getDietDayKey(dateObj = new Date()) {
       const d = getShiftedDietDate(dateObj);
       const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     }
 
     function getDietDayFormatted(dateObj = new Date()) {
       const d = getShiftedDietDate(dateObj);
-      return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+      return d.toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
     }
 
     let activeDietDay = getDietDayKey();
 
-    // Надійне автоматичне отримання ID користувача з Telegram WebApp або URL
+    // Автоматичне визначення та збереження прив'язки до Telegram ID
     function getSyncUserId() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const qId = urlParams.get('tgId') || urlParams.get('userId');
+        const qId = urlParams.get("tgId") || urlParams.get("userId");
         if (qId) {
-          const cleanId = String(qId).replace('tg_', '');
-          localStorage.setItem("diet_permanent_tg_id", cleanId);
-          return cleanId;
+          const cleanId = String(qId).replace("tg_", "").trim();
+          if (cleanId) {
+            localStorage.setItem("diet_permanent_tg_id", cleanId);
+            return cleanId;
+          }
+        }
+        const qToken = urlParams.get("token");
+        if (qToken && qToken.trim()) {
+          localStorage.setItem("diet_auth_token", qToken.trim());
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+          }
         }
       } catch (e) {}
 
@@ -709,31 +884,33 @@
         const initData = window.Telegram.WebApp.initDataUnsafe;
         if (initData && initData.user && initData.user.id) {
           const uId = String(initData.user.id);
-          localStorage.setItem("diet_permanent_tg_id", uId);
+          try {
+            localStorage.setItem("diet_permanent_tg_id", uId);
+          } catch (e) {}
           return uId;
         }
       }
 
-      const cachedTgId = localStorage.getItem("diet_permanent_tg_id");
-      if (cachedTgId) return String(cachedTgId).replace('tg_', '');
+      try {
+        const cachedTgId = localStorage.getItem("diet_permanent_tg_id");
+        if (cachedTgId) return String(cachedTgId).replace("tg_", "");
+      } catch (e) {}
 
       return "167040233";
     }
 
-    function getSyncHeaders(includeContentType = false) {
-      const headers = {};
-      if (includeContentType) {
-        headers["Content-Type"] = "application/json";
-      }
+    function getAuthHeaders() {
+      const headers = { "Content-Type": "application/json" };
       if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.initData === "string" && window.Telegram.WebApp.initData.length > 0) {
         headers["X-Telegram-Init-Data"] = window.Telegram.WebApp.initData;
       }
+      try {
+        const tok = localStorage.getItem("diet_auth_token");
+        if (tok) headers["X-Auth-Token"] = tok;
+      } catch (e) {}
       return headers;
     }
 
-    // ==========================================
-    // ТОЧНІ НОРМИ ПРОДУКТІВ (ВСІ 8 КАТЕГОРІЙ А–Ж)
-    // ==========================================
     const MASTER_CATEGORIES = [
       {"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [
         {"id": "a_bobovi", "name": "Бобові", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 527, "protein": 34}, "deficit": {"base": 100, "kcal": 310, "protein": 20}, "surplus": {"base": 230, "kcal": 715, "protein": 46}},
@@ -803,10 +980,10 @@
       {"id": "thigh", "name": "Обхват стегна", "unit": "см", "step": "0.5", "icon": "thigh", "target": "60.0"}
     ];
 
-    // User Profile Configuration (NO activity property)
+    // User Profile Configuration
     let userProfile = {
-      gender: 'male',
-      birthday: '1991-05-15',
+      gender: "male",
+      birthday: "1991-05-15",
       height: 183,
       weight: 76.6,
       startWeight: 76.6,
@@ -814,20 +991,22 @@
       hasCompletedOnboarding: false
     };
 
-    let currentGoalKey = 'deficit';
-    let currentFilter = 'all';
-    let currentView = 'calculator';
-    let selectedMetricId = 'weight';
+    let currentGoalKey = "deficit";
+    let currentFilter = "all";
+    let currentView = "calculator";
+    let selectedMetricId = "weight";
     let isEditingHistory = false;
     let editingRecordOriginalDate = null;
     let currentlyExpandedId = null;
 
+    // Measurements analytics state
+    let analyticsChartMode = "radar"; // "radar" | "corr_waist" | "corr_kcal"
+
     // Telegram WebApp setup
     const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
     let userId = getSyncUserId();
-    let userName = 'Користувач';
+    let userName = "Користувач";
 
-    // Розрахунок безпечних відступів для статус-бару Android та кнопок Telegram («Закрити» та меню бота)
     function applySafeAreaInsets() {
       let topInset = 0;
       let bottomInset = 0;
@@ -835,17 +1014,16 @@
       const isAndroid = /Android/i.test(navigator.userAgent);
       const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const isMobile = isAndroid || isIOS;
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 
       if (tg) {
-        const sysTop = (tg.safeAreaInset && typeof tg.safeAreaInset.top === 'number') ? tg.safeAreaInset.top : 0;
-        const contentTop = (tg.contentSafeAreaInset && typeof tg.contentSafeAreaInset.top === 'number') ? tg.contentSafeAreaInset.top : 0;
-        const sysBottom = (tg.safeAreaInset && typeof tg.safeAreaInset.bottom === 'number') ? tg.safeAreaInset.bottom : 0;
+        const sysTop = (tg.safeAreaInset && typeof tg.safeAreaInset.top === "number") ? tg.safeAreaInset.top : 0;
+        const contentTop = (tg.contentSafeAreaInset && typeof tg.contentSafeAreaInset.top === "number") ? tg.contentSafeAreaInset.top : 0;
+        const sysBottom = (tg.safeAreaInset && typeof tg.safeAreaInset.bottom === "number") ? tg.safeAreaInset.bottom : 0;
 
         topInset = sysTop + contentTop;
         bottomInset = sysBottom;
 
-        // При запуску ярлика з робочого столу Android Telegram відкриває WebView на весь екран від y=0
         const screenDiff = (window.screen && window.screen.height) ? (window.screen.height - window.innerHeight) : 999;
         const isEdgeToEdge = tg.isFullscreen || isStandalone || (isMobile && screenDiff < 95);
 
@@ -862,15 +1040,15 @@
       }
 
       const rootStyles = getComputedStyle(document.documentElement);
-      const cssTgSafe = parseFloat(rootStyles.getPropertyValue('--tg-safe-area-inset-top')) || 0;
-      const cssTgContent = parseFloat(rootStyles.getPropertyValue('--tg-content-safe-area-inset-top')) || 0;
+      const cssTgSafe = parseFloat(rootStyles.getPropertyValue("--tg-safe-area-inset-top")) || 0;
+      const cssTgContent = parseFloat(rootStyles.getPropertyValue("--tg-content-safe-area-inset-top")) || 0;
       if (cssTgSafe + cssTgContent > topInset) {
         topInset = cssTgSafe + cssTgContent;
       }
 
-      document.documentElement.style.setProperty('--app-top-inset', topInset + 'px');
+      document.documentElement.style.setProperty("--app-top-inset", topInset + "px");
       if (bottomInset > 0) {
-        document.documentElement.style.setProperty('--app-bottom-inset', bottomInset + 'px');
+        document.documentElement.style.setProperty("--app-bottom-inset", bottomInset + "px");
       }
     }
 
@@ -884,48 +1062,51 @@
           const u = tg.initDataUnsafe.user;
           if (u.id) {
             userId = String(u.id);
-            localStorage.setItem("diet_permanent_tg_id", userId);
+            try {
+              localStorage.setItem("diet_permanent_tg_id", userId);
+            } catch (e) {}
           }
-          userName = u.first_name || 'Користувач';
+          userName = u.first_name || "Користувач";
         }
         applyTelegramTheme();
         applySafeAreaInsets();
-        tg.onEvent('themeChanged', applyTelegramTheme);
-        tg.onEvent('safeAreaChanged', applySafeAreaInsets);
-        tg.onEvent('contentSafeAreaChanged', applySafeAreaInsets);
-        tg.onEvent('fullscreenChanged', applySafeAreaInsets);
-        tg.onEvent('viewportChanged', applySafeAreaInsets);
+        tg.onEvent("themeChanged", applyTelegramTheme);
+        tg.onEvent("safeAreaChanged", applySafeAreaInsets);
+        tg.onEvent("contentSafeAreaChanged", applySafeAreaInsets);
+        tg.onEvent("fullscreenChanged", applySafeAreaInsets);
+        tg.onEvent("viewportChanged", applySafeAreaInsets);
       } catch (e) {}
     }
 
     function applyTelegramTheme() {
-      const isDark = (tg && tg.colorScheme === 'dark') || 
-                     (!tg && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const isDark = (tg && tg.colorScheme === "dark") ||
+                     (!tg && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
       if (isDark) {
-        document.documentElement.classList.add('dark');
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.remove("dark");
       }
     }
 
-    document.getElementById('user-name-display').textContent = userName;
+    document.getElementById("user-name-display").textContent = userName;
     applyTelegramTheme();
     applySafeAreaInsets();
-    window.addEventListener('resize', applySafeAreaInsets);
+    window.addEventListener("resize", applySafeAreaInsets);
     setTimeout(applySafeAreaInsets, 150);
     setTimeout(applySafeAreaInsets, 600);
     setTimeout(applySafeAreaInsets, 1500);
 
-    document.getElementById('theme-toggle-btn').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
+    document.getElementById("theme-toggle-btn").addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
     });
 
     // Storage Keys
-    const profileKey = 'diet_user_profile_' + userId;
-    const userBaseKey = 'diet_user_base_' + userId;
-    const userStateKey = 'diet_consumed_state_' + userId;
-    const historyKey = 'diet_history_' + userId;
-    const measurementsKey = 'diet_measurements_' + userId;
+    const profileKey = "diet_user_profile_" + userId;
+    const userBaseKey = "diet_user_base_" + userId;
+    const hiddenItemsKey = "diet_hidden_items_" + userId;
+    const userStateKey = "diet_consumed_state_" + userId;
+    const historyKey = "diet_history_" + userId;
+    const measurementsKey = "diet_measurements_" + userId;
 
     // Load User Profile from localStorage
     try {
@@ -947,10 +1128,11 @@
       return Math.max(16, age);
     }
 
+    // Exact Metabolic Formula (Mifflin-St Jeor with fixed 1.62 multiplier)
     function calculateUserMetabolism() {
       const age = calculateAge(userProfile.birthday);
       let bmr = 0;
-      if (userProfile.gender === 'female') {
+      if (userProfile.gender === "female") {
         bmr = 10 * userProfile.weight + 6.25 * userProfile.height - 5 * age - 161;
       } else {
         bmr = 10 * userProfile.weight + 6.25 * userProfile.height - 5 * age + 5;
@@ -990,12 +1172,20 @@
       } catch (e) {}
     }
 
-    // Load Custom Baselines
+    // Load Custom Baselines & Hidden Products Map
     let customBaseMap = {};
     try {
       const savedBases = localStorage.getItem(userBaseKey);
       if (savedBases) customBaseMap = JSON.parse(savedBases);
     } catch (e) {}
+
+    let hiddenItemsMap = {};
+    try {
+      const savedHidden = localStorage.getItem(hiddenItemsKey);
+      if (savedHidden) hiddenItemsMap = JSON.parse(savedHidden);
+    } catch (e) {}
+
+    let openSettingsCats = {};
 
     // State: consumed weights (initialized to 0; only loaded if dietDayKey matches current day)
     let consumed = {};
@@ -1018,12 +1208,11 @@
         const savedDay = parsed.dietDayKey || (parsed.savedAt ? getDietDayKey(new Date(parsed.savedAt)) : null);
         if (savedDay === activeDietDay && parsed.consumed) {
           for (const k in parsed.consumed) {
-            if (consumed.hasOwnProperty(k)) {
+            if (Object.prototype.hasOwnProperty.call(consumed, k)) {
               consumed[k] = Number(parsed.consumed[k]) || 0;
             }
           }
         } else {
-          // Настав новий день (після 03:00) — обнуляємо поточний раціон
           resetConsumedObject();
           localStorage.setItem(userStateKey, JSON.stringify({
             dietDayKey: activeDietDay,
@@ -1045,11 +1234,11 @@
     // User Body Measurements storage
     let measurementsData = {
       weight: [{ date: getDietDayKey(), val: userProfile.weight || 76.6 }],
-      bicep: [],
-      chest: [],
-      waist: [],
-      hips: [],
-      thigh: []
+      bicep: [{ date: getDietDayKey(), val: 38.0 }],
+      chest: [{ date: getDietDayKey(), val: 106.0 }],
+      waist: [{ date: getDietDayKey(), val: 84.0 }],
+      hips: [{ date: getDietDayKey(), val: 100.0 }],
+      thigh: [{ date: getDietDayKey(), val: 60.0 }]
     };
 
     try {
@@ -1063,10 +1252,9 @@
       } catch (e) {}
     }
 
-    // Update weekly measurement reminder dot & banner
     function updateReminderBadges() {
-      const dotEl = document.getElementById('tab-measurement-red-dot');
-      const bannerEl = document.getElementById('weekly-reminder-banner');
+      const dotEl = document.getElementById("tab-measurement-red-dot");
+      const bannerEl = document.getElementById("weekly-reminder-banner");
       const weightHist = measurementsData.weight || [];
 
       let needsReminder = false;
@@ -1081,8 +1269,8 @@
         }
       }
 
-      if (dotEl) dotEl.classList.toggle('hidden', !needsReminder);
-      if (bannerEl) bannerEl.classList.toggle('hidden', !needsReminder);
+      if (dotEl) dotEl.classList.toggle("hidden", !needsReminder);
+      if (bannerEl) bannerEl.classList.toggle("hidden", !needsReminder);
     }
 
     // ==========================================
@@ -1091,60 +1279,62 @@
     let lastCloudSyncTime = null;
     let lastCloudSyncError = null;
 
-    function setSyncBadgeState(state, detailMsg = '') {
-      const badge = document.getElementById('autosave-badge');
-      const textEl = document.getElementById('sync-status-text');
-      const detailEl = document.getElementById('settings-sync-detail');
+    function setSyncBadgeState(state, detailMsg = "") {
+      const badge = document.getElementById("autosave-badge");
+      const textEl = document.getElementById("sync-status-text");
+      const detailEl = document.getElementById("settings-sync-detail");
       if (badge && textEl) {
-        if (state === 'syncing') {
-          badge.style.opacity = '0.75';
-          textEl.textContent = 'Синхрон...';
-        } else if (state === 'offline') {
-          badge.style.opacity = '1';
-          textEl.textContent = 'Локально';
+        if (state === "syncing") {
+          badge.style.opacity = "0.75";
+          textEl.textContent = "Синхрон...";
+        } else if (state === "offline") {
+          badge.style.opacity = "1";
+          textEl.textContent = "Локально";
         } else {
-          badge.style.opacity = '1';
-          textEl.textContent = 'Збережено';
+          badge.style.opacity = "1";
+          textEl.textContent = "Збережено";
         }
       }
       if (detailEl) {
         if (detailMsg) {
           detailEl.textContent = detailMsg;
-        } else if (state === 'syncing') {
-          detailEl.textContent = 'Обмін даними із сервером...';
-        } else if (state === 'offline') {
-          detailEl.textContent = `Локальний режим${lastCloudSyncError ? ' (' + lastCloudSyncError + ')' : ''}`;
+        } else if (state === "syncing") {
+          detailEl.textContent = "Обмін даними із сервером...";
+        } else if (state === "offline") {
+          detailEl.textContent = `Немає зв'язку з сервером${lastCloudSyncError ? " (" + lastCloudSyncError + ")" : ""}`;
         } else if (lastCloudSyncTime) {
           detailEl.textContent = `Синхронізовано о ${lastCloudSyncTime}`;
+        } else {
+          detailEl.textContent = "Готово до синхронізації";
         }
       }
     }
 
     async function syncLoadFromServer() {
       const syncId = getSyncUserId();
-      setSyncBadgeState('syncing');
+      setSyncBadgeState("syncing");
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
-          method: 'GET',
-          headers: getSyncHeaders(false),
-          cache: 'no-store',
+          method: "GET",
+          headers: getAuthHeaders(),
+          cache: "no-store",
           signal: controller.signal
         });
         clearTimeout(timeoutId);
 
         if (!resp.ok) {
           lastCloudSyncError = `HTTP ${resp.status}`;
-          setSyncBadgeState('offline');
+          setSyncBadgeState("offline");
           return false;
         }
 
         const json = await resp.json();
         lastCloudSyncError = null;
-        lastCloudSyncTime = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        lastCloudSyncTime = new Date().toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" });
 
         if (json.exists && json.data) {
           const remote = json.data;
@@ -1156,6 +1346,10 @@
           if (remote.customBaseMap) {
             customBaseMap = remote.customBaseMap;
             localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
+          }
+          if (remote.hiddenItemsMap) {
+            hiddenItemsMap = remote.hiddenItemsMap;
+            localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
           }
           if (remote.measurementsData) {
             measurementsData = remote.measurementsData;
@@ -1169,13 +1363,12 @@
             currentGoalKey = remote.currentGoal;
           }
 
-          // Перевіряємо, до якої доби раціону (з 03:00 до 02:59) належать дані на сервері
           const currentDay = getDietDayKey();
           const remoteDay = remote.dietDayKey || (remote.lastUpdated ? getDietDayKey(new Date(remote.lastUpdated)) : null);
 
           if (remoteDay === currentDay && remote.consumed) {
             for (const k in remote.consumed) {
-              if (consumed.hasOwnProperty(k)) {
+              if (Object.prototype.hasOwnProperty.call(consumed, k)) {
                 consumed[k] = Number(remote.consumed[k]) || 0;
               }
             }
@@ -1190,19 +1383,17 @@
             consumed: consumed
           }));
 
-          setSyncBadgeState('saved');
+          setSyncBadgeState("saved");
           return true;
         } else {
-          setSyncBadgeState('saved', 'Очікує першого збереження...');
-          if (userProfile.hasCompletedOnboarding) {
-            await syncSaveToServer(true);
-          }
+          setSyncBadgeState("saved", "Створення першого бекапу на сервері...");
+          await syncSaveToServer(true);
           return false;
         }
       } catch (e) {
         clearTimeout(timeoutId);
-        lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'офлайн';
-        setSyncBadgeState('offline');
+        lastCloudSyncError = e.name === "AbortError" ? "таймаут 10с" : "мережа/CORS";
+        setSyncBadgeState("offline");
         return false;
       }
     }
@@ -1210,7 +1401,7 @@
     let cloudSyncTimer = null;
     function syncSaveToServer(immediate = false) {
       clearTimeout(cloudSyncTimer);
-      setSyncBadgeState('syncing');
+      setSyncBadgeState("syncing");
 
       const executeSave = async () => {
         const syncId = getSyncUserId();
@@ -1218,6 +1409,7 @@
           dietDayKey: getDietDayKey(),
           userProfile: userProfile,
           customBaseMap: customBaseMap,
+          hiddenItemsMap: hiddenItemsMap,
           consumed: consumed,
           measurementsData: measurementsData,
           historyRecords: historyRecords,
@@ -1230,8 +1422,8 @@
 
         try {
           const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
-            method: 'POST',
-            headers: getSyncHeaders(true),
+            method: "POST",
+            headers: getAuthHeaders(),
             body: JSON.stringify({ userId: syncId, payload: payload }),
             signal: controller.signal
           });
@@ -1239,18 +1431,18 @@
 
           if (resp.ok) {
             lastCloudSyncError = null;
-            lastCloudSyncTime = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-            setSyncBadgeState('saved');
+            lastCloudSyncTime = new Date().toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" });
+            setSyncBadgeState("saved");
             return true;
           } else {
             lastCloudSyncError = `HTTP ${resp.status}`;
-            setSyncBadgeState('offline');
+            setSyncBadgeState("offline");
             return false;
           }
         } catch (e) {
           clearTimeout(timeoutId);
-          lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'офлайн';
-          setSyncBadgeState('offline');
+          lastCloudSyncError = e.name === "AbortError" ? "таймаут 10с" : "мережа/CORS";
+          setSyncBadgeState("offline");
           return false;
         }
       };
@@ -1268,15 +1460,15 @@
       const ratio = meta.scaleRatio;
 
       let rawSpecs = it.deficit;
-      if (currentGoalKey === 'maintenance') rawSpecs = it.maintenance;
-      else if (currentGoalKey === 'surplus') rawSpecs = it.surplus;
+      if (currentGoalKey === "maintenance") rawSpecs = it.maintenance;
+      else if (currentGoalKey === "surplus") rawSpecs = it.surplus;
 
       if (!rawSpecs) rawSpecs = it.maintenance;
 
       let scaledBase = rawSpecs.base;
-      if (it.unit === 'г') {
+      if (it.unit === "г") {
         scaledBase = Math.round(rawSpecs.base * ratio);
-      } else if (it.unit === 'шт') {
+      } else if (it.unit === "шт") {
         scaledBase = Math.max(1, Math.round(rawSpecs.base * Math.sqrt(ratio)));
       }
 
@@ -1314,18 +1506,20 @@
       return specs.protein;
     }
 
-    // Build DOM structure
+    // ==========================================
+    // CALCULATOR DOM & VALUE UPDATES
+    // ==========================================
     function buildCalculatorDOM() {
-      const container = document.getElementById('categories-container');
-      container.innerHTML = '';
+      const container = document.getElementById("categories-container");
+      container.innerHTML = "";
 
       MASTER_CATEGORIES.forEach(cat => {
-        const section = document.createElement('section');
-        section.id = 'category-' + cat.id;
-        section.className = 'category-section space-y-2';
+        const section = document.createElement("section");
+        section.id = "category-" + cat.id;
+        section.className = "category-section space-y-2";
 
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-2.5 border border-gray-100 dark:border-slate-700 flex flex-col space-y-1';
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-2.5 border border-gray-100 dark:border-slate-700 flex flex-col space-y-1";
         headerDiv.innerHTML = `
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -1347,13 +1541,13 @@
         `;
         section.appendChild(headerDiv);
 
-        const listDiv = document.createElement('div');
-        listDiv.className = 'space-y-1 bg-white dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-800 divide-y divide-gray-100 dark:divide-slate-800';
+        const listDiv = document.createElement("div");
+        listDiv.className = "space-y-1 bg-white dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-800 divide-y divide-gray-100 dark:divide-slate-800";
 
         cat.items.forEach(it => {
-          const card = document.createElement('div');
-          card.id = 'card-' + it.id;
-          card.className = 'product-card p-3 transition-colors';
+          const card = document.createElement("div");
+          card.id = "card-" + it.id;
+          card.className = "product-card p-3 transition-colors";
 
           card.innerHTML = `
             <div class="flex items-center justify-between cursor-pointer item-toggle-row" data-toggle-id="${it.id}">
@@ -1403,14 +1597,13 @@
                 
                 <div class="flex items-center space-x-1 shrink-0">
                   <input 
-                    type="number" 
+                    type="text" 
                     id="input-${it.id}" 
                     data-item-id="${it.id}"
                     data-cat-id="${cat.id}"
-                    min="0" 
-                    step="1"
                     inputmode="decimal"
                     enterkeyhint="done"
+                    autocomplete="off"
                     value=""
                     placeholder="0"
                     class="w-16 text-center py-1.5 px-1.5 text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
@@ -1450,10 +1643,11 @@
       let grandTotalProtein = 0;
 
       MASTER_CATEGORIES.forEach(cat => {
-        const isVisible = (currentFilter === 'all' || currentFilter === cat.id);
-        const section = document.getElementById('category-' + cat.id);
+        const isFilterMatch = (currentFilter === "all" || currentFilter === cat.id);
+        const visibleItemsCount = cat.items.filter(it => !hiddenItemsMap[it.id]).length;
+        const section = document.getElementById("category-" + cat.id);
         if (section) {
-          section.style.display = isVisible ? 'block' : 'none';
+          section.style.display = (isFilterMatch && visibleItemsCount > 0) ? "block" : "none";
         }
 
         let catFraction = 0;
@@ -1468,26 +1662,26 @@
         const remainingFraction = Math.max(0, 1.0 - catFraction);
         const remPct = Math.max(0, Math.round(remainingFraction * 100));
 
-        const catBadge = document.getElementById('cat-badge-' + cat.id);
-        const catProg = document.getElementById('cat-progress-' + cat.id);
+        const catBadge = document.getElementById("cat-badge-" + cat.id);
+        const catProg = document.getElementById("cat-progress-" + cat.id);
         if (catBadge) {
           if (isExceeded) {
             catBadge.textContent = `Перевищено: ${usedPct}%`;
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 animate-pulse';
+            catBadge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 animate-pulse";
           } else if (usedPct >= 100) {
-            catBadge.textContent = 'Заповнено 100%';
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300';
+            catBadge.textContent = "Заповнено 100%";
+            catBadge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300";
           } else if (usedPct > 0) {
             catBadge.textContent = `Залишок: ${remPct}%`;
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300';
+            catBadge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300";
           } else {
-            catBadge.textContent = `Залишок: 100%`;
-            catBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300';
+            catBadge.textContent = "Залишок: 100%";
+            catBadge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300";
           }
         }
         if (catProg) {
-          catProg.style.width = Math.min(100, usedPct) + '%';
-          catProg.style.backgroundColor = isExceeded ? '#EA580C' : cat.badgeBg;
+          catProg.style.width = Math.min(100, usedPct) + "%";
+          catProg.style.backgroundColor = isExceeded ? "#EA580C" : cat.badgeBg;
         }
 
         cat.items.forEach(it => {
@@ -1516,35 +1710,36 @@
           const isConsumed = itemWeight > 0;
           const isItemOverBudget = itemWeight > maxAllowedWeight && maxAllowedWeight > 0;
 
-          const card = document.getElementById('card-' + it.id);
-          const nameEl = document.getElementById('name-' + it.id);
-          const consumedEl = document.getElementById('consumed-' + it.id);
-          const maxEl = document.getElementById('max-' + it.id);
-          const statsEl = document.getElementById('stats-' + it.id);
-          const noteEl = document.getElementById('quota-note-' + it.id);
-          const baseLabel = document.getElementById('base-label-' + it.id);
-          const slider = document.getElementById('slider-' + it.id);
-          const numInput = document.getElementById('input-' + it.id);
+          const card = document.getElementById("card-" + it.id);
+          const nameEl = document.getElementById("name-" + it.id);
+          const consumedEl = document.getElementById("consumed-" + it.id);
+          const maxEl = document.getElementById("max-" + it.id);
+          const statsEl = document.getElementById("stats-" + it.id);
+          const noteEl = document.getElementById("quota-note-" + it.id);
+          const baseLabel = document.getElementById("base-label-" + it.id);
+          const slider = document.getElementById("slider-" + it.id);
+          const numInput = document.getElementById("input-" + it.id);
 
           if (nameEl) {
             nameEl.textContent = specs.name;
           }
 
           if (card) {
+            card.style.display = hiddenItemsMap[it.id] ? "none" : "block";
             if (isItemOverBudget) {
-              card.className = 'product-card p-3 transition-colors bg-amber-50/40 dark:bg-amber-950/20';
+              card.className = "product-card p-3 transition-colors bg-amber-50/40 dark:bg-amber-950/20";
             } else if (isConsumed) {
-              card.className = 'product-card p-3 transition-colors bg-blue-50/30 dark:bg-blue-950/20';
+              card.className = "product-card p-3 transition-colors bg-blue-50/30 dark:bg-blue-950/20";
             } else {
-              card.className = 'product-card p-3 transition-colors';
+              card.className = "product-card p-3 transition-colors";
             }
           }
 
           if (consumedEl) {
             consumedEl.textContent = itemWeight;
             consumedEl.className = isItemOverBudget 
-              ? 'text-amber-600 dark:text-amber-400 font-bold'
-              : (isConsumed ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-900 dark:text-white font-bold');
+              ? "text-amber-600 dark:text-amber-400 font-bold"
+              : (isConsumed ? "text-blue-600 dark:text-blue-400 font-bold" : "text-gray-900 dark:text-white font-bold");
           }
           if (maxEl) {
             maxEl.textContent = isConsumed ? maxAllowedWeight : remainingWeight;
@@ -1570,19 +1765,17 @@
           if (slider) {
             const sliderMax = Math.max(itemWeight, maxAllowedWeight, 1);
             slider.max = sliderMax;
-            if (sourceType === 'input' && activeItemId === it.id) {
+            if (sourceType === "input" && activeItemId === it.id) {
               slider.value = Math.min(sliderMax, itemWeight);
             } else if (activeItemId !== it.id) {
               slider.value = Math.min(sliderMax, itemWeight);
             }
           }
           if (numInput) {
-            // Never show pre-filled '0' — keep empty string with placeholder="0" when itemWeight === 0
-            const displayVal = itemWeight === 0 ? '' : String(itemWeight);
-            if (sourceType === 'slider' && activeItemId === it.id) {
-              numInput.value = displayVal;
-            } else if (activeItemId !== it.id) {
-              numInput.value = displayVal;
+            if (sourceType === "slider" && activeItemId === it.id) {
+              numInput.value = itemWeight > 0 ? itemWeight : "";
+            } else if (activeItemId !== it.id && document.activeElement !== numInput) {
+              numInput.value = itemWeight > 0 ? itemWeight : "";
             }
           }
         });
@@ -1592,13 +1785,18 @@
       const topCalories = Math.round(grandTotalCalories);
       const caloriesPct = Math.min(100, Math.round((topCalories / targetCalories) * 100));
 
-      document.getElementById('top-protein-value').textContent = `${topProtein} грам`;
-      document.getElementById('top-calories-value').textContent = topCalories.toLocaleString('uk-UA');
-      document.getElementById('top-calories-bar').style.width = `${caloriesPct}%`;
-      document.getElementById('top-calories-percent').textContent = `${caloriesPct}% від норми`;
+      document.getElementById("top-protein-value").textContent = `${topProtein} грам`;
+      document.getElementById("top-calories-value").textContent = topCalories.toLocaleString("uk-UA");
+      document.getElementById("top-calories-bar").style.width = `${caloriesPct}%`;
+      document.getElementById("top-calories-percent").textContent = `${caloriesPct}% від норми`;
 
       const remainingKcal = Math.max(0, targetCalories - topCalories);
-      document.getElementById('top-calories-remaining').textContent = `Залишок: ${remainingKcal.toLocaleString('uk-UA')} ккал`;
+      document.getElementById("top-calories-remaining").textContent = `Залишок: ${remainingKcal.toLocaleString("uk-UA")} ккал`;
+
+      const compactKcal = document.getElementById("compact-kb-kcal");
+      const compactProt = document.getElementById("compact-kb-prot");
+      if (compactKcal) compactKcal.textContent = `🔥 ${topCalories.toLocaleString("uk-UA")} / ${targetCalories.toLocaleString("uk-UA")} ккал`;
+      if (compactProt) compactProt.textContent = `🥩 ${topProtein} г білка`;
 
       triggerAutoSave(topCalories, topProtein);
       updateReminderBadges();
@@ -1606,7 +1804,7 @@
 
     let saveTimeout = null;
     function triggerAutoSave(totalKcal, totalProtein) {
-      setSyncBadgeState('syncing');
+      setSyncBadgeState("syncing");
 
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
@@ -1632,12 +1830,17 @@
 
     function updateDailyHistoryAuto(totalKcal, totalProtein) {
       const consumedList = [];
+      const categoryShares = {};
       MASTER_CATEGORIES.forEach(cat => {
+        let catFrac = 0;
         cat.items.forEach(it => {
           const w = consumed[it.id] || 0;
+          const baseW = getItemEffectiveBase(it);
+          if (baseW > 0 && w > 0) {
+            catFrac += (w / baseW);
+          }
           if (w > 0) {
             const specs = getItemSpecs(it);
-            const baseW = getItemEffectiveBase(it);
             const baseK = getItemEffectiveKcal(it);
             const baseP = getItemEffectiveProtein(it);
             const f = baseW > 0 ? (w / baseW) : 0;
@@ -1651,6 +1854,9 @@
             });
           }
         });
+        if (catFrac > 0.005) {
+          categoryShares[cat.id] = Math.round(catFrac * 100);
+        }
       });
 
       const currentDayKey = getDietDayKey();
@@ -1682,6 +1888,7 @@
           totalCalories: totalKcal,
           totalProtein: totalProtein,
           itemsCount: consumedList.length,
+          categoryShares: categoryShares,
           items: consumedList
         };
         historyRecords.unshift(todayEntry);
@@ -1692,6 +1899,7 @@
         todayEntry.totalCalories = totalKcal;
         todayEntry.totalProtein = totalProtein;
         todayEntry.itemsCount = consumedList.length;
+        todayEntry.categoryShares = categoryShares;
         todayEntry.items = consumedList;
       }
 
@@ -1701,129 +1909,53 @@
       } catch (e) {}
     }
 
-    // ==========================================
-    // MOBILE KEYBOARD UX (AUTO-SCROLL, ZERO HANDLING, ENTER ✓)
-    // ==========================================
-    (function setupMobileKeyboardUX() {
-      let blurTimer = null;
-
-      document.addEventListener('focusin', (e) => {
-        const inp = e.target;
-        if (!inp || inp.tagName !== 'INPUT') return;
-        if (!['number', 'text', 'tel', 'date'].includes(inp.type)) return;
-
-        clearTimeout(blurTimer);
-        document.body.classList.add('keyboard-open');
-
-        if (inp.value === '0' || inp.value === '0.0') {
-          inp.value = '';
-        } else if (inp.value.length > 0 && inp.type !== 'date') {
-          setTimeout(() => {
-            try { inp.select(); } catch (err) {}
-          }, 15);
-        }
-
-        const scrollTarget = inp.closest('.product-card') || inp.closest('#onboarding-form > div') || inp.closest('#add-measurement-modal .space-y-2\\.5 > div') || inp;
-        const doScroll = () => {
-          try {
-            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } catch (err) {}
-        };
-        setTimeout(doScroll, 120);
-        setTimeout(doScroll, 350);
-      });
-
-      document.addEventListener('keydown', (e) => {
-        const inp = e.target;
-        if (!inp || inp.tagName !== 'INPUT') return;
-
-        if (e.key === 'Enter' || e.keyCode === 13) {
-          const itemId = inp.getAttribute('data-item-id');
-          if (itemId) {
-            e.preventDefault();
-            const val = Math.max(0, Number(inp.value) || 0);
-            consumed[itemId] = val;
-            inp.blur();
-            closeAllProductDrawers();
-            updateValuesInPlace();
-            return;
-          }
-
-          if (!inp.closest('form')) {
-            e.preventDefault();
-            inp.blur();
-          }
-        }
-      });
-
-      document.addEventListener('focusout', (e) => {
-        const inp = e.target;
-        if (inp && inp.tagName === 'INPUT') {
-          const itemId = inp.getAttribute('data-item-id');
-          if (itemId) {
-            const val = Math.max(0, Number(inp.value) || 0);
-            consumed[itemId] = val;
-            inp.value = val === 0 ? '' : String(val);
-            updateValuesInPlace();
-          }
-        }
-
-        blurTimer = setTimeout(() => {
-          const active = document.activeElement;
-          if (!active || active.tagName !== 'INPUT') {
-            document.body.classList.remove('keyboard-open');
-          }
-        }, 150);
-      });
-    })();
-
     // Single-active accordion & click-outside-to-collapse
     let outsideClickBound = false;
     function attachListenersOnce() {
-      document.querySelectorAll('.item-toggle-row').forEach(row => {
-        row.addEventListener('click', (e) => {
+      document.querySelectorAll(".item-toggle-row").forEach(row => {
+        row.addEventListener("click", (e) => {
           e.stopPropagation();
-          const itemId = row.getAttribute('data-toggle-id');
+          const itemId = row.getAttribute("data-toggle-id");
           toggleProductDrawer(itemId);
         });
       });
 
-      document.querySelectorAll('.drawer-controls').forEach(drawer => {
-        drawer.addEventListener('click', (e) => {
+      document.querySelectorAll(".drawer-controls").forEach(drawer => {
+        drawer.addEventListener("click", (e) => {
           e.stopPropagation();
         });
       });
 
       if (!outsideClickBound) {
         outsideClickBound = true;
-        document.addEventListener('click', (e) => {
-          if (!e.target.closest('.product-card')) {
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".product-card") && !e.target.closest("#compact-keyboard-bar")) {
             closeAllProductDrawers();
           }
         });
       }
 
-      document.querySelectorAll('input[type=range][data-item-id]').forEach(slider => {
-        slider.addEventListener('input', (e) => {
-          const id = e.target.getAttribute('data-item-id');
+      document.querySelectorAll("input[type=range][data-item-id]").forEach(slider => {
+        slider.addEventListener("input", (e) => {
+          const id = e.target.getAttribute("data-item-id");
           consumed[id] = Number(e.target.value) || 0;
-          updateValuesInPlace('slider', id);
+          updateValuesInPlace("slider", id);
         });
       });
 
-      document.querySelectorAll('input[type=number][data-item-id]').forEach(numInput => {
-        numInput.addEventListener('input', (e) => {
-          const id = e.target.getAttribute('data-item-id');
-          const val = Math.max(0, Number(e.target.value) || 0);
+      document.querySelectorAll("input[data-item-id]:not([type=range])").forEach(numInput => {
+        numInput.addEventListener("input", (e) => {
+          const id = e.target.getAttribute("data-item-id");
+          const val = parseDecimalInput(e.target.value);
           consumed[id] = val;
-          updateValuesInPlace('input', id);
+          updateValuesInPlace("input", id);
         });
       });
 
-      document.querySelectorAll('.quick-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const id = e.target.getAttribute('data-item-id');
-          const action = e.target.getAttribute('data-action');
+      document.querySelectorAll(".quick-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const id = e.target.getAttribute("data-item-id");
+          const action = e.target.getAttribute("data-action");
           
           let targetCat = null;
           let targetItem = null;
@@ -1847,13 +1979,13 @@
           const maxFraction = Math.max(0, 1.0 - otherFractions);
           const maxAllowed = Math.round(maxFraction * baseWeight);
 
-          if (action === 'reset') {
+          if (action === "reset") {
             consumed[id] = 0;
-          } else if (action === 'quarter') {
+          } else if (action === "quarter") {
             consumed[id] = Math.min(maxAllowed, Math.round(baseWeight * 0.25));
-          } else if (action === 'half') {
+          } else if (action === "half") {
             consumed[id] = Math.min(maxAllowed, Math.round(baseWeight * 0.5));
-          } else if (action === 'max') {
+          } else if (action === "max") {
             consumed[id] = maxAllowed;
           }
           updateValuesInPlace();
@@ -1862,18 +1994,18 @@
     }
 
     function openProductDrawer(itemId) {
-      const drawer = document.getElementById('drawer-' + itemId);
-      const chevron = document.getElementById('chevron-' + itemId);
-      if (drawer) drawer.classList.remove('hidden');
-      if (chevron) chevron.style.transform = 'rotate(180deg)';
+      const drawer = document.getElementById("drawer-" + itemId);
+      const chevron = document.getElementById("chevron-" + itemId);
+      if (drawer) drawer.classList.remove("hidden");
+      if (chevron) chevron.style.transform = "rotate(180deg)";
       currentlyExpandedId = itemId;
     }
 
     function closeProductDrawer(itemId) {
-      const drawer = document.getElementById('drawer-' + itemId);
-      const chevron = document.getElementById('chevron-' + itemId);
-      if (drawer) drawer.classList.add('hidden');
-      if (chevron) chevron.style.transform = 'rotate(0deg)';
+      const drawer = document.getElementById("drawer-" + itemId);
+      const chevron = document.getElementById("chevron-" + itemId);
+      if (drawer) drawer.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
       if (currentlyExpandedId === itemId) currentlyExpandedId = null;
     }
 
@@ -1895,10 +2027,10 @@
     }
 
     // Goal change handler
-    document.querySelectorAll('.goal-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const targetBtn = e.target.closest('.goal-btn');
-        const goal = targetBtn.getAttribute('data-goal');
+    document.querySelectorAll(".goal-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const targetBtn = e.target.closest(".goal-btn");
+        const goal = targetBtn.getAttribute("data-goal");
         const meta = calculateUserMetabolism();
         if (meta.goals[goal]) {
           currentGoalKey = goal;
@@ -1911,154 +2043,687 @@
 
     function updateGoalButtonsUI() {
       const meta = calculateUserMetabolism();
-      document.getElementById('label-goal-deficit').textContent = `${meta.goals.deficit.targetKcal} ккал`;
-      document.getElementById('label-goal-maint').textContent = `${meta.goals.maintenance.targetKcal} ккал`;
-      document.getElementById('label-goal-surplus').textContent = `${meta.goals.surplus.targetKcal} ккал`;
+      document.getElementById("label-goal-deficit").textContent = `${meta.goals.deficit.targetKcal} ккал`;
+      document.getElementById("label-goal-maint").textContent = `${meta.goals.maintenance.targetKcal} ккал`;
+      document.getElementById("label-goal-surplus").textContent = `${meta.goals.surplus.targetKcal} ккал`;
 
-      document.querySelectorAll('.goal-btn').forEach(btn => {
-        const g = btn.getAttribute('data-goal');
+      document.querySelectorAll(".goal-btn").forEach(btn => {
+        const g = btn.getAttribute("data-goal");
         if (g === currentGoalKey) {
-          btn.className = 'goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold';
+          btn.className = "goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold";
         } else {
-          btn.className = 'goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400 font-semibold';
+          btn.className = "goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400 font-semibold";
         }
       });
       const target = meta.goals[currentGoalKey].targetKcal;
-      document.getElementById('top-target-label').textContent = `/ ${target.toLocaleString('uk-UA')} ккал`;
+      document.getElementById("top-target-label").textContent = `/ ${target.toLocaleString("uk-UA")} ккал`;
 
-      const genderText = userProfile.gender === 'female' ? 'Жінка' : 'Чоловік';
-      document.getElementById('athlete-profile-summary').textContent = `${genderText}, ${meta.age} р, ${userProfile.height} см • ${userProfile.weight} кг`;
+      const genderText = userProfile.gender === "female" ? "Жінка" : "Чоловік";
+      document.getElementById("athlete-profile-summary").textContent = `${genderText}, ${meta.age} р, ${userProfile.height} см • ${userProfile.weight} кг`;
     }
 
     // Filter pills
-    document.querySelectorAll('.cat-pill').forEach(pill => {
-      pill.addEventListener('click', (e) => {
-        currentFilter = e.target.getAttribute('data-cat-filter');
-        document.querySelectorAll('.cat-pill').forEach(p => {
-          p.className = 'cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 transition font-medium';
+    document.querySelectorAll(".cat-pill").forEach(pill => {
+      pill.addEventListener("click", (e) => {
+        currentFilter = e.target.getAttribute("data-cat-filter");
+        document.querySelectorAll(".cat-pill").forEach(p => {
+          p.className = "cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 transition font-medium";
         });
-        e.target.className = 'cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs font-semibold';
+        e.target.className = "cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs font-semibold";
         closeAllProductDrawers();
         updateValuesInPlace();
       });
     });
 
     // Reset Day Flow
-    const resetModal = document.getElementById('reset-modal');
-    document.getElementById('reset-day-btn').addEventListener('click', () => {
-      resetModal.classList.remove('hidden');
+    const resetModal = document.getElementById("reset-modal");
+    document.getElementById("reset-day-btn").addEventListener("click", () => {
+      resetModal.classList.remove("hidden");
     });
 
-    document.getElementById('modal-cancel-btn').addEventListener('click', () => {
-      resetModal.classList.add('hidden');
+    document.getElementById("modal-cancel-btn").addEventListener("click", () => {
+      resetModal.classList.add("hidden");
     });
 
-    document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+    document.getElementById("modal-confirm-btn").addEventListener("click", () => {
       resetConsumedObject();
-      resetModal.classList.add('hidden');
+      resetModal.classList.add("hidden");
       updateValuesInPlace();
-      showToast('Дані успішно скинуто!');
+      showToast("Дані успішно скинуто!");
     });
 
     // ==========================================
-    // BODY MEASUREMENTS (ЗАМІРИ) MODULE
+    // MOBILE KEYBOARD UX (SAFE-ZONE CENTERING + ✓ CONFIRMATION)
     // ==========================================
-    function renderMeasurementsList() {
-      const container = document.getElementById('measurements-container');
-      container.innerHTML = '';
+    (function setupMobileKeyboardUX() {
+      let blurTimer = null;
 
-      MEASUREMENTS_CONFIG.forEach(metric => {
-        const history = measurementsData[metric.id] || [];
-        const latest = history.length > 0 ? history[history.length - 1] : null;
-        const currentVal = latest ? latest.val : '--';
-        
-        let changeText = 'Немає даних';
-        let changeClass = 'text-gray-400';
+      function positionActiveInputInSafeZone(inp) {
+        if (!inp || !document.body.classList.contains("keyboard-open")) return;
+        const targetBlock = inp.closest(".product-card") || inp.closest("form > div") || inp;
+        const header = document.getElementById("app-header");
+        const headerBottom = header ? header.getBoundingClientRect().bottom : 56;
+        const vv = window.visualViewport;
+        const visibleTop = (vv ? vv.offsetTop : 0) + headerBottom + 10;
+        const visibleBottom = vv ? (vv.offsetTop + vv.height - 12) : (window.innerHeight - 12);
 
-        if (history.length >= 2) {
-          const first = history[0].val;
-          const last = history[history.length - 1].val;
-          const diff = Math.round((last - first) * 10) / 10;
-          if (diff > 0) {
-            changeText = `+${diff} ${metric.unit} від початку`;
-            changeClass = 'text-emerald-600 dark:text-emerald-400 font-semibold';
-          } else if (diff < 0) {
-            changeText = `${diff} ${metric.unit} від початку`;
-            changeClass = 'text-blue-600 dark:text-blue-400 font-semibold';
-          } else {
-            changeText = `0 ${metric.unit} без змін`;
-            changeClass = 'text-gray-500 font-medium';
-          }
-        } else if (history.length === 1) {
-          changeText = '1 замір внесено';
+        if (visibleBottom <= visibleTop + 30) return;
+
+        const rect = targetBlock.getBoundingClientRect();
+        const blockCenter = rect.top + rect.height / 2;
+        const safeCenter = (visibleTop + visibleBottom) / 2;
+        const scrollDelta = blockCenter - safeCenter;
+
+        if (Math.abs(scrollDelta) > 8) {
+          window.scrollBy({ top: scrollDelta, behavior: "smooth" });
+        }
+      }
+
+      document.getElementById("compact-kb-done-btn").addEventListener("click", (e) => {
+        e.preventDefault();
+        const active = document.activeElement;
+        if (active && active.tagName === "INPUT") {
+          active.blur();
+        }
+        closeAllProductDrawers();
+        document.body.classList.remove("keyboard-open");
+      });
+
+      document.addEventListener("focusin", (e) => {
+        const inp = e.target;
+        if (!inp || inp.tagName !== "INPUT") return;
+        if (["range", "radio", "checkbox", "file", "date"].includes(inp.type)) return;
+
+        clearTimeout(blurTimer);
+        document.body.classList.add("keyboard-open");
+
+        if (inp.value === "0" || inp.value === "0.0") {
+          inp.value = "";
+        } else if (inp.value.length > 0) {
+          setTimeout(() => {
+            try { inp.select(); } catch (err) {}
+          }, 15);
         }
 
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between p-3.5 hover:bg-gray-50 dark:hover:bg-slate-750 transition cursor-pointer metric-item-row';
-        row.setAttribute('data-metric-id', metric.id);
+        setTimeout(() => positionActiveInputInSafeZone(inp), 90);
+        setTimeout(() => positionActiveInputInSafeZone(inp), 300);
+        setTimeout(() => positionActiveInputInSafeZone(inp), 520);
+      });
 
-        row.innerHTML = `
-          <div class="flex items-center space-x-3">
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", () => {
+          const active = document.activeElement;
+          if (active && active.tagName === "INPUT") {
+            positionActiveInputInSafeZone(active);
+          }
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        const inp = e.target;
+        if (!inp || inp.tagName !== "INPUT") return;
+
+        if (e.key === "Enter" || e.keyCode === 13) {
+          const itemId = inp.getAttribute("data-item-id");
+          if (itemId) {
+            e.preventDefault();
+            const val = parseDecimalInput(inp.value);
+            consumed[itemId] = val;
+            updateValuesInPlace("input", itemId);
+            inp.blur();
+            closeProductDrawer(itemId);
+            return;
+          }
+
+          if (!inp.closest("form")) {
+            e.preventDefault();
+            inp.blur();
+          }
+        }
+      });
+
+      document.addEventListener("focusout", (e) => {
+        const inp = e.target;
+        if (inp && inp.tagName === "INPUT" && inp.getAttribute("data-item-id")) {
+          const itemId = inp.getAttribute("data-item-id");
+          const val = parseDecimalInput(inp.value);
+          consumed[itemId] = val;
+          updateValuesInPlace("input", itemId);
+        }
+
+        blurTimer = setTimeout(() => {
+          const active = document.activeElement;
+          if (!active || active.tagName !== "INPUT" || ["range", "radio", "checkbox", "file"].includes(active.type)) {
+            document.body.classList.remove("keyboard-open");
+          }
+        }, 160);
+      });
+    })();
+
+    // ==========================================
+    // BODY MEASUREMENTS (ЗАМІРИ — ANALYTICS DASHBOARD)
+    // ==========================================
+    function getLatestMetricValue(metricId, fallback = null) {
+      const arr = measurementsData[metricId] || [];
+      if (arr.length === 0) return fallback;
+      const sorted = [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
+      return Number(sorted[sorted.length - 1].val);
+    }
+
+    function getFirstMetricValue(metricId, fallback = null) {
+      const arr = measurementsData[metricId] || [];
+      if (arr.length === 0) return fallback;
+      const sorted = [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
+      return Number(sorted[0].val);
+    }
+
+    function renderMeasurementsOverviewCard() {
+      const card = document.getElementById("measurements-overview-target");
+      if (!card) return;
+
+      const weightHist = [...(measurementsData.weight || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const latestW = weightHist.length > 0 ? Number(weightHist[weightHist.length - 1].val) : Number(userProfile.weight) || 76.6;
+      const startW = Number(userProfile.startWeight) || (weightHist.length > 0 ? Number(weightHist[0].val) : latestW);
+      const targetW = userProfile.targetWeight ? Number(userProfile.targetWeight) : null;
+
+      // Calculate weekly pace (kg/week) across available measurements
+      let paceText = "Недостатньо даних для темпу";
+      let forecastText = "";
+      if (weightHist.length >= 2) {
+        const recent = weightHist.slice(-4);
+        const firstRec = recent[0];
+        const lastRec = recent[recent.length - 1];
+        const daysSpan = Math.max(1, (new Date(lastRec.date) - new Date(firstRec.date)) / (1000 * 60 * 60 * 24));
+        const weeksSpan = Math.max(1, daysSpan / 7);
+        const weeklyRate = Math.round(((lastRec.val - firstRec.val) / weeksSpan) * 100) / 100;
+        const sign = weeklyRate > 0 ? "+" : "";
+        paceText = `Темп: <strong>${sign}${weeklyRate} кг/тиж</strong>`;
+
+        if (targetW && Math.abs(targetW - latestW) >= 0.1) {
+          const isMovingRight = (targetW > latestW && weeklyRate > 0.03) || (targetW < latestW && weeklyRate < -0.03);
+          if (isMovingRight) {
+            const weeksLeft = Math.abs(targetW - latestW) / Math.abs(weeklyRate);
+            if (weeksLeft <= 104) {
+              const eta = new Date(Date.now() + weeksLeft * 7 * 24 * 60 * 60 * 1000);
+              const etaStr = eta.toLocaleDateString("uk-UA", { day: "numeric", month: "short" });
+              forecastText = ` • Прогноз: <strong>~${etaStr}</strong>`;
+            }
+          }
+        }
+      }
+
+      if (!targetW || targetW <= 0) {
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
             <div>
-              <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-tight">${metric.name}</h4>
-              <p class="text-xs ${changeClass} mt-0.5 leading-none">${changeText}</p>
+              <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">Поточна вага</span>
+              <div class="text-xl font-black text-gray-900 dark:text-white">${latestW} <span class="text-xs font-semibold text-gray-400">кг</span></div>
+            </div>
+            <button type="button" onclick="openTargetWeightModalQuick()" class="px-3 py-1.5 rounded-xl bg-blue-600/15 text-blue-600 dark:text-blue-400 text-xs font-bold hover:bg-blue-600/25 transition">
+              🎯 Задати цільову вагу
+            </button>
+          </div>
+          <div class="text-[11px] text-gray-600 dark:text-gray-300">${paceText}</div>
+        `;
+        return;
+      }
+
+      const isLosing = targetW < startW;
+      const totalDelta = Math.abs(targetW - startW);
+      const remainingDelta = Math.round(Math.abs(targetW - latestW) * 10) / 10;
+
+      let pct = 0;
+      if (totalDelta > 0) {
+        pct = isLosing
+          ? Math.round(((startW - latestW) / totalDelta) * 100)
+          : Math.round(((latestW - startW) / totalDelta) * 100);
+      }
+      pct = Math.max(0, Math.min(100, pct));
+
+      const remLabel = Math.abs(latestW - targetW) < 0.1
+        ? "🎉 Ціль досягнуто!"
+        : `Залишилось: ${remainingDelta} кг`;
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-sm">🎯</span>
+            <span class="text-xs font-bold text-gray-900 dark:text-white">Вага: <span class="text-blue-600 dark:text-blue-400 font-extrabold">${latestW}</span> → ${targetW} кг</span>
+          </div>
+          <button type="button" onclick="openTargetWeightModalQuick()" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+            Змінити
+          </button>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+        </div>
+        <div class="flex items-center justify-between text-[11px]">
+          <span class="font-bold text-blue-600 dark:text-blue-400">${pct}% до мети</span>
+          <span class="text-gray-600 dark:text-gray-300 font-medium">${remLabel}</span>
+        </div>
+        <div class="text-[11px] text-gray-500 dark:text-gray-400 pt-1 border-t border-blue-200/50 dark:border-slate-700/60">
+          ${paceText}${forecastText}
+        </div>
+      `;
+    }
+
+    function openTargetWeightModalQuick() {
+      document.getElementById("tw-modal-input").value = userProfile.targetWeight || "";
+      document.getElementById("target-weight-modal").classList.remove("hidden");
+      document.getElementById("tw-modal-input").focus();
+    }
+
+    function renderSmartFitnessIndices() {
+      const container = document.getElementById("measurements-indices-grid");
+      if (!container) return;
+
+      const heightCm = Number(userProfile.height) || 183;
+      const latestWaist = getLatestMetricValue("waist", 84);
+      const startWaist = getFirstMetricValue("waist", latestWaist);
+      const latestChest = getLatestMetricValue("chest", 106);
+      const startChest = getFirstMetricValue("chest", latestChest);
+
+      // 1. WHtR (Waist-to-Height Ratio)
+      const whtr = heightCm > 0 ? Math.round((latestWaist / heightCm) * 100) / 100 : 0.46;
+      let whtrLabel = "Атлетична норма";
+      let whtrBadgeClass = "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300";
+      if (whtr < 0.43) {
+        whtrLabel = "Високий рельєф";
+        whtrBadgeClass = "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300";
+      } else if (whtr >= 0.50 && whtr < 0.55) {
+        whtrLabel = "Помірний запас";
+        whtrBadgeClass = "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300";
+      } else if (whtr >= 0.55) {
+        whtrLabel = "Підвищений";
+        whtrBadgeClass = "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300";
+      }
+      const whtrMarkerPct = Math.max(5, Math.min(95, Math.round(((whtr - 0.38) / (0.62 - 0.38)) * 100)));
+
+      // 2. V-Taper Index (Chest / Waist)
+      const vTaper = latestWaist > 0 ? Math.round((latestChest / latestWaist) * 100) / 100 : 1.26;
+      const startVTaper = startWaist > 0 ? Math.round((startChest / startWaist) * 100) / 100 : vTaper;
+      const vDelta = Math.round((vTaper - startVTaper) * 100) / 100;
+      const vDeltaStr = vDelta > 0 ? `+${vDelta}` : `${vDelta}`;
+      const vDeltaColor = vDelta >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400";
+
+      container.innerHTML = `
+        <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Талія / Зріст</span>
+            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${whtrBadgeClass}">${whtrLabel}</span>
+          </div>
+          <div class="flex items-baseline space-x-1.5">
+            <span class="text-xl font-black text-gray-900 dark:text-white">${whtr.toFixed(2)}</span>
+            <span class="text-[10px] text-gray-400">WHtR</span>
+          </div>
+          <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-500">
+            <span class="absolute -top-1 w-3.5 h-3.5 rounded-full bg-white border-2 border-gray-900 dark:border-white shadow-xs -translate-x-1/2" style="left: ${whtrMarkerPct}%"></span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Індекс V-Taper</span>
+            <span class="text-[10px] font-bold ${vDeltaColor}">${vDeltaStr} від старту</span>
+          </div>
+          <div class="flex items-baseline space-x-1.5">
+            <span class="text-xl font-black text-gray-900 dark:text-white">${vTaper.toFixed(2)}</span>
+            <span class="text-[10px] text-gray-400">Груди ÷ Талія</span>
+          </div>
+          <div class="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+            ${latestChest} см ÷ ${latestWaist} см
+          </div>
+        </div>
+      `;
+    }
+
+    function setAnalyticsChartMode(mode) {
+      analyticsChartMode = mode;
+      renderMeasurementsAnalyticsCard();
+    }
+
+    function renderMeasurementsAnalyticsCard() {
+      const container = document.getElementById("measurements-analytics-card");
+      if (!container) return;
+
+      const tabsHtml = `
+        <div class="flex items-center justify-between gap-1.5 flex-wrap">
+          <span class="text-xs font-bold text-gray-900 dark:text-white">Аналітика форми</span>
+          <div class="bg-gray-100 dark:bg-slate-700/70 p-0.5 rounded-lg flex items-center text-[10px] font-bold">
+            <button type="button" onclick="setAnalyticsChartMode('radar')" class="px-2 py-1 rounded-md transition ${analyticsChartMode === "radar" ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs" : "text-gray-500 dark:text-gray-400"}">
+              Пропорції
+            </button>
+            <button type="button" onclick="setAnalyticsChartMode('corr_waist')" class="px-2 py-1 rounded-md transition ${analyticsChartMode === "corr_waist" ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs" : "text-gray-500 dark:text-gray-400"}">
+              Вага + Талія
+            </button>
+            <button type="button" onclick="setAnalyticsChartMode('corr_kcal')" class="px-2 py-1 rounded-md transition ${analyticsChartMode === "corr_kcal" ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs" : "text-gray-500 dark:text-gray-400"}">
+              Вага + Ккал
+            </button>
+          </div>
+        </div>
+      `;
+
+      if (analyticsChartMode === "radar") {
+        const axes = [
+          { id: "chest", label: "Груди", refMax: 130 },
+          { id: "bicep", label: "Плече", refMax: 50 },
+          { id: "waist", label: "Талія", refMax: 115 },
+          { id: "hips", label: "Стегна", refMax: 125 },
+          { id: "thigh", label: "Стегно", refMax: 78 }
+        ];
+
+        const startVals = axes.map(a => getFirstMetricValue(a.id, 50));
+        const curVals = axes.map(a => getLatestMetricValue(a.id, 50));
+
+        const cx = 155;
+        const cy = 96;
+        const maxR = 64;
+        const angleStep = (Math.PI * 2) / axes.length;
+
+        function getPolygonPoints(vals) {
+          return vals.map((v, idx) => {
+            const norm = Math.max(0.25, Math.min(1.0, v / axes[idx].refMax));
+            const angle = -Math.PI / 2 + idx * angleStep;
+            const x = cx + Math.cos(angle) * maxR * norm;
+            const y = cy + Math.sin(angle) * maxR * norm;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+          }).join(" ");
+        }
+
+        const ringsSvg = [0.35, 0.68, 1.0].map(scale => {
+          const pts = axes.map((_, idx) => {
+            const angle = -Math.PI / 2 + idx * angleStep;
+            const x = cx + Math.cos(angle) * maxR * scale;
+            const y = cy + Math.sin(angle) * maxR * scale;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+          }).join(" ");
+          return `<polygon points="${pts}" fill="none" stroke="#CBD5E1" stroke-opacity="0.55" stroke-width="1" class="dark:stroke-slate-600" />`;
+        }).join("");
+
+        const spokesAndLabelsSvg = axes.map((ax, idx) => {
+          const angle = -Math.PI / 2 + idx * angleStep;
+          const xEnd = cx + Math.cos(angle) * maxR;
+          const yEnd = cy + Math.sin(angle) * maxR;
+          const xLbl = cx + Math.cos(angle) * (maxR + 18);
+          const yLbl = cy + Math.sin(angle) * (maxR + 14);
+          return `
+            <line x1="${cx}" y1="${cy}" x2="${xEnd.toFixed(1)}" y2="${yEnd.toFixed(1)}" stroke="#CBD5E1" stroke-opacity="0.55" stroke-width="1" class="dark:stroke-slate-600" />
+            <text x="${xLbl.toFixed(1)}" y="${yLbl.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9.5" font-weight="700" fill="#64748B" class="dark:fill-slate-300">
+              ${ax.label} (${curVals[idx]})
+            </text>
+          `;
+        }).join("");
+
+        const startPoly = getPolygonPoints(startVals);
+        const curPoly = getPolygonPoints(curVals);
+
+        container.innerHTML = `
+          ${tabsHtml}
+          <div class="w-full flex flex-col items-center">
+            <svg viewBox="0 0 310 192" class="w-full max-w-xs h-44 overflow-visible">
+              ${ringsSvg}
+              ${spokesAndLabelsSvg}
+              <polygon points="${startPoly}" fill="rgba(148, 163, 184, 0.16)" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3 2" />
+              <polygon points="${curPoly}" fill="rgba(37, 99, 235, 0.24)" stroke="#2563EB" stroke-width="2.2" />
+            </svg>
+            <div class="flex items-center space-x-4 text-[10px] text-gray-500 dark:text-gray-400">
+              <span class="flex items-center space-x-1"><span class="w-3 h-0.5 bg-gray-400 inline-block border-t border-dashed"></span><span>Старт</span></span>
+              <span class="flex items-center space-x-1"><span class="w-3 h-0.5 bg-blue-600 inline-block"></span><span>Зараз</span></span>
             </div>
           </div>
+        `;
+        return;
+      }
 
-          <div class="flex items-center space-x-2.5 shrink-0">
-            <span class="text-sm font-bold text-gray-900 dark:text-white">${currentVal} <span class="text-xs text-gray-400 font-normal">${metric.unit}</span></span>
-            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path>
-            </svg>
+      // Dual-Axis Correlation Chart ("Вага + Талія" or "Вага + Ккал")
+      const weightHist = [...(measurementsData.weight || [])].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-8);
+      if (weightHist.length < 2) {
+        container.innerHTML = `
+          ${tabsHtml}
+          <div class="text-center text-gray-400 dark:text-gray-500 text-xs py-8">
+            Додайте принаймні 2 тижневі чекіни, щоб побудувати графік кореляції.
+          </div>
+        `;
+        return;
+      }
+
+      const secondSeries = weightHist.map((wRec, idx) => {
+        if (analyticsChartMode === "corr_waist") {
+          const waistHist = [...(measurementsData.waist || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+          const exact = waistHist.find(x => x.date === wRec.date);
+          if (exact) return Number(exact.val);
+          return waistHist.length > 0 ? Number(waistHist[Math.min(idx, waistHist.length - 1)].val) : 84;
+        } else {
+          // Average calories from historyRecords or current target
+          const validDays = (historyRecords || []).filter(r => Number(r.totalCalories) > 0);
+          if (validDays.length > 0) {
+            const match = validDays.find(r => r.dietDayKey === wRec.date);
+            if (match) return Number(match.totalCalories);
+            const avg = Math.round(validDays.reduce((s, r) => s + Number(r.totalCalories), 0) / validDays.length);
+            return avg;
+          }
+          return calculateUserMetabolism().goals[currentGoalKey].targetKcal;
+        }
+      });
+
+      const wVals = weightHist.map(x => Number(x.val));
+      const wMin = Math.min(...wVals) - 0.5;
+      const wMax = Math.max(...wVals) + 0.5;
+      const sMin = Math.min(...secondSeries) - (analyticsChartMode === "corr_waist" ? 1 : 150);
+      const sMax = Math.max(...secondSeries) + (analyticsChartMode === "corr_waist" ? 1 : 150);
+
+      const width = 330;
+      const height = 155;
+      const pL = 28;
+      const pR = 28;
+      const pT = 18;
+      const pB = 24;
+      const plotW = width - pL - pR;
+      const plotH = height - pT - pB;
+
+      const wPts = wVals.map((v, i) => ({
+        x: pL + (i / (wVals.length - 1)) * plotW,
+        y: pT + plotH - ((v - wMin) / (wMax - wMin || 1)) * plotH,
+        val: v,
+        date: weightHist[i].date.slice(5)
+      }));
+
+      const sPts = secondSeries.map((v, i) => ({
+        x: pL + (i / (secondSeries.length - 1)) * plotW,
+        y: pT + plotH - ((v - sMin) / (sMax - sMin || 1)) * plotH,
+        val: v
+      }));
+
+      const wPath = wPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+      const sPath = sPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+      const secondColor = analyticsChartMode === "corr_waist" ? "#10B981" : "#F59E0B";
+      const secondLabel = analyticsChartMode === "corr_waist" ? "Талія (см)" : "Калорії (ккал)";
+
+      container.innerHTML = `
+        ${tabsHtml}
+        <svg viewBox="0 0 ${width} ${height}" class="w-full h-40 overflow-visible">
+          <line x1="${pL}" y1="${pT + plotH}" x2="${width - pR}" y2="${pT + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-700" />
+          <path d="${sPath}" fill="none" stroke="${secondColor}" stroke-width="2" stroke-dasharray="4 2" stroke-linecap="round" />
+          <path d="${wPath}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
+          ${wPts.map((p, idx) => `
+            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#2563EB" />
+            <text x="${p.x.toFixed(1)}" y="${(p.y - 6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="bold" fill="#2563EB">${p.val}</text>
+            <circle cx="${sPts[idx].x.toFixed(1)}" cy="${sPts[idx].y.toFixed(1)}" r="3" fill="${secondColor}" />
+            <text x="${p.x.toFixed(1)}" y="${height - 6}" text-anchor="middle" font-size="8.5" fill="#94A3B8">${p.date}</text>
+          `).join("")}
+        </svg>
+        <div class="flex items-center justify-center space-x-4 text-[10px] text-gray-500 dark:text-gray-400">
+          <span class="flex items-center space-x-1"><span class="w-3 h-0.5 bg-blue-600 inline-block"></span><span>Вага (кг)</span></span>
+          <span class="flex items-center space-x-1"><span class="w-3 h-0.5 inline-block border-t-2 border-dashed" style="border-color: ${secondColor};"></span><span>${secondLabel}</span></span>
+        </div>
+      `;
+    }
+
+    function buildSparklineSvg(history) {
+      if (!history || history.length < 2) {
+        return `<div class="h-6 flex items-center text-[10px] text-gray-400">1 запис</div>`;
+      }
+      const recent = history.slice(-6).map(x => Number(x.val));
+      const minV = Math.min(...recent);
+      const maxV = Math.max(...recent);
+      const span = (maxV - minV) || 1;
+      const w = 96;
+      const h = 24;
+      const pts = recent.map((v, i) => {
+        const x = 3 + (i / (recent.length - 1)) * (w - 6);
+        const y = h - 4 - ((v - minV) / span) * (h - 8);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(" ");
+      const lastPt = pts.split(" ").pop().split(",");
+
+      return `
+        <svg viewBox="0 0 ${w} ${h}" class="w-full h-6 overflow-visible">
+          <polyline points="${pts}" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="2.8" fill="#2563EB" />
+        </svg>
+      `;
+    }
+
+    function renderMeasurementsList() {
+      renderMeasurementsOverviewCard();
+      renderSmartFitnessIndices();
+      renderMeasurementsAnalyticsCard();
+
+      const container = document.getElementById("measurements-container");
+      container.innerHTML = "";
+
+      MEASUREMENTS_CONFIG.forEach(metric => {
+        const history = [...(measurementsData[metric.id] || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const latest = history.length > 0 ? history[history.length - 1] : null;
+        const currentVal = latest ? latest.val : "--";
+
+        let deltaBadge = `<span class="text-[10px] text-gray-400">Без змін</span>`;
+        if (history.length >= 2) {
+          const prev = history[history.length - 2].val;
+          const diff = Math.round((latest.val - prev) * 10) / 10;
+          if (diff > 0) {
+            deltaBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">+${diff} ${metric.unit}</span>`;
+          } else if (diff < 0) {
+            deltaBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">${diff} ${metric.unit}</span>`;
+          }
+        }
+
+        const tile = document.createElement("div");
+        tile.className = "bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 transition cursor-pointer flex flex-col justify-between space-y-1.5";
+        tile.innerHTML = `
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">${metric.name}</span>
+            ${deltaBadge}
+          </div>
+          <div class="flex items-baseline space-x-1">
+            <span class="text-xl font-black text-gray-900 dark:text-white">${currentVal}</span>
+            <span class="text-xs text-gray-400 font-medium">${metric.unit}</span>
+          </div>
+          <div>
+            ${buildSparklineSvg(history)}
           </div>
         `;
 
-        row.addEventListener('click', () => {
+        tile.addEventListener("click", () => {
           openMetricDetail(metric.id);
         });
 
-        container.appendChild(row);
+        container.appendChild(tile);
       });
 
       updateReminderBadges();
     }
+
+    // Unified Weekly Check-in Modal Handlers
+    const wcModal = document.getElementById("weekly-checkin-modal");
+    document.getElementById("open-weekly-checkin-btn").addEventListener("click", () => {
+      document.getElementById("wc-date").value = getDietDayKey();
+      document.getElementById("wc-weight").value = getLatestMetricValue("weight", userProfile.weight || 76.6);
+      document.getElementById("wc-waist").value = getLatestMetricValue("waist", 84.0);
+      document.getElementById("wc-chest").value = getLatestMetricValue("chest", 106.0);
+      document.getElementById("wc-hips").value = getLatestMetricValue("hips", 100.0);
+      document.getElementById("wc-bicep").value = getLatestMetricValue("bicep", 38.0);
+      document.getElementById("wc-thigh").value = getLatestMetricValue("thigh", 60.0);
+      wcModal.classList.remove("hidden");
+    });
+
+    document.getElementById("close-wc-modal-x").addEventListener("click", () => wcModal.classList.add("hidden"));
+    document.getElementById("wc-cancel-btn").addEventListener("click", () => wcModal.classList.add("hidden"));
+
+    document.getElementById("weekly-checkin-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const dateStr = document.getElementById("wc-date").value || getDietDayKey();
+      const entries = {
+        weight: parseDecimalInput(document.getElementById("wc-weight").value),
+        waist: parseDecimalInput(document.getElementById("wc-waist").value),
+        chest: parseDecimalInput(document.getElementById("wc-chest").value),
+        hips: parseDecimalInput(document.getElementById("wc-hips").value),
+        bicep: parseDecimalInput(document.getElementById("wc-bicep").value),
+        thigh: parseDecimalInput(document.getElementById("wc-thigh").value)
+      };
+
+      Object.keys(entries).forEach(mId => {
+        const val = entries[mId];
+        if (val > 0) {
+          if (!measurementsData[mId]) measurementsData[mId] = [];
+          const existingIdx = measurementsData[mId].findIndex(x => x.date === dateStr);
+          if (existingIdx !== -1) {
+            measurementsData[mId][existingIdx].val = val;
+          } else {
+            measurementsData[mId].push({ date: dateStr, val: val });
+          }
+          measurementsData[mId].sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+      });
+
+      if (entries.weight > 0) {
+        userProfile.weight = entries.weight;
+        saveUserProfile();
+        updateGoalButtonsUI();
+      }
+
+      saveMeasurementsToStorage();
+      syncSaveToServer();
+      wcModal.classList.add("hidden");
+      renderMeasurementsList();
+      showToast("Тижневий чекін збережено!");
+    });
 
     function openMetricDetail(metricId) {
       selectedMetricId = metricId;
       const metric = MEASUREMENTS_CONFIG.find(m => m.id === metricId);
       if (!metric) return;
 
-      document.getElementById('measurements-list-screen').classList.add('hidden');
-      document.getElementById('measurement-detail-screen').classList.remove('hidden');
+      document.getElementById("measurements-list-screen").classList.add("hidden");
+      document.getElementById("measurement-detail-screen").classList.remove("hidden");
 
-      document.getElementById('detail-metric-name').textContent = `${metric.name} (${metric.unit})`;
-      document.getElementById('detail-metric-unit').textContent = metric.unit;
+      document.getElementById("detail-metric-name").textContent = `${metric.name} (${metric.unit})`;
+      document.getElementById("detail-metric-unit").textContent = metric.unit;
 
       renderMetricDetailView();
     }
 
-    // Target Weight Progress Widget
     function renderTargetWeightWidget(history) {
-      const widget = document.getElementById('target-weight-widget');
-      const prompt = document.getElementById('set-target-weight-prompt');
+      const widget = document.getElementById("target-weight-widget");
+      const prompt = document.getElementById("set-target-weight-prompt");
 
-      if (selectedMetricId !== 'weight') {
-        widget.classList.add('hidden');
-        prompt.classList.add('hidden');
+      if (selectedMetricId !== "weight") {
+        widget.classList.add("hidden");
+        prompt.classList.add("hidden");
         return;
       }
 
       if (!userProfile.targetWeight || userProfile.targetWeight <= 0) {
-        widget.classList.add('hidden');
-        prompt.classList.remove('hidden');
+        widget.classList.add("hidden");
+        prompt.classList.remove("hidden");
         return;
       }
 
-      widget.classList.remove('hidden');
-      prompt.classList.add('hidden');
+      widget.classList.remove("hidden");
+      prompt.classList.add("hidden");
 
       const targetW = Number(userProfile.targetWeight);
-      document.getElementById('tw-target-val').textContent = targetW;
+      document.getElementById("tw-target-val").textContent = targetW;
 
       const latest = history.length > 0 ? history[history.length - 1].val : userProfile.weight;
       const startW = userProfile.startWeight || (history.length > 0 ? history[0].val : latest);
@@ -2077,15 +2742,15 @@
       }
       pct = Math.max(0, Math.min(100, pct));
 
-      document.getElementById('tw-progress-bar').style.width = pct + '%';
-      document.getElementById('tw-progress-pct').textContent = pct + '% до мети';
+      document.getElementById("tw-progress-bar").style.width = pct + "%";
+      document.getElementById("tw-progress-pct").textContent = pct + "% до мети";
 
       if (Math.abs(latest - targetW) < 0.1) {
-        document.getElementById('tw-remaining-text').textContent = '🎉 Ціль досягнуто!';
+        document.getElementById("tw-remaining-text").textContent = "🎉 Ціль досягнуто!";
       } else if (isLosing) {
-        document.getElementById('tw-remaining-text').textContent = `Залишилось скинути: ${remainingDelta} кг`;
+        document.getElementById("tw-remaining-text").textContent = `Залишилось скинути: ${remainingDelta} кг`;
       } else {
-        document.getElementById('tw-remaining-text').textContent = `Залишилось набрати: ${remainingDelta} кг`;
+        document.getElementById("tw-remaining-text").textContent = `Залишилось набрати: ${remainingDelta} кг`;
       }
     }
 
@@ -2095,22 +2760,22 @@
 
       history.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      const currentValEl = document.getElementById('detail-metric-current');
-      const dateEl = document.getElementById('detail-metric-date');
-      const totalChangeEl = document.getElementById('detail-total-change');
-      const weekChangeEl = document.getElementById('detail-week-change');
+      const currentValEl = document.getElementById("detail-metric-current");
+      const dateEl = document.getElementById("detail-metric-date");
+      const totalChangeEl = document.getElementById("detail-total-change");
+      const weekChangeEl = document.getElementById("detail-week-change");
 
       if (history.length === 0) {
-        currentValEl.textContent = '--';
-        dateEl.textContent = 'Ще немає замірів';
-        totalChangeEl.textContent = '0 ' + metric.unit;
-        weekChangeEl.textContent = '0 ' + metric.unit;
+        currentValEl.textContent = "--";
+        dateEl.textContent = "Ще немає замірів";
+        totalChangeEl.textContent = "0 " + metric.unit;
+        weekChangeEl.textContent = "0 " + metric.unit;
       } else {
         const latest = history[history.length - 1];
         currentValEl.textContent = latest.val;
         dateEl.textContent = `Останній замір: ${latest.date}`;
 
-        if (selectedMetricId === 'weight') {
+        if (selectedMetricId === "weight") {
           userProfile.weight = latest.val;
           saveUserProfile();
           updateGoalButtonsUI();
@@ -2118,16 +2783,16 @@
 
         const first = history[0];
         const totalDiff = Math.round((latest.val - first.val) * 10) / 10;
-        totalChangeEl.textContent = (totalDiff > 0 ? '+' : '') + totalDiff + ' ' + metric.unit;
-        totalChangeEl.className = totalDiff > 0 ? 'text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5' : (totalDiff < 0 ? 'text-sm font-bold text-blue-600 dark:text-blue-400 block mt-0.5' : 'text-sm font-bold text-gray-500 block mt-0.5');
+        totalChangeEl.textContent = (totalDiff > 0 ? "+" : "") + totalDiff + " " + metric.unit;
+        totalChangeEl.className = totalDiff > 0 ? "text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5" : (totalDiff < 0 ? "text-sm font-bold text-blue-600 dark:text-blue-400 block mt-0.5" : "text-sm font-bold text-gray-500 block mt-0.5");
 
         let weekDiff = 0;
         if (history.length >= 2) {
           const prev = history[history.length - 2];
           weekDiff = Math.round((latest.val - prev.val) * 10) / 10;
         }
-        weekChangeEl.textContent = (weekDiff > 0 ? '+' : '') + weekDiff + ' ' + metric.unit;
-        weekChangeEl.className = weekDiff > 0 ? 'text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5' : (weekDiff < 0 ? 'text-sm font-bold text-blue-600 dark:text-blue-400 block mt-0.5' : 'text-sm font-bold text-gray-500 block mt-0.5');
+        weekChangeEl.textContent = (weekDiff > 0 ? "+" : "") + weekDiff + " " + metric.unit;
+        weekChangeEl.className = weekDiff > 0 ? "text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5" : (weekDiff < 0 ? "text-sm font-bold text-blue-600 dark:text-blue-400 block mt-0.5" : "text-sm font-bold text-gray-500 block mt-0.5");
       }
 
       renderTargetWeightWidget(history);
@@ -2136,8 +2801,8 @@
     }
 
     function renderSVGLineChart(history, metric) {
-      const container = document.getElementById('chart-container');
-      container.innerHTML = '';
+      const container = document.getElementById("chart-container");
+      container.innerHTML = "";
 
       if (history.length < 2) {
         container.innerHTML = `
@@ -2177,9 +2842,9 @@
         pathD += ` L ${points[i].x} ${points[i].y}`;
       }
 
-      let areaD = pathD + ` L ${points[points.length-1].x} ${pTop + plotH} L ${points[0].x} ${pTop + plotH} Z`;
+      let areaD = pathD + ` L ${points[points.length - 1].x} ${pTop + plotH} L ${points[0].x} ${pTop + plotH} Z`;
 
-      let dotsHtml = '';
+      let dotsHtml = "";
       points.forEach((pt) => {
         dotsHtml += `
           <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="2" class="cursor-pointer transition-all" />
@@ -2197,7 +2862,7 @@
             </linearGradient>
           </defs>
           <line x1="${pLeft}" y1="${pTop}" x2="${width - pRight}" y2="${pTop}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
-          <line x1="${pLeft}" y1="${pTop + plotH/2}" x2="${width - pRight}" y2="${pTop + plotH/2}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
+          <line x1="${pLeft}" y1="${pTop + plotH / 2}" x2="${width - pRight}" y2="${pTop + plotH / 2}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
           <line x1="${pLeft}" y1="${pTop + plotH}" x2="${width - pRight}" y2="${pTop + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-600"/>
 
           <path d="${areaD}" fill="url(#chartGrad)"/>
@@ -2210,12 +2875,12 @@
     }
 
     function renderMetricRecordsList(history, metric) {
-      const list = document.getElementById('metric-records-list');
-      const hint = document.getElementById('edit-hint-label');
-      list.innerHTML = '';
+      const list = document.getElementById("metric-records-list");
+      const hint = document.getElementById("edit-hint-label");
+      list.innerHTML = "";
 
       if (hint) {
-        hint.textContent = isEditingHistory ? 'Натисніть ✏️ для зміни значення' : '';
+        hint.textContent = isEditingHistory ? "Натисніть ✏️ для зміни значення" : "";
       }
 
       if (history.length === 0) {
@@ -2224,8 +2889,8 @@
       }
 
       [...history].reverse().forEach((rec) => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between py-2 px-1 hover:bg-gray-50/50 dark:hover:bg-slate-700/30 rounded-lg transition';
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between py-2 px-1 hover:bg-gray-50/50 dark:hover:bg-slate-700/30 rounded-lg transition";
 
         row.innerHTML = `
           <div class="flex items-center space-x-2">
@@ -2240,25 +2905,25 @@
               <button type="button" class="delete-rec-btn text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1 rounded font-bold text-xs" data-date="${rec.date}" data-val="${rec.val}" title="Видалити">
                 ✕
               </button>
-            ` : ''}
+            ` : ""}
           </div>
         `;
 
         list.appendChild(row);
       });
 
-      document.querySelectorAll('.edit-single-rec-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const date = btn.getAttribute('data-date');
-          const val = Number(btn.getAttribute('data-val'));
+      document.querySelectorAll(".edit-single-rec-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const date = btn.getAttribute("data-date");
+          const val = Number(btn.getAttribute("data-val"));
           openEditMeasurementModal(date, val);
         });
       });
 
-      document.querySelectorAll('.delete-rec-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const date = btn.getAttribute('data-date');
-          const val = Number(btn.getAttribute('data-val'));
+      document.querySelectorAll(".delete-rec-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const date = btn.getAttribute("data-date");
+          const val = Number(btn.getAttribute("data-val"));
           const idx = measurementsData[selectedMetricId].findIndex(x => x.date === date && x.val === val);
           if (idx !== -1) {
             measurementsData[selectedMetricId].splice(idx, 1);
@@ -2266,7 +2931,7 @@
             syncSaveToServer();
             renderMetricDetailView();
             renderMeasurementsList();
-            showToast('Запис видалено');
+            showToast("Запис видалено");
           }
         });
       });
@@ -2276,109 +2941,107 @@
       const metric = MEASUREMENTS_CONFIG.find(m => m.id === selectedMetricId);
       editingRecordOriginalDate = date;
 
-      document.getElementById('modal-metric-title').textContent = `Редагувати: ${metric.name}`;
-      document.getElementById('modal-metric-unit').textContent = metric.unit;
-      document.getElementById('modal-metric-input').value = val || '';
-      document.getElementById('modal-metric-date').value = date;
+      document.getElementById("modal-metric-title").textContent = `Редагувати: ${metric.name}`;
+      document.getElementById("modal-metric-unit").textContent = metric.unit;
+      document.getElementById("modal-metric-input").value = val;
+      document.getElementById("modal-metric-date").value = date;
 
-      addModal.classList.remove('hidden');
-      document.getElementById('modal-metric-input').focus();
+      addModal.classList.remove("hidden");
+      document.getElementById("modal-metric-input").focus();
     }
 
-    document.getElementById('detail-back-to-list-btn').addEventListener('click', () => {
-      document.getElementById('measurement-detail-screen').classList.add('hidden');
-      document.getElementById('measurements-list-screen').classList.remove('hidden');
+    document.getElementById("detail-back-to-list-btn").addEventListener("click", () => {
+      document.getElementById("measurement-detail-screen").classList.add("hidden");
+      document.getElementById("measurements-list-screen").classList.remove("hidden");
       renderMeasurementsList();
     });
 
-    document.getElementById('edit-history-toggle-btn').addEventListener('click', () => {
+    document.getElementById("edit-history-toggle-btn").addEventListener("click", () => {
       isEditingHistory = !isEditingHistory;
-      document.getElementById('edit-history-toggle-btn').textContent = isEditingHistory ? 'Готово' : 'Редагувати дані';
+      document.getElementById("edit-history-toggle-btn").textContent = isEditingHistory ? "Готово" : "Редагувати дані";
       renderMetricDetailView();
     });
 
     // Target Weight Edit Modal logic
-    const twModal = document.getElementById('target-weight-modal');
-    document.getElementById('edit-target-weight-btn').addEventListener('click', () => {
-      document.getElementById('tw-modal-input').value = userProfile.targetWeight || '';
-      twModal.classList.remove('hidden');
-      document.getElementById('tw-modal-input').focus();
+    const twModal = document.getElementById("target-weight-modal");
+    document.getElementById("edit-target-weight-btn").addEventListener("click", openTargetWeightModalQuick);
+    document.getElementById("prompt-add-target-btn").addEventListener("click", openTargetWeightModalQuick);
+
+    document.getElementById("close-tw-modal-x").addEventListener("click", () => {
+      twModal.classList.add("hidden");
     });
 
-    document.getElementById('prompt-add-target-btn').addEventListener('click', () => {
-      document.getElementById('tw-modal-input').value = userProfile.targetWeight || '';
-      twModal.classList.remove('hidden');
-      document.getElementById('tw-modal-input').focus();
-    });
-
-    document.getElementById('close-tw-modal-x').addEventListener('click', () => {
-      twModal.classList.add('hidden');
-    });
-
-    document.getElementById('tw-modal-delete-btn').addEventListener('click', () => {
+    document.getElementById("tw-modal-delete-btn").addEventListener("click", () => {
       userProfile.targetWeight = null;
       saveUserProfile();
       syncSaveToServer();
-      twModal.classList.add('hidden');
-      renderMetricDetailView();
-      showToast('Цільову вагу видалено');
+      twModal.classList.add("hidden");
+      if (!document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
+        renderMetricDetailView();
+      }
+      renderMeasurementsList();
+      showToast("Цільову вагу видалено");
     });
 
-    document.getElementById('delete-target-weight-btn').addEventListener('click', () => {
+    document.getElementById("delete-target-weight-btn").addEventListener("click", () => {
       userProfile.targetWeight = null;
       saveUserProfile();
       syncSaveToServer();
       renderMetricDetailView();
-      showToast('Цільову вагу видалено');
+      renderMeasurementsList();
+      showToast("Цільову вагу видалено");
     });
 
-    document.getElementById('tw-modal-save-btn').addEventListener('click', () => {
-      const val = Number(document.getElementById('tw-modal-input').value);
+    document.getElementById("tw-modal-save-btn").addEventListener("click", () => {
+      const val = parseDecimalInput(document.getElementById("tw-modal-input").value);
       if (val > 30 && val < 250) {
         userProfile.targetWeight = val;
         saveUserProfile();
         syncSaveToServer();
-        twModal.classList.add('hidden');
-        renderMetricDetailView();
-        showToast('Цільову вагу оновлено!');
+        twModal.classList.add("hidden");
+        if (!document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
+          renderMetricDetailView();
+        }
+        renderMeasurementsList();
+        showToast("Цільову вагу оновлено!");
       } else {
-        showToast('Введіть коректну вагу');
+        showToast("Введіть коректну вагу");
       }
     });
 
-    // Add Measurement Modal logic
-    const addModal = document.getElementById('add-measurement-modal');
-    document.getElementById('open-add-measurement-modal-btn').addEventListener('click', () => {
+    // Add Single Measurement Modal logic
+    const addModal = document.getElementById("add-measurement-modal");
+    document.getElementById("open-add-measurement-modal-btn").addEventListener("click", () => {
       const metric = MEASUREMENTS_CONFIG.find(m => m.id === selectedMetricId);
       editingRecordOriginalDate = null;
 
-      document.getElementById('modal-metric-title').textContent = `Внести замір: ${metric.name}`;
-      document.getElementById('modal-metric-unit').textContent = metric.unit;
+      document.getElementById("modal-metric-title").textContent = `Внести замір: ${metric.name}`;
+      document.getElementById("modal-metric-unit").textContent = metric.unit;
 
       const history = measurementsData[selectedMetricId] || [];
       const latest = history.length > 0 ? history[history.length - 1] : null;
-      document.getElementById('modal-metric-input').value = (latest && latest.val > 0) ? latest.val : '';
-      document.getElementById('modal-metric-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById("modal-metric-input").value = latest ? latest.val : "";
+      document.getElementById("modal-metric-date").value = getDietDayKey();
 
-      addModal.classList.remove('hidden');
-      document.getElementById('modal-metric-input').focus();
+      addModal.classList.remove("hidden");
+      document.getElementById("modal-metric-input").focus();
     });
 
-    document.getElementById('modal-close-btn').addEventListener('click', () => {
-      addModal.classList.add('hidden');
+    document.getElementById("modal-close-btn").addEventListener("click", () => {
+      addModal.classList.add("hidden");
       editingRecordOriginalDate = null;
     });
-    document.getElementById('close-modal-x-btn').addEventListener('click', () => {
-      addModal.classList.add('hidden');
+    document.getElementById("close-modal-x-btn").addEventListener("click", () => {
+      addModal.classList.add("hidden");
       editingRecordOriginalDate = null;
     });
 
-    document.getElementById('modal-save-measurement-btn').addEventListener('click', () => {
-      const val = Number(document.getElementById('modal-metric-input').value);
-      const date = document.getElementById('modal-metric-date').value;
+    document.getElementById("modal-save-measurement-btn").addEventListener("click", () => {
+      const val = parseDecimalInput(document.getElementById("modal-metric-input").value);
+      const date = document.getElementById("modal-metric-date").value;
 
       if (!val || val <= 0 || !date) {
-        showToast('Введіть коректне значення та дату');
+        showToast("Введіть коректне значення та дату");
         return;
       }
 
@@ -2393,7 +3056,7 @@
         } else {
           measurementsData[selectedMetricId].push({ date, val });
         }
-        showToast('Замір оновлено!');
+        showToast("Замір оновлено!");
       } else {
         const existingIdx = measurementsData[selectedMetricId].findIndex(x => x.date === date);
         if (existingIdx !== -1) {
@@ -2401,7 +3064,7 @@
         } else {
           measurementsData[selectedMetricId].push({ date, val });
         }
-        showToast('Замір збережено!');
+        showToast("Замір збережено!");
       }
 
       editingRecordOriginalDate = null;
@@ -2409,51 +3072,51 @@
       saveMeasurementsToStorage();
       syncSaveToServer();
 
-      addModal.classList.add('hidden');
+      addModal.classList.add("hidden");
       renderMetricDetailView();
       renderMeasurementsList();
     });
 
     // Tab Navigation
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetView = btn.getAttribute('data-view');
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetView = btn.getAttribute("data-view");
         switchView(targetView);
       });
     });
 
     function switchView(viewName) {
       currentView = viewName;
-      document.getElementById('view-calculator').classList.toggle('hidden', viewName !== 'calculator');
-      document.getElementById('view-measurements').classList.toggle('hidden', viewName !== 'measurements');
-      document.getElementById('view-history').classList.toggle('hidden', viewName !== 'history');
-      document.getElementById('view-settings').classList.toggle('hidden', viewName !== 'settings');
+      document.getElementById("view-calculator").classList.toggle("hidden", viewName !== "calculator");
+      document.getElementById("view-measurements").classList.toggle("hidden", viewName !== "measurements");
+      document.getElementById("view-history").classList.toggle("hidden", viewName !== "history");
+      document.getElementById("view-settings").classList.toggle("hidden", viewName !== "settings");
 
-      document.getElementById('top-nutrition-summary').classList.toggle('hidden', viewName !== 'calculator');
-      document.getElementById('goal-selector-container').classList.toggle('hidden', viewName !== 'calculator');
+      document.getElementById("top-nutrition-summary").classList.toggle("hidden", viewName !== "calculator");
+      document.getElementById("goal-selector-container").classList.toggle("hidden", viewName !== "calculator");
 
-      const titleEl = document.getElementById('top-title-text');
-      if (viewName === 'calculator') titleEl.textContent = 'Раціон';
-      else if (viewName === 'measurements') titleEl.textContent = 'Заміри тіла';
-      else if (viewName === 'history') titleEl.textContent = 'Історія днів';
-      else if (viewName === 'settings') titleEl.textContent = 'Мої норми';
+      const titleEl = document.getElementById("top-title-text");
+      if (viewName === "calculator") titleEl.textContent = "Раціон";
+      else if (viewName === "measurements") titleEl.textContent = "Заміри тіла";
+      else if (viewName === "history") titleEl.textContent = "Історія днів";
+      else if (viewName === "settings") titleEl.textContent = "Мої норми";
 
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        const v = b.getAttribute('data-view');
+      document.querySelectorAll(".tab-btn").forEach(b => {
+        const v = b.getAttribute("data-view");
         if (v === viewName) {
-          b.className = 'tab-btn relative flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold';
+          b.className = "tab-btn relative flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold";
         } else {
-          b.className = 'tab-btn relative flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium';
+          b.className = "tab-btn relative flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium";
         }
       });
 
-      if (viewName === 'measurements') {
-        document.getElementById('measurement-detail-screen').classList.add('hidden');
-        document.getElementById('measurements-list-screen').classList.remove('hidden');
+      if (viewName === "measurements") {
+        document.getElementById("measurement-detail-screen").classList.add("hidden");
+        document.getElementById("measurements-list-screen").classList.remove("hidden");
         renderMeasurementsList();
-      } else if (viewName === 'history') {
+      } else if (viewName === "history") {
         renderHistory();
-      } else if (viewName === 'settings') {
+      } else if (viewName === "settings") {
         renderProfileDetails();
         renderSettings();
       }
@@ -2461,21 +3124,276 @@
       updateReminderBadges();
     }
 
-    // Manual Sync Button in "Мої норми" (No manual ID input box)
-    document.getElementById('manual-sync-now-btn').addEventListener('click', async () => {
-      showToast('Синхронізація із сервером...');
+    document.getElementById("manual-sync-now-btn").addEventListener("click", async () => {
+      showToast("Синхронізація із сервером...");
       const ok = await syncSaveToServer(true);
-      showToast(ok ? 'Дані та бекап збережено на сервері!' : 'Збережено локально на пристрої');
+      showToast(ok ? "Дані та бекап збережено на сервері!" : "Помилка з'єднання із сервером");
     });
 
-    // History View with collapsible day items (collapsed by default, expands on click)
+    // ==========================================
+    // HISTORY TAB: BENTO SUMMARY, 28-DAY HEATMAP, 7-DAY BAR CHART & COLLAPSIBLE CARDS
+    // ==========================================
+    function getRecordDayKey(entry) {
+      if (entry.dietDayKey) return entry.dietDayKey;
+      if (entry.id && typeof entry.id === "number" && entry.id > 1600000000000) {
+        return getDietDayKey(new Date(entry.id));
+      }
+      return null;
+    }
+
+    function computeEntryCategoryShares(entry) {
+      if (entry.categoryShares && Object.keys(entry.categoryShares).length > 0) {
+        return entry.categoryShares;
+      }
+      const shares = {};
+      (entry.items || []).forEach(it => {
+        const cat = MASTER_CATEGORIES.find(c => c.id === it.category);
+        if (!cat) return;
+        const prod = cat.items.find(p => p.name === it.name || (p.maintenance && p.maintenance.name === it.name) || (p.deficit && p.deficit.name === it.name));
+        if (prod) {
+          const baseW = getItemEffectiveBase(prod);
+          if (baseW > 0) {
+            shares[cat.id] = (shares[cat.id] || 0) + Math.round((Number(it.weight) / baseW) * 100);
+          }
+        }
+      });
+      return shares;
+    }
+
     function renderHistory() {
-      const list = document.getElementById('history-list');
-      list.innerHTML = '';
+      const bentoEl = document.getElementById("history-bento-summary");
+      const heatmapEl = document.getElementById("history-heatmap-card");
+      const barChartEl = document.getElementById("history-bar-chart-card");
+      const list = document.getElementById("history-list");
+
+      const meta = calculateUserMetabolism();
+      const defaultTargetKcal = meta.goals[currentGoalKey].targetKcal;
+      const bodyWeight = Number(userProfile.weight) || 76.6;
+      const targetProtein = Math.round(bodyWeight * 2.0);
+
+      const recordByKey = {};
+      (historyRecords || []).forEach(rec => {
+        const k = getRecordDayKey(rec);
+        if (k && !recordByKey[k]) {
+          recordByKey[k] = rec;
+        }
+      });
+
+      const todayShifted = getShiftedDietDate(new Date());
+      const todayKey = getDietDayKey(new Date());
+
+      function getOffsetDietKey(daysBack) {
+        const d = new Date(todayShifted.getTime() - daysBack * 24 * 60 * 60 * 1000);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return { key: `${y}-${m}-${day}`, dateObj: d };
+      }
+
+      // 1. 7-Day Bento Summary
+      const last7Days = [];
+      for (let i = 6; i >= 0; i--) {
+        const info = getOffsetDietKey(i);
+        const rec = recordByKey[info.key] || null;
+        last7Days.push({
+          key: info.key,
+          dateObj: info.dateObj,
+          rec,
+          kcal: rec ? (Number(rec.totalCalories) || 0) : 0,
+          protein: rec ? (Number(rec.totalProtein) || 0) : 0,
+          target: rec ? (Number(rec.targetCalories) || defaultTargetKcal) : defaultTargetKcal
+        });
+      }
+
+      const active7 = last7Days.filter(d => d.kcal > 0);
+      const avgKcal = active7.length > 0 ? Math.round(active7.reduce((s, d) => s + d.kcal, 0) / active7.length) : 0;
+      const avgProt = active7.length > 0 ? Math.round((active7.reduce((s, d) => s + d.protein, 0) / active7.length) * 10) / 10 : 0;
+      const avgKcalPct = defaultTargetKcal > 0 ? Math.round((avgKcal / defaultTargetKcal) * 100) : 0;
+      const protPerKg = bodyWeight > 0 ? (avgProt / bodyWeight).toFixed(1) : "0.0";
+      const avgProtPct = targetProtein > 0 ? Math.min(100, Math.round((avgProt / targetProtein) * 100)) : 0;
+
+      if (bentoEl) {
+        bentoEl.innerHTML = `
+          <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Калорії (7 дн.)</span>
+              <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">${avgKcalPct}% норми</span>
+            </div>
+            <div class="flex items-baseline space-x-1">
+              <span class="text-xl font-black text-gray-900 dark:text-white">${avgKcal.toLocaleString("uk-UA")}</span>
+              <span class="text-[11px] text-gray-400">ккал/д</span>
+            </div>
+            <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-blue-600 h-full rounded-full transition-all" style="width: ${Math.min(100, avgKcalPct)}%"></div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Білок (7 дн.)</span>
+              <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">${protPerKg} г/кг</span>
+            </div>
+            <div class="flex items-baseline space-x-1">
+              <span class="text-xl font-black text-gray-900 dark:text-white">${avgProt}</span>
+              <span class="text-[11px] text-gray-400">г/день</span>
+            </div>
+            <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-emerald-500 h-full rounded-full transition-all" style="width: ${avgProtPct}%"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2. 28-Day Discipline Heatmap & Streak
+      let streak = 0;
+      for (let i = 0; i < 60; i++) {
+        const info = getOffsetDietKey(i);
+        const rec = recordByKey[info.key];
+        if (!rec || !rec.totalCalories) {
+          if (i === 0) continue;
+          break;
+        }
+        const tKcal = Number(rec.targetCalories) || defaultTargetKcal;
+        const ratio = tKcal > 0 ? (Number(rec.totalCalories) / tKcal) : 0;
+        if (ratio >= 0.90 && ratio <= 1.10) {
+          streak++;
+        } else if (i === 0 && ratio < 0.90) {
+          continue;
+        } else {
+          break;
+        }
+      }
+
+      const jsDay = todayShifted.getDay();
+      const mondayOffset = (jsDay + 6) % 7;
+      const currentWeekSunday = new Date(todayShifted.getTime() + (6 - mondayOffset) * 24 * 60 * 60 * 1000);
+      const gridStart = new Date(currentWeekSunday.getTime() - 27 * 24 * 60 * 60 * 1000);
+
+      const weekdayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+      let cellsHtml = "";
+      for (let idx = 0; idx < 28; idx++) {
+        const cellDate = new Date(gridStart.getTime() + idx * 24 * 60 * 60 * 1000);
+        const y = cellDate.getFullYear();
+        const m = String(cellDate.getMonth() + 1).padStart(2, "0");
+        const d = String(cellDate.getDate()).padStart(2, "0");
+        const key = `${y}-${m}-${d}`;
+        const dayNum = cellDate.getDate();
+        const isFuture = key > todayKey;
+        const isToday = key === todayKey;
+        const rec = recordByKey[key];
+
+        let cellClass = "bg-gray-100 dark:bg-slate-700/60 text-gray-500 dark:text-slate-400";
+        let clickableAttr = "";
+
+        if (isFuture) {
+          cellClass = "bg-gray-50/60 dark:bg-slate-800/40 text-gray-300 dark:text-slate-600 opacity-50";
+        } else if (rec && Number(rec.totalCalories) > 0) {
+          const tKcal = Number(rec.targetCalories) || defaultTargetKcal;
+          const ratio = tKcal > 0 ? (Number(rec.totalCalories) / tKcal) : 0;
+          clickableAttr = `onclick="focusHistoryDayCard('${key}')"`;
+          if (ratio >= 0.90 && ratio <= 1.10) {
+            cellClass = "bg-emerald-500 text-white font-bold shadow-2xs cursor-pointer active:scale-95";
+          } else if (ratio < 0.90) {
+            cellClass = "bg-blue-500 text-white font-bold shadow-2xs cursor-pointer active:scale-95";
+          } else {
+            cellClass = "bg-amber-500 text-white font-bold shadow-2xs cursor-pointer active:scale-95";
+          }
+        }
+
+        const ringClass = isToday ? "ring-2 ring-offset-1 ring-blue-600 dark:ring-blue-400 dark:ring-offset-slate-800 font-extrabold" : "";
+
+        cellsHtml += `
+          <div ${clickableAttr} class="h-7 rounded-lg flex items-center justify-center text-[11px] transition ${cellClass} ${ringClass}">
+            ${dayNum}
+          </div>
+        `;
+      }
+
+      if (heatmapEl) {
+        heatmapEl.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-gray-900 dark:text-white">Календар дисципліни (28 дн.)</span>
+            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+              <span>🔥 Серія в нормі: ${streak} дн.</span>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1.5 text-center">
+            ${weekdayNames.map(w => `<div class="text-[10px] font-bold text-gray-400 dark:text-gray-500 pb-0.5">${w}</div>`).join("")}
+            ${cellsHtml}
+          </div>
+
+          <div class="flex items-center justify-between flex-wrap gap-2 pt-1.5 border-t border-gray-100 dark:border-slate-700/60 text-[10px] text-gray-500 dark:text-gray-400">
+            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span><span>Норма (±10%)</span></span>
+            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-blue-500"></span><span>Недобір</span></span>
+            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-amber-500"></span><span>Перебір</span></span>
+            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-gray-200 dark:bg-slate-700"></span><span>Немає записів</span></span>
+          </div>
+        `;
+      }
+
+      // 3. 7-Day SVG Bar Chart with Dashed Target Line
+      if (barChartEl) {
+        const width = 330;
+        const height = 165;
+        const pLeft = 14;
+        const pRight = 14;
+        const pTop = 24;
+        const pBottom = 24;
+        const plotW = width - pLeft - pRight;
+        const plotH = height - pTop - pBottom;
+
+        const maxBarVal = Math.max(defaultTargetKcal * 1.18, ...last7Days.map(d => d.kcal), 1000);
+        const normY = pTop + plotH - (defaultTargetKcal / maxBarVal) * plotH;
+        const colStep = plotW / 7;
+        const barW = 24;
+
+        const barsSvg = last7Days.map((d, idx) => {
+          const cx = pLeft + idx * colStep + colStep / 2;
+          const x = cx - barW / 2;
+          const dateLabel = `${String(d.dateObj.getDate()).padStart(2, "0")}.${String(d.dateObj.getMonth() + 1).padStart(2, "0")}`;
+
+          if (d.kcal <= 0) {
+            return `
+              <rect x="${x.toFixed(1)}" y="${(pTop + plotH - 6).toFixed(1)}" width="${barW}" height="6" rx="3" fill="#CBD5E1" fill-opacity="0.45" class="dark:fill-slate-700" />
+              <text x="${cx.toFixed(1)}" y="${height - 6}" text-anchor="middle" font-size="9" fill="#94A3B8">${dateLabel}</text>
+            `;
+          }
+
+          const ratio = d.target > 0 ? (d.kcal / d.target) : 0;
+          let fillHex = "#2563EB";
+          if (ratio >= 0.90 && ratio <= 1.10) fillHex = "#10B981";
+          else if (ratio > 1.10) fillHex = "#F59E0B";
+
+          const barH = Math.max(8, (d.kcal / maxBarVal) * plotH);
+          const y = pTop + plotH - barH;
+
+          return `
+            <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" rx="5" fill="${fillHex}" />
+            <text x="${cx.toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${fillHex}">${d.kcal}</text>
+            <text x="${cx.toFixed(1)}" y="${height - 6}" text-anchor="middle" font-size="9" font-weight="600" fill="#64748B" class="dark:fill-slate-400">${dateLabel}</text>
+          `;
+        }).join("");
+
+        barChartEl.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-900 dark:text-white">Калорійність за останні 7 днів</span>
+            <span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">Норма: ${defaultTargetKcal} ккал</span>
+          </div>
+          <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto overflow-visible">
+            <line x1="${pLeft}" y1="${pTop + plotH}" x2="${width - pRight}" y2="${pTop + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-700" />
+            ${barsSvg}
+            <line x1="${pLeft}" y1="${normY.toFixed(1)}" x2="${width - pRight}" y2="${normY.toFixed(1)}" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="4 3" />
+          </svg>
+        `;
+      }
+
+      // 4. Collapsible Daily Cards List (NO "Повторити день" button)
+      list.innerHTML = "";
 
       if (historyRecords.length === 0) {
         list.innerHTML = `
-          <div class="text-center py-10 text-gray-400 dark:text-gray-500 text-xs">
+          <div class="text-center py-8 bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-200 dark:border-slate-700 text-gray-400 dark:text-gray-500 text-xs">
             Історія поки що порожня.<br>Коли ви вносите продукти, вони автоматично зберігаються за поточну добу (03:00 – 02:59).
           </div>
         `;
@@ -2483,32 +3401,44 @@
       }
 
       historyRecords.forEach(entry => {
-        const card = document.createElement('div');
-        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 shadow-xs transition-colors';
-        
+        const dayKey = getRecordDayKey(entry) || "";
+        const card = document.createElement("div");
+        if (dayKey) card.id = `history-day-card-${dayKey}`;
+        card.className = "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3.5 shadow-xs transition-all";
+
+        const shares = computeEntryCategoryShares(entry);
+        const catPillsHtml = MASTER_CATEGORIES
+          .filter(c => shares[c.id] && shares[c.id] > 0)
+          .map(c => `
+            <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style="background-color: ${c.badgeBg};">
+              <span>${c.id}</span>
+              <span class="opacity-90">${shares[c.id]}%</span>
+            </span>
+          `).join("");
+
         const itemsHtml = (entry.items || []).map(it => `
           <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
             <span class="text-gray-700 dark:text-gray-300 pr-2">• ${it.name}</span>
             <span class="font-semibold text-gray-900 dark:text-white shrink-0">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
           </div>
-        `).join('');
+        `).join("");
 
         card.innerHTML = `
-          <div class="history-card-header flex justify-between items-center cursor-pointer select-none">
-            <div class="space-y-1 flex-1 min-w-0 pr-2">
+          <div class="history-card-header flex justify-between items-start gap-2 cursor-pointer select-none">
+            <div class="space-y-1.5 flex-1 min-w-0">
               <div class="flex items-center flex-wrap gap-1.5">
-                <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                <span class="text-xs font-extrabold text-gray-900 dark:text-white">${entry.date}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
                   ${entry.goal}
                 </span>
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center flex-wrap gap-x-3 gap-y-0.5">
                 <span>🔥 <strong class="text-gray-800 dark:text-gray-200">${entry.totalCalories}</strong> / ${entry.targetCalories} ккал</span>
                 <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
-                <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
               </div>
+              ${catPillsHtml ? `<div class="flex items-center flex-wrap gap-1 pt-0.5">${catPillsHtml}</div>` : ""}
             </div>
-            <div class="flex items-center space-x-1 text-gray-400 shrink-0 pl-1">
+            <div class="flex items-center text-gray-400 shrink-0 pt-1">
               <svg class="history-chevron w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -2519,15 +3449,15 @@
           </div>
         `;
 
-        const headerEl = card.querySelector('.history-card-header');
-        const drawerEl = card.querySelector('.history-items-drawer');
-        const chevronEl = card.querySelector('.history-chevron');
+        const headerEl = card.querySelector(".history-card-header");
+        const drawerEl = card.querySelector(".history-items-drawer");
+        const chevronEl = card.querySelector(".history-chevron");
 
-        headerEl.addEventListener('click', () => {
-          const isHidden = drawerEl.classList.contains('hidden');
-          drawerEl.classList.toggle('hidden', !isHidden);
+        headerEl.addEventListener("click", () => {
+          const isHidden = drawerEl.classList.contains("hidden");
+          drawerEl.classList.toggle("hidden", !isHidden);
           if (chevronEl) {
-            chevronEl.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            chevronEl.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
           }
         });
 
@@ -2535,88 +3465,260 @@
       });
     }
 
-    document.getElementById('clear-history-btn').addEventListener('click', () => {
+    function focusHistoryDayCard(dayKey) {
+      const card = document.getElementById(`history-day-card-${dayKey}`);
+      if (!card) return;
+      const drawerEl = card.querySelector(".history-items-drawer");
+      const chevronEl = card.querySelector(".history-chevron");
+      if (drawerEl && drawerEl.classList.contains("hidden")) {
+        drawerEl.classList.remove("hidden");
+        if (chevronEl) chevronEl.style.transform = "rotate(180deg)";
+      }
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.classList.add("ring-2", "ring-blue-500");
+      setTimeout(() => card.classList.remove("ring-2", "ring-blue-500"), 1400);
+    }
+
+    const clearHistoryModal = document.getElementById("clear-history-modal");
+    document.getElementById("clear-history-btn").addEventListener("click", () => {
+      if (historyRecords.length === 0) {
+        showToast("Історія вже порожня");
+        return;
+      }
+      clearHistoryModal.classList.remove("hidden");
+    });
+
+    document.getElementById("clear-hist-cancel-btn").addEventListener("click", () => {
+      clearHistoryModal.classList.add("hidden");
+    });
+
+    document.getElementById("clear-hist-confirm-btn").addEventListener("click", () => {
       historyRecords = [];
       try {
         localStorage.removeItem(historyKey);
       } catch (e) {}
+      clearHistoryModal.classList.add("hidden");
       syncSaveToServer();
       renderHistory();
-      showToast('Історію очищено');
+      showToast("Історію очищено");
     });
 
+    // ==========================================
+    // MY NORMS TAB: METABOLISM CHAIN, ACCORDION & VISIBILITY TOGGLES
+    // ==========================================
     function renderProfileDetails() {
-      const grid = document.getElementById('profile-details-grid');
+      const chainBox = document.getElementById("metabolism-chain-box");
+      const protScaleBox = document.getElementById("protein-scale-box");
+      const grid = document.getElementById("profile-details-grid");
       const meta = calculateUserMetabolism();
-      const genderStr = userProfile.gender === 'female' ? 'Жінка' : 'Чоловік';
+      const genderStr = userProfile.gender === "female" ? "Жінка" : "Чоловік";
+      const activeGoalObj = meta.goals[currentGoalKey];
+      const w = Number(userProfile.weight) || 76.6;
 
-      grid.innerHTML = `
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Стать та вік</span>
-          <strong class="text-gray-900 dark:text-white font-bold">${genderStr}, ${meta.age} р.</strong>
-        </div>
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Зріст / Вага</span>
-          <strong class="text-gray-900 dark:text-white font-bold">${userProfile.height} см / ${userProfile.weight} кг</strong>
-        </div>
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Базовий обмін (BMR)</span>
-          <strong class="text-gray-900 dark:text-white font-bold">${meta.bmr} ккал/добу</strong>
-        </div>
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Цільова вага</span>
-          <strong class="text-blue-600 dark:text-blue-400 font-bold">${userProfile.targetWeight ? userProfile.targetWeight + ' кг' : 'Не вказана'}</strong>
-        </div>
-      `;
+      if (chainBox) {
+        chainBox.innerHTML = `
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl border border-gray-100 dark:border-slate-700">
+            <span class="text-[10px] text-gray-400 block font-medium">Базовий BMR</span>
+            <strong class="text-xs font-extrabold text-gray-900 dark:text-white mt-0.5 block">${meta.bmr} ккал</strong>
+          </div>
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl border border-gray-100 dark:border-slate-700">
+            <span class="text-[10px] text-gray-400 block font-medium">Норма (×1.62)</span>
+            <strong class="text-xs font-extrabold text-gray-900 dark:text-white mt-0.5 block">${meta.tdee} ккал</strong>
+          </div>
+          <div class="bg-blue-50 dark:bg-blue-950/50 p-2 rounded-xl border border-blue-200 dark:border-blue-800">
+            <span class="text-[10px] text-blue-600 dark:text-blue-400 block font-bold truncate">${activeGoalObj.name}</span>
+            <strong class="text-xs font-black text-blue-700 dark:text-blue-300 mt-0.5 block">${activeGoalObj.targetKcal} ккал</strong>
+          </div>
+        `;
+      }
+
+      if (protScaleBox) {
+        const minProt = Math.round(w * 1.8);
+        const maxProt = Math.round(w * 2.2);
+        let todayProt = 0;
+        MASTER_CATEGORIES.forEach(cat => {
+          cat.items.forEach(it => {
+            const amt = consumed[it.id] || 0;
+            if (amt > 0) {
+              const baseW = getItemEffectiveBase(it);
+              const baseP = getItemEffectiveProtein(it);
+              if (baseW > 0) todayProt += (amt / baseW) * baseP;
+            }
+          });
+        });
+        todayProt = Math.round(todayProt * 10) / 10;
+        const curRatio = (todayProt / w).toFixed(1);
+        const fillPct = Math.min(100, Math.round((todayProt / maxProt) * 100));
+
+        protScaleBox.innerHTML = `
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-bold text-gray-700 dark:text-gray-200">Цільовий білок (1.8–2.2 г/кг):</span>
+            <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${minProt}–${maxProt} г <span class="text-gray-400 font-normal">(зараз ${curRatio} г/кг)</span></span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full transition-all" style="width: ${fillPct}%"></div>
+          </div>
+        `;
+      }
+
+      if (grid) {
+        grid.innerHTML = `
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl text-center">
+            <span class="text-gray-400 block text-[10px]">Стать / вік</span>
+            <strong class="text-gray-900 dark:text-white font-bold">${genderStr}, ${meta.age} р.</strong>
+          </div>
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl text-center">
+            <span class="text-gray-400 block text-[10px]">Зріст / Вага</span>
+            <strong class="text-gray-900 dark:text-white font-bold">${userProfile.height} см / ${userProfile.weight} кг</strong>
+          </div>
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl text-center">
+            <span class="text-gray-400 block text-[10px]">Цільова вага</span>
+            <strong class="text-blue-600 dark:text-blue-400 font-bold">${userProfile.targetWeight ? userProfile.targetWeight + " кг" : "Не задана"}</strong>
+          </div>
+        `;
+      }
+    }
+
+    function computeLiveSettingsMacros(it, rawVal) {
+      const specs = getItemSpecs(it);
+      const effBase = parseDecimalInput(rawVal);
+      if (specs.base <= 0 || effBase <= 0) {
+        return { kcal: 0, protein: 0 };
+      }
+      return {
+        kcal: Math.round((effBase / specs.base) * specs.kcal),
+        protein: Math.round((effBase / specs.base) * specs.protein * 10) / 10
+      };
+    }
+
+    function toggleSettingsCategoryAccordion(catId) {
+      openSettingsCats[catId] = !openSettingsCats[catId];
+      renderSettings();
+    }
+
+    function toggleProductVisibilityInSettings(itemId) {
+      if (hiddenItemsMap[itemId]) {
+        delete hiddenItemsMap[itemId];
+      } else {
+        hiddenItemsMap[itemId] = true;
+        if (currentlyExpandedId === itemId) {
+          closeProductDrawer(itemId);
+        }
+      }
+      try {
+        localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
+      } catch (e) {}
+      syncSaveToServer();
+      updateValuesInPlace();
+      renderSettings();
+      showToast(hiddenItemsMap[itemId] ? "Продукт приховано з головного екрана" : "Продукт повернуто в раціон");
     }
 
     function renderSettings() {
-      const container = document.getElementById('settings-categories-container');
-      container.innerHTML = '';
+      const container = document.getElementById("settings-categories-container");
+      container.innerHTML = "";
 
       MASTER_CATEGORIES.forEach(cat => {
-        const catBox = document.createElement('div');
-        catBox.className = 'border border-gray-200 dark:border-slate-700 rounded-xl p-3 bg-white dark:bg-slate-800 space-y-2';
+        const isOpen = Boolean(openSettingsCats[cat.id]);
+        const activeCount = cat.items.filter(it => !hiddenItemsMap[it.id]).length;
+        const totalCount = cat.items.length;
+        const modifiedCount = cat.items.filter(it => {
+          const ck = `${it.id}_${currentGoalKey}`;
+          return customBaseMap[ck] !== undefined && customBaseMap[ck] > 0;
+        }).length;
 
-        let rowsHtml = '';
+        const catBox = document.createElement("div");
+        catBox.className = "border border-gray-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-xs overflow-hidden";
+
+        let rowsHtml = "";
         cat.items.forEach(it => {
           const specs = getItemSpecs(it);
           const currentBase = getItemEffectiveBase(it);
+          const isHidden = Boolean(hiddenItemsMap[it.id]);
+          const live = computeLiveSettingsMacros(it, currentBase);
+
+          const eyeIconSvg = isHidden
+            ? `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>`
+            : `<svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
+
           rowsHtml += `
-            <div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-              <span class="text-gray-800 dark:text-gray-200 text-xs font-medium pr-2">${specs.name}</span>
+            <div class="flex items-center justify-between gap-2 py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0 ${isHidden ? "opacity-50" : ""}">
+              <div class="flex items-center space-x-2 min-w-0 flex-1">
+                <button type="button" onclick="toggleProductVisibilityInSettings('${it.id}')" title="${isHidden ? "Показати в раціоні" : "Приховати з раціону"}" class="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-700/80 hover:bg-blue-50 dark:hover:bg-slate-600 transition shrink-0">
+                  ${eyeIconSvg}
+                </button>
+                <div class="min-w-0 flex-1">
+                  <div class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate ${isHidden ? "line-through" : ""}">${specs.name}</div>
+                  <div id="settings-macro-preview-${it.id}" class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
+                    ${live.kcal} ккал • ${live.protein} г білка
+                  </div>
+                </div>
+              </div>
               <div class="flex items-center space-x-1.5 shrink-0">
                 <input 
-                  type="number" 
+                  type="text" 
                   data-base-item-id="${it.id}" 
                   value="${currentBase}" 
-                  inputmode="numeric"
+                  inputmode="decimal"
                   enterkeyhint="done"
+                  autocomplete="off"
                   class="w-16 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                <span class="text-gray-400 text-xs">${it.unit}</span>
+                <span class="text-gray-400 text-xs w-4">${it.unit}</span>
               </div>
             </div>
           `;
         });
 
         catBox.innerHTML = `
-          <div class="flex items-center space-x-2 mb-1.5">
-            <span class="w-5 h-5 rounded flex items-center justify-center font-bold text-white text-[11px]" style="background-color: ${cat.badgeBg};">${cat.id}</span>
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white">${cat.name}</h3>
+          <div onclick="toggleSettingsCategoryAccordion('${cat.id}')" class="p-3 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-gray-50/70 dark:hover:bg-slate-750 transition">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <span class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-white text-xs shrink-0" style="background-color: ${cat.badgeBg};">${cat.id}</span>
+              <div class="min-w-0">
+                <h3 class="text-xs font-bold text-gray-900 dark:text-white truncate">${cat.name}</h3>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">${cat.desc}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0">
+              ${modifiedCount > 0 ? `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">Змінено: ${modifiedCount}</span>` : ""}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300">${activeCount}/${totalCount}</span>
+              <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
           </div>
-          <div class="space-y-0.5">
+          <div class="${isOpen ? "block" : "hidden"} px-3 pb-2.5 pt-1 border-t border-gray-100 dark:border-slate-700/60">
             ${rowsHtml}
           </div>
         `;
         container.appendChild(catBox);
       });
+
+      container.querySelectorAll("input[data-base-item-id]").forEach(inp => {
+        inp.addEventListener("input", (e) => {
+          const itemId = e.target.getAttribute("data-base-item-id");
+          let targetItem = null;
+          for (const c of MASTER_CATEGORIES) {
+            const found = c.items.find(x => x.id === itemId);
+            if (found) {
+              targetItem = found;
+              break;
+            }
+          }
+          if (!targetItem) return;
+          const live = computeLiveSettingsMacros(targetItem, e.target.value);
+          const previewEl = document.getElementById(`settings-macro-preview-${itemId}`);
+          if (previewEl) {
+            previewEl.textContent = `${live.kcal} ккал • ${live.protein} г білка`;
+          }
+        });
+      });
     }
 
-    document.getElementById('save-settings-btn').addEventListener('click', () => {
-      document.querySelectorAll('input[data-base-item-id]').forEach(input => {
-        const id = input.getAttribute('data-base-item-id');
-        const val = Number(input.value) || 0;
+    document.getElementById("save-settings-btn").addEventListener("click", () => {
+      document.querySelectorAll("input[data-base-item-id]").forEach(input => {
+        const id = input.getAttribute("data-base-item-id");
+        const val = parseDecimalInput(input.value);
         if (val > 0) {
           customBaseMap[`${id}_${currentGoalKey}`] = val;
         }
@@ -2626,68 +3728,153 @@
       } catch (e) {}
       syncSaveToServer();
       updateValuesInPlace();
-      showToast('Норми збережено!');
-      switchView('calculator');
+      showToast("Норми збережено!");
+      switchView("calculator");
     });
 
-    document.getElementById('reset-defaults-btn').addEventListener('click', () => {
+    document.getElementById("reset-defaults-btn").addEventListener("click", () => {
       customBaseMap = {};
+      hiddenItemsMap = {};
       try {
         localStorage.removeItem(userBaseKey);
+        localStorage.removeItem(hiddenItemsKey);
       } catch (e) {}
       syncSaveToServer();
       renderSettings();
       updateValuesInPlace();
-      showToast('Скинуто до розрахункових значень');
+      showToast("Скинуто до базових значень");
+    });
+
+    // Export & Import JSON Backup Handlers
+    document.getElementById("export-json-btn").addEventListener("click", () => {
+      const backupObj = {
+        exportedAt: new Date().toISOString(),
+        dietDayKey: getDietDayKey(),
+        userProfile: userProfile,
+        customBaseMap: customBaseMap,
+        hiddenItemsMap: hiddenItemsMap,
+        measurementsData: measurementsData,
+        historyRecords: historyRecords,
+        currentGoal: currentGoalKey,
+        consumed: consumed
+      };
+      const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ration_backup_${getDietDayKey()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Файл резервної копії JSON завантажено");
+    });
+
+    document.getElementById("import-json-input").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!imported || typeof imported !== "object") throw new Error("Invalid JSON");
+
+          if (imported.userProfile) {
+            userProfile = Object.assign(userProfile, imported.userProfile);
+            saveUserProfile();
+          }
+          if (imported.customBaseMap) {
+            customBaseMap = imported.customBaseMap;
+            localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
+          }
+          if (imported.hiddenItemsMap) {
+            hiddenItemsMap = imported.hiddenItemsMap;
+            localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
+          }
+          if (imported.measurementsData) {
+            measurementsData = imported.measurementsData;
+            saveMeasurementsToStorage();
+          }
+          if (Array.isArray(imported.historyRecords)) {
+            historyRecords = imported.historyRecords;
+            localStorage.setItem(historyKey, JSON.stringify(historyRecords));
+          }
+          if (imported.currentGoal) {
+            currentGoalKey = imported.currentGoal;
+          }
+          if (imported.dietDayKey === getDietDayKey() && imported.consumed) {
+            for (const k in imported.consumed) {
+              if (Object.prototype.hasOwnProperty.call(consumed, k)) {
+                consumed[k] = Number(imported.consumed[k]) || 0;
+              }
+            }
+          }
+
+          updateGoalButtonsUI();
+          updateValuesInPlace();
+          renderProfileDetails();
+          renderSettings();
+          syncSaveToServer(true);
+          showToast("Резервну копію успішно відновлено!");
+        } catch (err) {
+          showToast("Помилка: некоректний JSON-файл");
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
     });
 
     // Reopen Onboarding from settings
-    document.getElementById('reopen-onboarding-btn').addEventListener('click', () => {
-      openOnboardingModal();
+    document.getElementById("reopen-onboarding-btn").addEventListener("click", () => {
+      openOnboardingModal(true);
     });
 
     // ==========================================
-    // ONBOARDING WIZARD LOGIC (Birthday + Optional Circumferences)
+    // ONBOARDING WIZARD LOGIC (Birthday, Gender, Height, Weight, Target Weight, Optional Measurements)
     // ==========================================
     function checkOnboardingNeeded() {
       if (!userProfile.hasCompletedOnboarding) {
-        openOnboardingModal();
+        openOnboardingModal(false);
       }
     }
 
-    function openOnboardingModal() {
-      const modal = document.getElementById('onboarding-modal');
-      const genderRadio = document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`);
+    function openOnboardingModal(isEditing = false) {
+      const modal = document.getElementById("onboarding-modal");
+      const genderRadio = document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || "male"}"]`);
       if (genderRadio) genderRadio.checked = true;
+      document.getElementById("ob-birthday").value = userProfile.birthday || "1991-05-15";
 
-      document.getElementById('ob-birthday').value = userProfile.birthday || '1991-05-15';
-      document.getElementById('ob-height').value = userProfile.height || 183;
-      document.getElementById('ob-weight').value = userProfile.weight || 76.6;
-      document.getElementById('ob-target-weight').value = userProfile.targetWeight || '';
+      if (isEditing) {
+        document.getElementById("ob-height").value = userProfile.height || "";
+        document.getElementById("ob-weight").value = userProfile.weight || "";
+        document.getElementById("ob-target-weight").value = userProfile.targetWeight || "";
+        document.getElementById("ob-waist").value = getLatestMetricValue("waist", "");
+        document.getElementById("ob-hips").value = getLatestMetricValue("hips", "");
+        document.getElementById("ob-bicep").value = getLatestMetricValue("bicep", "");
+        document.getElementById("ob-chest").value = getLatestMetricValue("chest", "");
+        document.getElementById("ob-thigh").value = getLatestMetricValue("thigh", "");
+      } else {
+        document.getElementById("ob-height").value = "";
+        document.getElementById("ob-weight").value = "";
+        document.getElementById("ob-target-weight").value = "";
+        document.getElementById("ob-waist").value = "";
+        document.getElementById("ob-hips").value = "";
+        document.getElementById("ob-bicep").value = "";
+        document.getElementById("ob-chest").value = "";
+        document.getElementById("ob-thigh").value = "";
+      }
 
-      const w = (measurementsData.waist && measurementsData.waist.length) ? measurementsData.waist[measurementsData.waist.length - 1].val : '';
-      const h = (measurementsData.hips && measurementsData.hips.length) ? measurementsData.hips[measurementsData.hips.length - 1].val : '';
-      const b = (measurementsData.bicep && measurementsData.bicep.length) ? measurementsData.bicep[measurementsData.bicep.length - 1].val : '';
-      const c = (measurementsData.chest && measurementsData.chest.length) ? measurementsData.chest[measurementsData.chest.length - 1].val : '';
-      const th = (measurementsData.thigh && measurementsData.thigh.length) ? measurementsData.thigh[measurementsData.thigh.length - 1].val : '';
-
-      document.getElementById('ob-waist').value = w;
-      document.getElementById('ob-hips').value = h;
-      document.getElementById('ob-bicep').value = b;
-      document.getElementById('ob-chest').value = c;
-      document.getElementById('ob-thigh').value = th;
-
-      modal.classList.remove('hidden');
+      modal.classList.remove("hidden");
     }
 
-    document.getElementById('onboarding-form').addEventListener('submit', (e) => {
+    document.getElementById("onboarding-form").addEventListener("submit", (e) => {
       e.preventDefault();
 
       const gender = document.querySelector('input[name="ob-gender"]:checked').value;
-      const birthday = document.getElementById('ob-birthday').value || '1991-05-15';
-      const height = Number(document.getElementById('ob-height').value) || 183;
-      const weight = Number(document.getElementById('ob-weight').value) || 76.6;
-      const rawTarget = Number(document.getElementById('ob-target-weight').value);
+      const birthday = document.getElementById("ob-birthday").value || "1991-05-15";
+      const height = parseDecimalInput(document.getElementById("ob-height").value) || 183;
+      const weight = parseDecimalInput(document.getElementById("ob-weight").value) || 76.6;
+      const rawTarget = parseDecimalInput(document.getElementById("ob-target-weight").value);
       const targetWeight = rawTarget > 0 ? rawTarget : null;
 
       userProfile.gender = gender;
@@ -2700,74 +3887,53 @@
 
       saveUserProfile();
 
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = getDietDayKey();
+      const waistVal = parseDecimalInput(document.getElementById("ob-waist").value);
+      const hipsVal = parseDecimalInput(document.getElementById("ob-hips").value);
+      const bicepVal = parseDecimalInput(document.getElementById("ob-bicep").value);
+      const chestVal = parseDecimalInput(document.getElementById("ob-chest").value);
+      const thighVal = parseDecimalInput(document.getElementById("ob-thigh").value);
 
-      // Upsert today's weight in measurementsData
-      if (!Array.isArray(measurementsData.weight)) measurementsData.weight = [];
-      const wIdx = measurementsData.weight.findIndex(x => x.date === todayStr);
-      if (wIdx !== -1) {
-        measurementsData.weight[wIdx].val = weight;
-      } else {
-        measurementsData.weight.push({ date: todayStr, val: weight });
-      }
-
-      // Only save non-empty optional circumference values
-      const optionalMetrics = [
-        { key: 'waist', inputId: 'ob-waist' },
-        { key: 'hips', inputId: 'ob-hips' },
-        { key: 'bicep', inputId: 'ob-bicep' },
-        { key: 'chest', inputId: 'ob-chest' },
-        { key: 'thigh', inputId: 'ob-thigh' }
-      ];
-
-      optionalMetrics.forEach(({ key, inputId }) => {
-        if (!Array.isArray(measurementsData[key])) measurementsData[key] = [];
-        const rawStr = document.getElementById(inputId).value.trim();
-        const numVal = Number(rawStr);
-        if (rawStr !== '' && numVal > 0) {
-          const idx = measurementsData[key].findIndex(x => x.date === todayStr);
-          if (idx !== -1) {
-            measurementsData[key][idx].val = numVal;
-          } else {
-            measurementsData[key].push({ date: todayStr, val: numVal });
-          }
-        }
-      });
-
+      measurementsData.weight = [{ date: todayStr, val: weight }];
+      if (waistVal > 0) measurementsData.waist = [{ date: todayStr, val: waistVal }];
+      if (hipsVal > 0) measurementsData.hips = [{ date: todayStr, val: hipsVal }];
+      if (bicepVal > 0) measurementsData.bicep = [{ date: todayStr, val: bicepVal }];
+      if (chestVal > 0) measurementsData.chest = [{ date: todayStr, val: chestVal }];
+      if (thighVal > 0) measurementsData.thigh = [{ date: todayStr, val: thighVal }];
       saveMeasurementsToStorage();
 
-      document.getElementById('onboarding-modal').classList.add('hidden');
+      document.getElementById("onboarding-modal").classList.add("hidden");
       updateGoalButtonsUI();
       buildCalculatorDOM();
       updateValuesInPlace();
       renderMeasurementsList();
-      syncSaveToServer();
-      showToast('Анкету заповнено! Раціон перераховано.');
+      syncSaveToServer(true);
+      showToast("Анкету заповнено! Раціон перераховано.");
     });
 
-    document.getElementById('header-back-btn').addEventListener('click', () => {
-      if (currentView === 'measurements' && !document.getElementById('measurement-detail-screen').classList.contains('hidden')) {
-        document.getElementById('measurement-detail-screen').classList.add('hidden');
-        document.getElementById('measurements-list-screen').classList.remove('hidden');
+    document.getElementById("header-back-btn").addEventListener("click", () => {
+      if (currentView === "measurements" && !document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
+        document.getElementById("measurement-detail-screen").classList.add("hidden");
+        document.getElementById("measurements-list-screen").classList.remove("hidden");
         renderMeasurementsList();
-      } else if (currentView !== 'calculator') {
-        switchView('calculator');
-      } else if (tg && typeof tg.close === 'function') {
+      } else if (currentView !== "calculator") {
+        switchView("calculator");
+      } else if (tg && typeof tg.close === "function") {
         tg.close();
       } else {
-        showToast('Головний екран раціону');
+        showToast("Головний екран раціону");
       }
     });
 
     function showToast(msg) {
-      const toast = document.getElementById('toast');
+      const toast = document.getElementById("toast");
       if (!toast) return;
       toast.textContent = msg;
-      toast.classList.remove('opacity-0');
-      toast.classList.add('opacity-100');
+      toast.classList.remove("opacity-0");
+      toast.classList.add("opacity-100");
       setTimeout(() => {
-        toast.classList.remove('opacity-100');
-        toast.classList.add('opacity-0');
+        toast.classList.remove("opacity-100");
+        toast.classList.add("opacity-0");
       }, 2000);
     }
 
@@ -2786,21 +3952,21 @@
           }));
         } catch (e) {}
         updateValuesInPlace();
-        if (currentView === 'history') {
+        if (currentView === "history") {
           renderHistory();
         }
-        showToast('Розпочато нову добу раціону (03:00)');
+        showToast("Розпочато нову добу раціону (03:00)");
       }
     }
 
     setInterval(checkDietDayRollover, 30000);
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         checkDietDayRollover();
         applySafeAreaInsets();
       }
     });
-    window.addEventListener('focus', () => {
+    window.addEventListener("focus", () => {
       checkDietDayRollover();
       applySafeAreaInsets();
     });
