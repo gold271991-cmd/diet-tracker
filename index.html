@@ -49,11 +49,15 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
     input, select, textarea {
-      user-select: text;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      touch-action: manipulation;
+    }
+    .drawer-controls {
+      touch-action: manipulation;
     }
     .slider-container {
       touch-action: pan-y;
@@ -123,23 +127,12 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* Мобільна клавіатура: компактна шапка, приховування нижнього меню та запас прокрутки */
+    /* Мобільна клавіатура: ховаємо нижню панель та даємо запас прокрутки без перемальовування шапки */
     body.keyboard-open #bottom-nav {
       display: none !important;
     }
-    body.keyboard-open #goal-selector-container,
-    body.keyboard-open #top-nutrition-summary,
-    body.keyboard-open #header-controls-row {
-      display: none !important;
-    }
-    body.keyboard-open #compact-keyboard-bar {
-      display: flex !important;
-    }
-    body.keyboard-open #app-header {
-      padding-bottom: 0.5rem;
-    }
     body.keyboard-open {
-      padding-bottom: 62vh !important;
+      padding-bottom: 52vh !important;
     }
   </style>
 </head>
@@ -147,51 +140,36 @@
 
   <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors relative">
     
-    <!-- Top Header (Sticky & opaque with safe area padding for Android status bar & Telegram overlay buttons) -->
-    <header id="app-header" class="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 transition-colors shadow-xs">
-      
-      <!-- Compact single-line summary shown ONLY when mobile keyboard is open -->
-      <div id="compact-keyboard-bar" class="hidden items-center justify-between text-xs py-0.5">
-        <div class="flex items-center space-x-2 min-w-0">
-          <span class="font-bold text-gray-900 dark:text-white truncate" id="compact-kb-kcal">🔥 0 / 2 208 ккал</span>
-          <span class="text-gray-300 dark:text-slate-600">•</span>
-          <span class="font-bold text-blue-600 dark:text-blue-400 shrink-0" id="compact-kb-prot">🥩 0 г білка</span>
-        </div>
-        <button type="button" id="compact-kb-done-btn" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-[11px] shrink-0">
-          ✓ Готово
-        </button>
-      </div>
-
-      <!-- Top controls -->
-      <div id="header-controls-row" class="flex items-center justify-between mb-2.5">
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 shrink-0" title="Закрити / Назад">
+    <!-- Compact Sticky Top Bar (Never hides focused inputs on mobile keyboard) -->
+    <header id="app-header" class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-3.5 pb-2.5 transition-colors">
+      <div id="header-controls-row" class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <button id="header-back-btn" type="button" class="p-1.5 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 shrink-0" title="Закрити / Назад">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <div class="min-w-0">
-            <div class="flex items-center space-x-2">
-              <h1 id="top-title-text" class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none">Раціон</h1>
-              <span id="user-name-display" class="text-xs font-semibold text-blue-600 dark:text-blue-400 truncate"></span>
-            </div>
-            <div class="text-xs text-gray-400 dark:text-gray-500 leading-tight mt-1 truncate" id="athlete-profile-summary">
-              Чоловік, 35 р, 183 см • 76.6 кг
+          <div class="min-w-0 flex-1">
+            <h1 id="top-title-text" class="text-base font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight whitespace-nowrap truncate">Раціон</h1>
+            <div class="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-400 leading-tight mt-0.5 truncate">
+              <span id="user-name-display" class="font-semibold text-blue-600 dark:text-blue-400 shrink-0"></span>
+              <span id="user-name-sep" class="text-gray-300 dark:text-slate-600 shrink-0">•</span>
+              <span id="athlete-profile-summary" class="truncate">Чоловік, 35 р, 183 см • 76.6 кг</span>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center space-x-2 shrink-0">
+        <div class="flex items-center gap-1.5 shrink-0">
           <!-- Live Sync & Save Indicator Badge -->
-          <div id="autosave-badge" class="flex items-center space-x-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full transition-opacity duration-300">
-            <svg id="sync-icon-ok" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div id="autosave-badge" class="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-1 rounded-full transition-opacity duration-300 whitespace-nowrap">
+            <svg id="sync-icon-ok" class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
             </svg>
             <span id="sync-status-text">Збережено</span>
           </div>
 
           <!-- Dark Mode Toggle Button -->
-          <button id="theme-toggle-btn" type="button" class="p-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition" title="Змінити тему">
+          <button id="theme-toggle-btn" type="button" class="p-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition shrink-0" title="Змінити тему">
             <svg id="theme-icon-sun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
             </svg>
@@ -200,64 +178,14 @@
             </svg>
           </button>
 
-          <!-- Reset button -->
-          <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Reset button (visible on Ration tab) -->
+          <button id="reset-day-btn" type="button" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2 py-1 rounded-full transition flex items-center gap-1 whitespace-nowrap shrink-0">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             <span>Скинути</span>
           </button>
         </div>
-      </div>
-
-      <!-- Goal Selector Segmented Control -->
-      <div id="goal-selector-container" class="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl flex items-center justify-between text-xs font-semibold mb-2">
-        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="deficit">
-          Схуднення <span id="label-goal-deficit" class="text-[10px] block font-normal opacity-85">2 208 ккал</span>
-        </button>
-        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="maintenance">
-          Підтримка <span id="label-goal-maint" class="text-[10px] block font-normal opacity-85">2 822 ккал</span>
-        </button>
-        <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="surplus">
-          Набір м'язів <span id="label-goal-surplus" class="text-[10px] block font-normal opacity-85">3 200 ккал</span>
-        </button>
-      </div>
-
-      <!-- Dynamic Top Summary for Calculator -->
-      <div id="top-nutrition-summary">
-        <!-- Protein Counter -->
-        <div class="text-center my-1">
-          <div class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="top-protein-value">0 грам</div>
-          <div class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">білків спожито</div>
-        </div>
-
-        <!-- Calories Bar -->
-        <div class="mt-1.5">
-          <div class="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            <span>Калорії</span>
-            <span><strong id="top-calories-value" class="text-gray-900 dark:text-white font-bold text-sm">0</strong> <span id="top-target-label" class="text-gray-400 dark:text-gray-500">/ 2208 ккал</span></span>
-          </div>
-          <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
-            <div id="top-calories-bar" class="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
-          </div>
-          <div class="flex justify-between items-center text-xs text-gray-400 dark:text-gray-500 mt-1">
-            <span id="top-calories-percent">0% від норми</span>
-            <span id="top-calories-remaining">Залишок: 2208 ккал</span>
-          </div>
-        </div>
-
-        <!-- Category Navigation Pills -->
-        <nav class="flex space-x-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5 mt-1.5 border-t border-gray-100 dark:border-slate-800 text-xs font-medium">
-          <button type="button" data-cat-filter="all" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs font-semibold">Всі</button>
-          <button type="button" data-cat-filter="A" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600 transition">А • Вуглеводи</button>
-          <button type="button" data-cat-filter="B" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-rose-50 hover:text-rose-600 transition">Б • Білки</button>
-          <button type="button" data-cat-filter="V" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 hover:text-emerald-600 transition">В • Овочі</button>
-          <button type="button" data-cat-filter="G" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition">Г • Жири</button>
-          <button type="button" data-cat-filter="D" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-purple-50 hover:text-purple-600 transition">Д • Молочка</button>
-          <button type="button" data-cat-filter="E" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-pink-50 hover:text-pink-600 transition">Е • Фрукти</button>
-          <button type="button" data-cat-filter="YE" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-slate-50 hover:text-slate-600 transition">Є • Горіхи</button>
-          <button type="button" data-cat-filter="ZH" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-orange-50 hover:text-orange-600 transition">Ж • Інше</button>
-        </nav>
       </div>
     </header>
 
@@ -266,6 +194,56 @@
       
       <!-- 1. Ration Calculator View -->
       <div id="view-calculator" class="space-y-3.5">
+        <!-- Goal Selector Segmented Control -->
+        <div id="goal-selector-container" class="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl flex items-center justify-between text-xs font-semibold">
+          <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold" data-goal="deficit">
+            Схуднення <span id="label-goal-deficit" class="text-[10px] block font-normal opacity-85">2 208 ккал</span>
+          </button>
+          <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="maintenance">
+            Підтримка <span id="label-goal-maint" class="text-[10px] block font-normal opacity-85">2 822 ккал</span>
+          </button>
+          <button type="button" class="goal-btn flex-1 py-1.5 px-1 rounded-lg text-center transition text-gray-600 dark:text-gray-400" data-goal="surplus">
+            Набір м'язів <span id="label-goal-surplus" class="text-[10px] block font-normal opacity-85">3 200 ккал</span>
+          </button>
+        </div>
+
+        <!-- Daily Nutrition Summary & Category Navigation -->
+        <div id="top-nutrition-summary" class="bg-white dark:bg-slate-800/80 rounded-2xl p-3.5 border border-gray-100 dark:border-slate-800 shadow-xs">
+          <!-- Protein Counter -->
+          <div class="text-center mb-1.5">
+            <div class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="top-protein-value">0 грам</div>
+            <div class="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">білків спожито</div>
+          </div>
+
+          <!-- Calories Bar -->
+          <div class="mt-1.5">
+            <div class="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+              <span>Калорії</span>
+              <span><strong id="top-calories-value" class="text-gray-900 dark:text-white font-bold text-sm">0</strong> <span id="top-target-label" class="text-gray-400 dark:text-gray-500">/ 2208 ккал</span></span>
+            </div>
+            <div class="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div id="top-calories-bar" class="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-400 dark:text-gray-500 mt-1">
+              <span id="top-calories-percent">0% від норми</span>
+              <span id="top-calories-remaining">Залишок: 2208 ккал</span>
+            </div>
+          </div>
+
+          <!-- Category Navigation Pills -->
+          <nav class="flex space-x-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5 mt-2.5 border-t border-gray-100 dark:border-slate-700/70 text-xs font-medium">
+            <button type="button" data-cat-filter="all" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-900 dark:bg-white text-white dark:text-gray-900 transition shadow-xs font-semibold">Всі</button>
+            <button type="button" data-cat-filter="A" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600 transition">А • Вуглеводи</button>
+            <button type="button" data-cat-filter="B" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-rose-50 hover:text-rose-600 transition">Б • Білки</button>
+            <button type="button" data-cat-filter="V" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 hover:text-emerald-600 transition">В • Овочі</button>
+            <button type="button" data-cat-filter="G" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition">Г • Жири</button>
+            <button type="button" data-cat-filter="D" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-purple-50 hover:text-purple-600 transition">Д • Молочка</button>
+            <button type="button" data-cat-filter="E" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-pink-50 hover:text-pink-600 transition">Е • Фрукти</button>
+            <button type="button" data-cat-filter="YE" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-slate-50 hover:text-slate-600 transition">Є • Горіхи</button>
+            <button type="button" data-cat-filter="ZH" class="cat-pill px-3 py-1 rounded-full whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-orange-50 hover:text-orange-600 transition">Ж • Інше</button>
+          </nav>
+        </div>
+
         <div class="px-3 py-2 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl flex items-center justify-between text-xs text-blue-900 dark:text-blue-300">
           <div class="flex items-center space-x-2">
             <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1027,16 +1005,13 @@
         const screenDiff = (window.screen && window.screen.height) ? (window.screen.height - window.innerHeight) : 999;
         const isEdgeToEdge = tg.isFullscreen || isStandalone || (isMobile && screenDiff < 95);
 
-        if (isEdgeToEdge) {
-          const minTop = isAndroid ? 92 : 84;
-          if (topInset < minTop) {
-            topInset = minTop;
-          }
-        } else if (isMobile && topInset < 12) {
-          topInset = 12;
+        if (isEdgeToEdge && topInset === 0) {
+          topInset = isAndroid ? 56 : 52;
+        } else if (isMobile && topInset < 10) {
+          topInset = 10;
         }
       } else if (isStandalone || isMobile) {
-        topInset = isStandalone ? 44 : 8;
+        topInset = isStandalone ? 36 : 8;
       }
 
       const rootStyles = getComputedStyle(document.documentElement);
@@ -1089,6 +1064,8 @@
     }
 
     document.getElementById("user-name-display").textContent = userName;
+    const nameSepEl = document.getElementById("user-name-sep");
+    if (nameSepEl) nameSepEl.classList.toggle("hidden", !userName);
     applyTelegramTheme();
     applySafeAreaInsets();
     window.addEventListener("resize", applySafeAreaInsets);
@@ -1793,11 +1770,6 @@
       const remainingKcal = Math.max(0, targetCalories - topCalories);
       document.getElementById("top-calories-remaining").textContent = `Залишок: ${remainingKcal.toLocaleString("uk-UA")} ккал`;
 
-      const compactKcal = document.getElementById("compact-kb-kcal");
-      const compactProt = document.getElementById("compact-kb-prot");
-      if (compactKcal) compactKcal.textContent = `🔥 ${topCalories.toLocaleString("uk-UA")} / ${targetCalories.toLocaleString("uk-UA")} ккал`;
-      if (compactProt) compactProt.textContent = `🥩 ${topProtein} г білка`;
-
       triggerAutoSave(topCalories, topProtein);
       updateReminderBadges();
     }
@@ -1921,15 +1893,17 @@
       });
 
       document.querySelectorAll(".drawer-controls").forEach(drawer => {
-        drawer.addEventListener("click", (e) => {
-          e.stopPropagation();
+        ["click", "touchstart", "pointerdown"].forEach(evtName => {
+          drawer.addEventListener(evtName, (e) => {
+            e.stopPropagation();
+          }, { passive: true });
         });
       });
 
       if (!outsideClickBound) {
         outsideClickBound = true;
         document.addEventListener("click", (e) => {
-          if (!e.target.closest(".product-card") && !e.target.closest("#compact-keyboard-bar")) {
+          if (!e.target.closest(".product-card")) {
             closeAllProductDrawers();
           }
         });
@@ -2026,6 +2000,77 @@
       }
     }
 
+    // ==========================================
+    // MOBILE KEYBOARD UX (STABLE FOCUS + SAFE SCROLL + ✓ CONFIRMATION)
+    // ==========================================
+    (function setupMobileKeyboardUX() {
+      let blurTimer = null;
+
+      function scrollFocusedInputIntoView(inp) {
+        if (!inp || document.activeElement !== inp) return;
+        const targetBlock = inp.closest(".product-card") || inp.closest("form > div") || inp;
+        try {
+          targetBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (err) {}
+      }
+
+      document.addEventListener("focusin", (e) => {
+        const inp = e.target;
+        if (!inp || inp.tagName !== "INPUT") return;
+        if (["range", "radio", "checkbox", "file", "date"].includes(inp.type)) return;
+
+        clearTimeout(blurTimer);
+        document.body.classList.add("keyboard-open");
+
+        if (inp.value === "0" || inp.value === "0.0") {
+          inp.value = "";
+        }
+
+        setTimeout(() => scrollFocusedInputIntoView(inp), 220);
+        setTimeout(() => scrollFocusedInputIntoView(inp), 480);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        const inp = e.target;
+        if (!inp || inp.tagName !== "INPUT") return;
+
+        if (e.key === "Enter" || e.keyCode === 13) {
+          const itemId = inp.getAttribute("data-item-id");
+          if (itemId) {
+            e.preventDefault();
+            const val = parseDecimalInput(inp.value);
+            consumed[itemId] = val;
+            updateValuesInPlace("input", itemId);
+            inp.blur();
+            closeProductDrawer(itemId);
+            return;
+          }
+
+          if (!inp.closest("form")) {
+            e.preventDefault();
+            inp.blur();
+          }
+        }
+      });
+
+      document.addEventListener("focusout", (e) => {
+        const inp = e.target;
+        if (inp && inp.tagName === "INPUT" && inp.getAttribute("data-item-id")) {
+          const itemId = inp.getAttribute("data-item-id");
+          const val = parseDecimalInput(inp.value);
+          consumed[itemId] = val;
+          updateValuesInPlace("input", itemId);
+        }
+
+        blurTimer = setTimeout(() => {
+          const active = document.activeElement;
+          if (!active || active.tagName !== "INPUT" || ["range", "radio", "checkbox", "file", "date"].includes(active.type)) {
+            document.body.classList.remove("keyboard-open");
+          }
+        }, 160);
+      });
+    })();
+
     // Goal change handler
     document.querySelectorAll(".goal-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
@@ -2093,204 +2138,102 @@
     });
 
     // ==========================================
-    // MOBILE KEYBOARD UX (SAFE-ZONE CENTERING + ✓ CONFIRMATION)
+    // BODY MEASUREMENTS (ЗАМІРИ) — LACONIC ANALYTICS DASHBOARD
     // ==========================================
-    (function setupMobileKeyboardUX() {
-      let blurTimer = null;
-
-      function positionActiveInputInSafeZone(inp) {
-        if (!inp || !document.body.classList.contains("keyboard-open")) return;
-        const targetBlock = inp.closest(".product-card") || inp.closest("form > div") || inp;
-        const header = document.getElementById("app-header");
-        const headerBottom = header ? header.getBoundingClientRect().bottom : 56;
-        const vv = window.visualViewport;
-        const visibleTop = (vv ? vv.offsetTop : 0) + headerBottom + 10;
-        const visibleBottom = vv ? (vv.offsetTop + vv.height - 12) : (window.innerHeight - 12);
-
-        if (visibleBottom <= visibleTop + 30) return;
-
-        const rect = targetBlock.getBoundingClientRect();
-        const blockCenter = rect.top + rect.height / 2;
-        const safeCenter = (visibleTop + visibleBottom) / 2;
-        const scrollDelta = blockCenter - safeCenter;
-
-        if (Math.abs(scrollDelta) > 8) {
-          window.scrollBy({ top: scrollDelta, behavior: "smooth" });
-        }
-      }
-
-      document.getElementById("compact-kb-done-btn").addEventListener("click", (e) => {
-        e.preventDefault();
-        const active = document.activeElement;
-        if (active && active.tagName === "INPUT") {
-          active.blur();
-        }
-        closeAllProductDrawers();
-        document.body.classList.remove("keyboard-open");
-      });
-
-      document.addEventListener("focusin", (e) => {
-        const inp = e.target;
-        if (!inp || inp.tagName !== "INPUT") return;
-        if (["range", "radio", "checkbox", "file", "date"].includes(inp.type)) return;
-
-        clearTimeout(blurTimer);
-        document.body.classList.add("keyboard-open");
-
-        if (inp.value === "0" || inp.value === "0.0") {
-          inp.value = "";
-        } else if (inp.value.length > 0) {
-          setTimeout(() => {
-            try { inp.select(); } catch (err) {}
-          }, 15);
-        }
-
-        setTimeout(() => positionActiveInputInSafeZone(inp), 90);
-        setTimeout(() => positionActiveInputInSafeZone(inp), 300);
-        setTimeout(() => positionActiveInputInSafeZone(inp), 520);
-      });
-
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", () => {
-          const active = document.activeElement;
-          if (active && active.tagName === "INPUT") {
-            positionActiveInputInSafeZone(active);
-          }
-        });
-      }
-
-      document.addEventListener("keydown", (e) => {
-        const inp = e.target;
-        if (!inp || inp.tagName !== "INPUT") return;
-
-        if (e.key === "Enter" || e.keyCode === 13) {
-          const itemId = inp.getAttribute("data-item-id");
-          if (itemId) {
-            e.preventDefault();
-            const val = parseDecimalInput(inp.value);
-            consumed[itemId] = val;
-            updateValuesInPlace("input", itemId);
-            inp.blur();
-            closeProductDrawer(itemId);
-            return;
-          }
-
-          if (!inp.closest("form")) {
-            e.preventDefault();
-            inp.blur();
-          }
-        }
-      });
-
-      document.addEventListener("focusout", (e) => {
-        const inp = e.target;
-        if (inp && inp.tagName === "INPUT" && inp.getAttribute("data-item-id")) {
-          const itemId = inp.getAttribute("data-item-id");
-          const val = parseDecimalInput(inp.value);
-          consumed[itemId] = val;
-          updateValuesInPlace("input", itemId);
-        }
-
-        blurTimer = setTimeout(() => {
-          const active = document.activeElement;
-          if (!active || active.tagName !== "INPUT" || ["range", "radio", "checkbox", "file"].includes(active.type)) {
-            document.body.classList.remove("keyboard-open");
-          }
-        }, 160);
-      });
-    })();
-
-    // ==========================================
-    // BODY MEASUREMENTS (ЗАМІРИ — ANALYTICS DASHBOARD)
-    // ==========================================
-    function getLatestMetricValue(metricId, fallback = null) {
+    function getSortedMetricHistory(metricId) {
       const arr = measurementsData[metricId] || [];
-      if (arr.length === 0) return fallback;
-      const sorted = [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
-      return Number(sorted[sorted.length - 1].val);
+      return [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
     }
 
-    function getFirstMetricValue(metricId, fallback = null) {
-      const arr = measurementsData[metricId] || [];
-      if (arr.length === 0) return fallback;
-      const sorted = [...arr].sort((a, b) => new Date(a.date) - new Date(b.date));
-      return Number(sorted[0].val);
+    function getLatestMetricVal(metricId, fallback = null) {
+      const hist = getSortedMetricHistory(metricId);
+      return hist.length > 0 ? Number(hist[hist.length - 1].val) : fallback;
     }
 
-    function renderMeasurementsOverviewCard() {
+    function getStartMetricVal(metricId, fallback = null) {
+      const hist = getSortedMetricHistory(metricId);
+      return hist.length > 0 ? Number(hist[0].val) : fallback;
+    }
+
+    function renderOverviewTargetCard() {
       const card = document.getElementById("measurements-overview-target");
       if (!card) return;
 
-      const weightHist = [...(measurementsData.weight || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
-      const latestW = weightHist.length > 0 ? Number(weightHist[weightHist.length - 1].val) : Number(userProfile.weight) || 76.6;
-      const startW = Number(userProfile.startWeight) || (weightHist.length > 0 ? Number(weightHist[0].val) : latestW);
+      const weightHist = getSortedMetricHistory("weight");
+      const currentW = weightHist.length > 0 ? Number(weightHist[weightHist.length - 1].val) : Number(userProfile.weight);
+      const startW = userProfile.startWeight || (weightHist.length > 0 ? Number(weightHist[0].val) : currentW);
       const targetW = userProfile.targetWeight ? Number(userProfile.targetWeight) : null;
-
-      // Calculate weekly pace (kg/week) across available measurements
-      let paceText = "Недостатньо даних для темпу";
-      let forecastText = "";
-      if (weightHist.length >= 2) {
-        const recent = weightHist.slice(-4);
-        const firstRec = recent[0];
-        const lastRec = recent[recent.length - 1];
-        const daysSpan = Math.max(1, (new Date(lastRec.date) - new Date(firstRec.date)) / (1000 * 60 * 60 * 24));
-        const weeksSpan = Math.max(1, daysSpan / 7);
-        const weeklyRate = Math.round(((lastRec.val - firstRec.val) / weeksSpan) * 100) / 100;
-        const sign = weeklyRate > 0 ? "+" : "";
-        paceText = `Темп: <strong>${sign}${weeklyRate} кг/тиж</strong>`;
-
-        if (targetW && Math.abs(targetW - latestW) >= 0.1) {
-          const isMovingRight = (targetW > latestW && weeklyRate > 0.03) || (targetW < latestW && weeklyRate < -0.03);
-          if (isMovingRight) {
-            const weeksLeft = Math.abs(targetW - latestW) / Math.abs(weeklyRate);
-            if (weeksLeft <= 104) {
-              const eta = new Date(Date.now() + weeksLeft * 7 * 24 * 60 * 60 * 1000);
-              const etaStr = eta.toLocaleDateString("uk-UA", { day: "numeric", month: "short" });
-              forecastText = ` • Прогноз: <strong>~${etaStr}</strong>`;
-            }
-          }
-        }
-      }
 
       if (!targetW || targetW <= 0) {
         card.innerHTML = `
           <div class="flex items-center justify-between">
             <div>
-              <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">Поточна вага</span>
-              <div class="text-xl font-black text-gray-900 dark:text-white">${latestW} <span class="text-xs font-semibold text-gray-400">кг</span></div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Цільова вага</span>
+              <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5">Поточна вага: <strong>${currentW} кг</strong> • Ціль не задана</p>
             </div>
-            <button type="button" onclick="openTargetWeightModalQuick()" class="px-3 py-1.5 rounded-xl bg-blue-600/15 text-blue-600 dark:text-blue-400 text-xs font-bold hover:bg-blue-600/25 transition">
-              🎯 Задати цільову вагу
+            <button type="button" id="overview-set-tw-btn" class="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition">
+              Задати ціль
             </button>
           </div>
-          <div class="text-[11px] text-gray-600 dark:text-gray-300">${paceText}</div>
         `;
+        const btn = document.getElementById("overview-set-tw-btn");
+        if (btn) {
+          btn.addEventListener("click", () => {
+            document.getElementById("tw-modal-input").value = "";
+            twModal.classList.remove("hidden");
+            document.getElementById("tw-modal-input").focus();
+          });
+        }
         return;
       }
 
       const isLosing = targetW < startW;
       const totalDelta = Math.abs(targetW - startW);
-      const remainingDelta = Math.round(Math.abs(targetW - latestW) * 10) / 10;
+      const remainingDelta = Math.round(Math.abs(targetW - currentW) * 10) / 10;
 
       let pct = 0;
-      if (totalDelta > 0) {
+      if (totalDelta > 0.05) {
         pct = isLosing
-          ? Math.round(((startW - latestW) / totalDelta) * 100)
-          : Math.round(((latestW - startW) / totalDelta) * 100);
+          ? Math.round(((startW - currentW) / totalDelta) * 100)
+          : Math.round(((currentW - startW) / totalDelta) * 100);
+      } else if (Math.abs(currentW - targetW) < 0.1) {
+        pct = 100;
       }
       pct = Math.max(0, Math.min(100, pct));
 
-      const remLabel = Math.abs(latestW - targetW) < 0.1
-        ? "🎉 Ціль досягнуто!"
-        : `Залишилось: ${remainingDelta} кг`;
+      // Calculate weekly pace and forecast date
+      let paceText = "Внесіть ≥2 заміри ваги для прогнозу дати";
+      if (weightHist.length >= 2) {
+        const recent = weightHist.slice(-4);
+        const firstRec = recent[0];
+        const lastRec = recent[recent.length - 1];
+        const daysSpan = Math.max(1, (new Date(lastRec.date) - new Date(firstRec.date)) / (1000 * 60 * 60 * 24));
+        const weeksSpan = Math.max(0.5, daysSpan / 7);
+        const weeklyRate = (Number(lastRec.val) - Number(firstRec.val)) / weeksSpan;
+        const rateRounded = Math.round(weeklyRate * 100) / 100;
+        const rateSign = rateRounded > 0 ? "+" : "";
+
+        const movingTowardsGoal = (isLosing && weeklyRate < -0.03) || (!isLosing && weeklyRate > 0.03);
+        if (Math.abs(currentW - targetW) < 0.1) {
+          paceText = "🎉 Цільову вагу досягнуто!";
+        } else if (movingTowardsGoal) {
+          const weeksNeeded = remainingDelta / Math.abs(weeklyRate);
+          const etaDate = new Date(Date.now() + weeksNeeded * 7 * 24 * 60 * 60 * 1000);
+          const etaStr = etaDate.toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
+          paceText = `Темп: ${rateSign}${rateRounded} кг/тиж • Прогноз: ~${etaStr}`;
+        } else {
+          paceText = `Поточний темп: ${rateSign}${rateRounded} кг/тиж`;
+        }
+      }
 
       card.innerHTML = `
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-1.5">
             <span class="text-sm">🎯</span>
-            <span class="text-xs font-bold text-gray-900 dark:text-white">Вага: <span class="text-blue-600 dark:text-blue-400 font-extrabold">${latestW}</span> → ${targetW} кг</span>
+            <span class="text-xs font-bold text-gray-900 dark:text-white">Ціль: <span class="text-blue-600 dark:text-blue-400 font-extrabold">${targetW} кг</span></span>
+            <span class="text-[11px] text-gray-400">(${startW} → ${currentW} кг)</span>
           </div>
-          <button type="button" onclick="openTargetWeightModalQuick()" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+          <button type="button" id="overview-edit-tw-btn" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">
             Змінити
           </button>
         </div>
@@ -2298,329 +2241,378 @@
           <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
         </div>
         <div class="flex items-center justify-between text-[11px]">
-          <span class="font-bold text-blue-600 dark:text-blue-400">${pct}% до мети</span>
-          <span class="text-gray-600 dark:text-gray-300 font-medium">${remLabel}</span>
-        </div>
-        <div class="text-[11px] text-gray-500 dark:text-gray-400 pt-1 border-t border-blue-200/50 dark:border-slate-700/60">
-          ${paceText}${forecastText}
+          <span class="font-bold text-blue-600 dark:text-blue-400">${pct}% виконано (залишок ${remainingDelta} кг)</span>
+          <span class="text-gray-600 dark:text-gray-300 font-medium">${paceText}</span>
         </div>
       `;
-    }
 
-    function openTargetWeightModalQuick() {
-      document.getElementById("tw-modal-input").value = userProfile.targetWeight || "";
-      document.getElementById("target-weight-modal").classList.remove("hidden");
-      document.getElementById("tw-modal-input").focus();
-    }
-
-    function renderSmartFitnessIndices() {
-      const container = document.getElementById("measurements-indices-grid");
-      if (!container) return;
-
-      const heightCm = Number(userProfile.height) || 183;
-      const latestWaist = getLatestMetricValue("waist", 84);
-      const startWaist = getFirstMetricValue("waist", latestWaist);
-      const latestChest = getLatestMetricValue("chest", 106);
-      const startChest = getFirstMetricValue("chest", latestChest);
-
-      // 1. WHtR (Waist-to-Height Ratio)
-      const whtr = heightCm > 0 ? Math.round((latestWaist / heightCm) * 100) / 100 : 0.46;
-      let whtrLabel = "Атлетична норма";
-      let whtrBadgeClass = "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300";
-      if (whtr < 0.43) {
-        whtrLabel = "Високий рельєф";
-        whtrBadgeClass = "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300";
-      } else if (whtr >= 0.50 && whtr < 0.55) {
-        whtrLabel = "Помірний запас";
-        whtrBadgeClass = "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300";
-      } else if (whtr >= 0.55) {
-        whtrLabel = "Підвищений";
-        whtrBadgeClass = "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300";
+      const editBtn = document.getElementById("overview-edit-tw-btn");
+      if (editBtn) {
+        editBtn.addEventListener("click", () => {
+          document.getElementById("tw-modal-input").value = userProfile.targetWeight || "";
+          twModal.classList.remove("hidden");
+          document.getElementById("tw-modal-input").focus();
+        });
       }
-      const whtrMarkerPct = Math.max(5, Math.min(95, Math.round(((whtr - 0.38) / (0.62 - 0.38)) * 100)));
+    }
 
-      // 2. V-Taper Index (Chest / Waist)
-      const vTaper = latestWaist > 0 ? Math.round((latestChest / latestWaist) * 100) / 100 : 1.26;
-      const startVTaper = startWaist > 0 ? Math.round((startChest / startWaist) * 100) / 100 : vTaper;
-      const vDelta = Math.round((vTaper - startVTaper) * 100) / 100;
-      const vDeltaStr = vDelta > 0 ? `+${vDelta}` : `${vDelta}`;
-      const vDeltaColor = vDelta >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400";
+    function renderSmartIndicesCards() {
+      const grid = document.getElementById("measurements-indices-grid");
+      if (!grid) return;
 
-      container.innerHTML = `
+      const height = Number(userProfile.height) || 183;
+      const waistNow = getLatestMetricVal("waist", 84.0);
+      const chestNow = getLatestMetricVal("chest", 106.0);
+      const waistStart = getStartMetricVal("waist", waistNow);
+      const chestStart = getStartMetricVal("chest", chestNow);
+
+      // 1. Waist-to-Height Ratio (WHtR)
+      const whtr = Math.round((waistNow / height) * 100) / 100;
+      let whtrZone = "Норма";
+      let whtrColor = "text-emerald-600 dark:text-emerald-400";
+      let whtrBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
+      if (whtr < 0.43) {
+        whtrZone = "Сухий рельєф";
+        whtrColor = "text-blue-600 dark:text-blue-400";
+        whtrBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
+      } else if (whtr <= 0.49) {
+        whtrZone = "Атлетична зона";
+        whtrColor = "text-emerald-600 dark:text-emerald-400";
+        whtrBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
+      } else if (whtr <= 0.54) {
+        whtrZone = "Помірний запас";
+        whtrColor = "text-amber-600 dark:text-amber-400";
+        whtrBadgeBg = "bg-amber-50 dark:bg-amber-950/50";
+      } else {
+        whtrZone = "Підвищений";
+        whtrColor = "text-rose-600 dark:text-rose-400";
+        whtrBadgeBg = "bg-rose-50 dark:bg-rose-950/50";
+      }
+      const whtrBarPct = Math.max(8, Math.min(96, Math.round(((whtr - 0.36) / (0.62 - 0.36)) * 100)));
+
+      // 2. V-Taper Ratio (Chest / Waist)
+      const vtaperNow = waistNow > 0 ? Math.round((chestNow / waistNow) * 100) / 100 : 0;
+      const vtaperStart = waistStart > 0 ? Math.round((chestStart / waistStart) * 100) / 100 : vtaperNow;
+      const vtaperDiff = Math.round((vtaperNow - vtaperStart) * 100) / 100;
+      const vtaperDiffStr = vtaperDiff > 0 ? `+${vtaperDiff}` : `${vtaperDiff}`;
+      const vtaperBadgeClass = vtaperDiff >= 0
+        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50"
+        : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50";
+
+      grid.innerHTML = `
         <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
-          <div class="flex items-center justify-between gap-1">
-            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Талія / Зріст</span>
-            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${whtrBadgeClass}">${whtrLabel}</span>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Талія / Зріст</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${whtrColor} ${whtrBadgeBg}">${whtrZone}</span>
           </div>
           <div class="flex items-baseline space-x-1.5">
-            <span class="text-xl font-black text-gray-900 dark:text-white">${whtr.toFixed(2)}</span>
-            <span class="text-[10px] text-gray-400">WHtR</span>
+            <span class="text-xl font-extrabold text-gray-900 dark:text-white">${whtr.toFixed(2)}</span>
+            <span class="text-[10px] text-gray-400">ціль 0.43–0.49</span>
           </div>
-          <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-500">
-            <span class="absolute -top-1 w-3.5 h-3.5 rounded-full bg-white border-2 border-gray-900 dark:border-white shadow-xs -translate-x-1/2" style="left: ${whtrMarkerPct}%"></span>
+          <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400">
+            <span class="absolute -top-1 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-xs" style="left: calc(${whtrBarPct}% - 6px);"></span>
           </div>
         </div>
 
         <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
-          <div class="flex items-center justify-between gap-1">
-            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Індекс V-Taper</span>
-            <span class="text-[10px] font-bold ${vDeltaColor}">${vDeltaStr} від старту</span>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">V-Taper (Груди/Талія)</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${vtaperBadgeClass}">${vtaperDiffStr}</span>
           </div>
           <div class="flex items-baseline space-x-1.5">
-            <span class="text-xl font-black text-gray-900 dark:text-white">${vTaper.toFixed(2)}</span>
-            <span class="text-[10px] text-gray-400">Груди ÷ Талія</span>
+            <span class="text-xl font-extrabold text-gray-900 dark:text-white">${vtaperNow.toFixed(2)}</span>
+            <span class="text-[10px] text-gray-400">${chestNow} / ${waistNow} см</span>
           </div>
           <div class="text-[10px] text-gray-400 dark:text-gray-500 truncate">
-            ${latestChest} см ÷ ${latestWaist} см
+            ${vtaperDiff >= 0 ? "Пропорції плечового поясу покращуються" : "Контролюйте обхват талії"}
           </div>
         </div>
       `;
     }
 
-    function setAnalyticsChartMode(mode) {
-      analyticsChartMode = mode;
-      renderMeasurementsAnalyticsCard();
-    }
+    function buildRadarChartSVG() {
+      const axes = [
+        { id: "chest", label: "Груди" },
+        { id: "bicep", label: "Плече" },
+        { id: "thigh", label: "Стегно" },
+        { id: "hips", label: "Стегна" },
+        { id: "waist", label: "Талія" }
+      ];
 
-    function renderMeasurementsAnalyticsCard() {
-      const container = document.getElementById("measurements-analytics-card");
-      if (!container) return;
+      const cx = 155;
+      const cy = 96;
+      const maxR = 64;
+      const total = axes.length;
 
-      const tabsHtml = `
-        <div class="flex items-center justify-between gap-1.5 flex-wrap">
-          <span class="text-xs font-bold text-gray-900 dark:text-white">Аналітика форми</span>
-          <div class="bg-gray-100 dark:bg-slate-700/70 p-0.5 rounded-lg flex items-center text-[10px] font-bold">
-            <button type="button" onclick="setAnalyticsChartMode('radar')" class="px-2 py-1 rounded-md transition ${analyticsChartMode === "radar" ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs" : "text-gray-500 dark:text-gray-400"}">
-              Пропорції
-            </button>
-            <button type="button" onclick="setAnalyticsChartMode('corr_waist')" class="px-2 py-1 rounded-md transition ${analyticsChartMode === "corr_waist" ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs" : "text-gray-500 dark:text-gray-400"}">
-              Вага + Талія
-            </button>
-            <button type="button" onclick="setAnalyticsChartMode('corr_kcal')" class="px-2 py-1 rounded-md transition ${analyticsChartMode === "corr_kcal" ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs" : "text-gray-500 dark:text-gray-400"}">
-              Вага + Ккал
-            </button>
-          </div>
-        </div>
-      `;
+      const startCoords = [];
+      const nowCoords = [];
+      const labelsHtml = [];
+      const gridRings = [0.4, 0.7, 1.0];
 
-      if (analyticsChartMode === "radar") {
-        const axes = [
-          { id: "chest", label: "Груди", refMax: 130 },
-          { id: "bicep", label: "Плече", refMax: 50 },
-          { id: "waist", label: "Талія", refMax: 115 },
-          { id: "hips", label: "Стегна", refMax: 125 },
-          { id: "thigh", label: "Стегно", refMax: 78 }
-        ];
+      axes.forEach((ax, idx) => {
+        const angle = -Math.PI / 2 + (idx * 2 * Math.PI) / total;
+        const sVal = getStartMetricVal(ax.id, 50);
+        const nVal = getLatestMetricVal(ax.id, sVal);
+        const refMax = Math.max(sVal, nVal, 1) * 1.12;
+        const refMin = Math.min(sVal, nVal) * 0.72;
+        const span = Math.max(1, refMax - refMin);
 
-        const startVals = axes.map(a => getFirstMetricValue(a.id, 50));
-        const curVals = axes.map(a => getLatestMetricValue(a.id, 50));
+        const sNorm = Math.max(0.22, Math.min(0.96, (sVal - refMin) / span));
+        const nNorm = Math.max(0.22, Math.min(0.96, (nVal - refMin) / span));
 
-        const cx = 155;
-        const cy = 96;
-        const maxR = 64;
-        const angleStep = (Math.PI * 2) / axes.length;
+        const sx = cx + maxR * sNorm * Math.cos(angle);
+        const sy = cy + maxR * sNorm * Math.sin(angle);
+        const nx = cx + maxR * nNorm * Math.cos(angle);
+        const ny = cy + maxR * nNorm * Math.sin(angle);
 
-        function getPolygonPoints(vals) {
-          return vals.map((v, idx) => {
-            const norm = Math.max(0.25, Math.min(1.0, v / axes[idx].refMax));
-            const angle = -Math.PI / 2 + idx * angleStep;
-            const x = cx + Math.cos(angle) * maxR * norm;
-            const y = cy + Math.sin(angle) * maxR * norm;
-            return `${x.toFixed(1)},${y.toFixed(1)}`;
-          }).join(" ");
-        }
+        startCoords.push(`${sx.toFixed(1)},${sy.toFixed(1)}`);
+        nowCoords.push(`${nx.toFixed(1)},${ny.toFixed(1)}`);
 
-        const ringsSvg = [0.35, 0.68, 1.0].map(scale => {
-          const pts = axes.map((_, idx) => {
-            const angle = -Math.PI / 2 + idx * angleStep;
-            const x = cx + Math.cos(angle) * maxR * scale;
-            const y = cy + Math.sin(angle) * maxR * scale;
-            return `${x.toFixed(1)},${y.toFixed(1)}`;
-          }).join(" ");
-          return `<polygon points="${pts}" fill="none" stroke="#CBD5E1" stroke-opacity="0.55" stroke-width="1" class="dark:stroke-slate-600" />`;
-        }).join("");
+        const lx = cx + (maxR + 22) * Math.cos(angle);
+        const ly = cy + (maxR + 16) * Math.sin(angle);
+        const anchor = Math.abs(Math.cos(angle)) < 0.2 ? "middle" : (Math.cos(angle) > 0 ? "start" : "end");
 
-        const spokesAndLabelsSvg = axes.map((ax, idx) => {
-          const angle = -Math.PI / 2 + idx * angleStep;
-          const xEnd = cx + Math.cos(angle) * maxR;
-          const yEnd = cy + Math.sin(angle) * maxR;
-          const xLbl = cx + Math.cos(angle) * (maxR + 18);
-          const yLbl = cy + Math.sin(angle) * (maxR + 14);
-          return `
-            <line x1="${cx}" y1="${cy}" x2="${xEnd.toFixed(1)}" y2="${yEnd.toFixed(1)}" stroke="#CBD5E1" stroke-opacity="0.55" stroke-width="1" class="dark:stroke-slate-600" />
-            <text x="${xLbl.toFixed(1)}" y="${yLbl.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9.5" font-weight="700" fill="#64748B" class="dark:fill-slate-300">
-              ${ax.label} (${curVals[idx]})
-            </text>
-          `;
-        }).join("");
+        const delta = Math.round((nVal - sVal) * 10) / 10;
+        const deltaTag = delta === 0 ? "" : (delta > 0 ? ` (+${delta})` : ` (${delta})`);
 
-        const startPoly = getPolygonPoints(startVals);
-        const curPoly = getPolygonPoints(curVals);
-
-        container.innerHTML = `
-          ${tabsHtml}
-          <div class="w-full flex flex-col items-center">
-            <svg viewBox="0 0 310 192" class="w-full max-w-xs h-44 overflow-visible">
-              ${ringsSvg}
-              ${spokesAndLabelsSvg}
-              <polygon points="${startPoly}" fill="rgba(148, 163, 184, 0.16)" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3 2" />
-              <polygon points="${curPoly}" fill="rgba(37, 99, 235, 0.24)" stroke="#2563EB" stroke-width="2.2" />
-            </svg>
-            <div class="flex items-center space-x-4 text-[10px] text-gray-500 dark:text-gray-400">
-              <span class="flex items-center space-x-1"><span class="w-3 h-0.5 bg-gray-400 inline-block border-t border-dashed"></span><span>Старт</span></span>
-              <span class="flex items-center space-x-1"><span class="w-3 h-0.5 bg-blue-600 inline-block"></span><span>Зараз</span></span>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // Dual-Axis Correlation Chart ("Вага + Талія" or "Вага + Ккал")
-      const weightHist = [...(measurementsData.weight || [])].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-8);
-      if (weightHist.length < 2) {
-        container.innerHTML = `
-          ${tabsHtml}
-          <div class="text-center text-gray-400 dark:text-gray-500 text-xs py-8">
-            Додайте принаймні 2 тижневі чекіни, щоб побудувати графік кореляції.
-          </div>
-        `;
-        return;
-      }
-
-      const secondSeries = weightHist.map((wRec, idx) => {
-        if (analyticsChartMode === "corr_waist") {
-          const waistHist = [...(measurementsData.waist || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
-          const exact = waistHist.find(x => x.date === wRec.date);
-          if (exact) return Number(exact.val);
-          return waistHist.length > 0 ? Number(waistHist[Math.min(idx, waistHist.length - 1)].val) : 84;
-        } else {
-          // Average calories from historyRecords or current target
-          const validDays = (historyRecords || []).filter(r => Number(r.totalCalories) > 0);
-          if (validDays.length > 0) {
-            const match = validDays.find(r => r.dietDayKey === wRec.date);
-            if (match) return Number(match.totalCalories);
-            const avg = Math.round(validDays.reduce((s, r) => s + Number(r.totalCalories), 0) / validDays.length);
-            return avg;
-          }
-          return calculateUserMetabolism().goals[currentGoalKey].targetKcal;
-        }
+        labelsHtml.push(`
+          <line x1="${cx}" y1="${cy}" x2="${(cx + maxR * Math.cos(angle)).toFixed(1)}" y2="${(cy + maxR * Math.sin(angle)).toFixed(1)}" stroke="#CBD5E1" stroke-width="0.8" class="dark:stroke-slate-700"/>
+          <circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="3.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5"/>
+          <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" font-size="9.5" font-weight="700" fill="#64748B" class="dark:fill-slate-300">${ax.label}</text>
+          <text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" text-anchor="${anchor}" font-size="9" font-weight="600" fill="#2563EB">${nVal}см${deltaTag}</text>
+        `);
       });
 
-      const wVals = weightHist.map(x => Number(x.val));
+      const ringsSvg = gridRings.map(rScale => {
+        const pts = axes.map((_, idx) => {
+          const angle = -Math.PI / 2 + (idx * 2 * Math.PI) / total;
+          return `${(cx + maxR * rScale * Math.cos(angle)).toFixed(1)},${(cy + maxR * rScale * Math.sin(angle)).toFixed(1)}`;
+        }).join(" ");
+        return `<polygon points="${pts}" fill="none" stroke="#E2E8F0" stroke-width="0.9" class="dark:stroke-slate-700/80"/>`;
+      }).join("");
+
+      return `
+        <svg viewBox="0 0 310 194" class="w-full h-44 overflow-visible">
+          ${ringsSvg}
+          <polygon points="${startCoords.join(" ")}" fill="rgba(148, 163, 184, 0.14)" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <polygon points="${nowCoords.join(" ")}" fill="rgba(37, 99, 235, 0.22)" stroke="#2563EB" stroke-width="2.2"/>
+          ${labelsHtml.join("")}
+        </svg>
+        <div class="flex items-center justify-center space-x-4 text-[10px] text-gray-500 dark:text-gray-400">
+          <span class="flex items-center space-x-1"><span class="w-3 h-0.5 border-t-2 border-dashed border-slate-400 inline-block"></span><span>Старт</span></span>
+          <span class="flex items-center space-x-1"><span class="w-3 h-1.5 rounded-xs bg-blue-600/40 border border-blue-600 inline-block"></span><span>Зараз</span></span>
+        </div>
+      `;
+    }
+
+    function buildDualAxisCorrelationSVG(mode) {
+      const weightHist = getSortedMetricHistory("weight");
+      if (weightHist.length < 2) {
+        return `<div class="text-center text-xs text-gray-400 py-10">Внесіть принаймні 2 заміри ваги для побудови кореляції</div>`;
+      }
+
+      const points = weightHist.slice(-8);
+      const wVals = points.map(p => Number(p.val));
       const wMin = Math.min(...wVals) - 0.5;
       const wMax = Math.max(...wVals) + 0.5;
-      const sMin = Math.min(...secondSeries) - (analyticsChartMode === "corr_waist" ? 1 : 150);
-      const sMax = Math.max(...secondSeries) + (analyticsChartMode === "corr_waist" ? 1 : 150);
 
-      const width = 330;
-      const height = 155;
+      let secVals = [];
+      let secLabel = "";
+      let secColor = "#10B981";
+
+      if (mode === "corr_waist") {
+        secLabel = "Талія (см)";
+        secColor = "#10B981";
+        const waistHist = getSortedMetricHistory("waist");
+        secVals = points.map(wp => {
+          if (waistHist.length === 0) return 84;
+          let closest = waistHist[0];
+          let minDiff = Infinity;
+          waistHist.forEach(wh => {
+            const d = Math.abs(new Date(wh.date) - new Date(wp.date));
+            if (d < minDiff) {
+              minDiff = d;
+              closest = wh;
+            }
+          });
+          return Number(closest.val);
+        });
+      } else {
+        secLabel = "Калорії (ккал)";
+        secColor = "#F59E0B";
+        const meta = calculateUserMetabolism();
+        const fallbackKcal = meta.goals[currentGoalKey].targetKcal;
+        secVals = points.map(wp => {
+          const rec = historyRecords.find(r => r.dietDayKey === wp.date);
+          return rec ? Number(rec.totalCalories) : fallbackKcal;
+        });
+      }
+
+      const sMin = Math.min(...secVals) * 0.96;
+      const sMax = Math.max(...secVals) * 1.04 || 1;
+
+      const width = 320;
+      const height = 148;
       const pL = 28;
       const pR = 28;
       const pT = 18;
-      const pB = 24;
+      const pB = 22;
       const plotW = width - pL - pR;
       const plotH = height - pT - pB;
 
-      const wPts = wVals.map((v, i) => ({
-        x: pL + (i / (wVals.length - 1)) * plotW,
-        y: pT + plotH - ((v - wMin) / (wMax - wMin || 1)) * plotH,
-        val: v,
-        date: weightHist[i].date.slice(5)
-      }));
+      let wPath = "";
+      let sPath = "";
+      let dotsSvg = "";
 
-      const sPts = secondSeries.map((v, i) => ({
-        x: pL + (i / (secondSeries.length - 1)) * plotW,
-        y: pT + plotH - ((v - sMin) / (sMax - sMin || 1)) * plotH,
-        val: v
-      }));
+      points.forEach((pt, idx) => {
+        const x = pL + (idx / (points.length - 1)) * plotW;
+        const wy = pT + plotH - ((wVals[idx] - wMin) / Math.max(0.1, wMax - wMin)) * plotH;
+        const sy = pT + plotH - ((secVals[idx] - sMin) / Math.max(0.1, sMax - sMin)) * plotH;
 
-      const wPath = wPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-      const sPath = sPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-      const secondColor = analyticsChartMode === "corr_waist" ? "#10B981" : "#F59E0B";
-      const secondLabel = analyticsChartMode === "corr_waist" ? "Талія (см)" : "Калорії (ккал)";
+        wPath += (idx === 0 ? `M ${x} ${wy}` : ` L ${x} ${wy}`);
+        sPath += (idx === 0 ? `M ${x} ${sy}` : ` L ${x} ${sy}`);
 
-      container.innerHTML = `
-        ${tabsHtml}
+        dotsSvg += `
+          <circle cx="${x}" cy="${wy}" r="3.5" fill="#2563EB" stroke="#FFF" stroke-width="1.5"/>
+          <circle cx="${x}" cy="${sy}" r="3.2" fill="${secColor}" stroke="#FFF" stroke-width="1.2"/>
+          <text x="${x}" y="${height - 5}" text-anchor="middle" font-size="8.5" fill="#94A3B8">${pt.date.slice(5)}</text>
+        `;
+      });
+
+      return `
         <svg viewBox="0 0 ${width} ${height}" class="w-full h-40 overflow-visible">
-          <line x1="${pL}" y1="${pT + plotH}" x2="${width - pR}" y2="${pT + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-700" />
-          <path d="${sPath}" fill="none" stroke="${secondColor}" stroke-width="2" stroke-dasharray="4 2" stroke-linecap="round" />
-          <path d="${wPath}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
-          ${wPts.map((p, idx) => `
-            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#2563EB" />
-            <text x="${p.x.toFixed(1)}" y="${(p.y - 6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="bold" fill="#2563EB">${p.val}</text>
-            <circle cx="${sPts[idx].x.toFixed(1)}" cy="${sPts[idx].y.toFixed(1)}" r="3" fill="${secondColor}" />
-            <text x="${p.x.toFixed(1)}" y="${height - 6}" text-anchor="middle" font-size="8.5" fill="#94A3B8">${p.date}</text>
-          `).join("")}
+          <line x1="${pL}" y1="${pT + plotH}" x2="${width - pR}" y2="${pT + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-700"/>
+          <path d="${sPath}" fill="none" stroke="${secColor}" stroke-width="2" stroke-dasharray="4,2" stroke-linecap="round"/>
+          <path d="${wPath}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+          ${dotsSvg}
         </svg>
         <div class="flex items-center justify-center space-x-4 text-[10px] text-gray-500 dark:text-gray-400">
           <span class="flex items-center space-x-1"><span class="w-3 h-0.5 bg-blue-600 inline-block"></span><span>Вага (кг)</span></span>
-          <span class="flex items-center space-x-1"><span class="w-3 h-0.5 inline-block border-t-2 border-dashed" style="border-color: ${secondColor};"></span><span>${secondLabel}</span></span>
+          <span class="flex items-center space-x-1"><span class="w-3 h-0.5 inline-block" style="border-top: 2px dashed ${secColor};"></span><span>${secLabel}</span></span>
         </div>
       `;
     }
 
-    function buildSparklineSvg(history) {
-      if (!history || history.length < 2) {
-        return `<div class="h-6 flex items-center text-[10px] text-gray-400">1 запис</div>`;
+    function renderAnalyticsCard() {
+      const card = document.getElementById("measurements-analytics-card");
+      if (!card) return;
+
+      const tabs = [
+        { id: "radar", label: "Пропорції" },
+        { id: "corr_waist", label: "Вага + Талія" },
+        { id: "corr_kcal", label: "Вага + Ккал" }
+      ];
+
+      const tabsHtml = tabs.map(t => {
+        const active = analyticsChartMode === t.id;
+        return `<button type="button" data-analytics-mode="${t.id}" class="analytics-mode-btn px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+          active
+            ? "bg-blue-600 text-white shadow-xs"
+            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200"
+        }">${t.label}</button>`;
+      }).join("");
+
+      const chartHtml = analyticsChartMode === "radar"
+        ? buildRadarChartSVG()
+        : buildDualAxisCorrelationSVG(analyticsChartMode);
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-1.5">
+          <span class="text-xs font-bold text-gray-900 dark:text-white">Візуалізація</span>
+          <div class="flex items-center space-x-1">${tabsHtml}</div>
+        </div>
+        <div>${chartHtml}</div>
+      `;
+
+      card.querySelectorAll(".analytics-mode-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          analyticsChartMode = btn.getAttribute("data-analytics-mode");
+          renderAnalyticsCard();
+        });
+      });
+    }
+
+    function buildSparklineSVG(history, isPositiveGood) {
+      if (history.length < 2) {
+        return `<svg viewBox="0 0 64 20" class="w-16 h-5"><line x1="2" y1="10" x2="62" y2="10" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="2,2"/></svg>`;
       }
-      const recent = history.slice(-6).map(x => Number(x.val));
-      const minV = Math.min(...recent);
-      const maxV = Math.max(...recent);
-      const span = (maxV - minV) || 1;
-      const w = 96;
-      const h = 24;
-      const pts = recent.map((v, i) => {
-        const x = 3 + (i / (recent.length - 1)) * (w - 6);
-        const y = h - 4 - ((v - minV) / span) * (h - 8);
+      const recent = history.slice(-6);
+      const vals = recent.map(r => Number(r.val));
+      const minV = Math.min(...vals);
+      const maxV = Math.max(...vals);
+      const span = maxV - minV || 1;
+      const diff = vals[vals.length - 1] - vals[0];
+
+      let strokeColor = "#2563EB";
+      if (Math.abs(diff) >= 0.1) {
+        const good = isPositiveGood ? diff > 0 : diff < 0;
+        strokeColor = good ? "#10B981" : "#F59E0B";
+      }
+
+      const pts = vals.map((v, i) => {
+        const x = 3 + (i / (vals.length - 1)) * 58;
+        const y = 17 - ((v - minV) / span) * 14;
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       }).join(" ");
-      const lastPt = pts.split(" ").pop().split(",");
 
+      const lastPt = pts.split(" ").pop().split(",");
       return `
-        <svg viewBox="0 0 ${w} ${h}" class="w-full h-6 overflow-visible">
-          <polyline points="${pts}" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="2.8" fill="#2563EB" />
+        <svg viewBox="0 0 64 20" class="w-16 h-5 overflow-visible">
+          <polyline fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${pts}"/>
+          <circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="2.5" fill="${strokeColor}"/>
         </svg>
       `;
     }
 
     function renderMeasurementsList() {
-      renderMeasurementsOverviewCard();
-      renderSmartFitnessIndices();
-      renderMeasurementsAnalyticsCard();
+      renderOverviewTargetCard();
+      renderSmartIndicesCards();
+      renderAnalyticsCard();
 
       const container = document.getElementById("measurements-container");
       container.innerHTML = "";
 
+      const targetW = userProfile.targetWeight ? Number(userProfile.targetWeight) : null;
+      const startW = userProfile.startWeight || getStartMetricVal("weight", 76.6);
+      const isGainingWeight = targetW ? targetW >= startW : true;
+
       MEASUREMENTS_CONFIG.forEach(metric => {
-        const history = [...(measurementsData[metric.id] || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const history = getSortedMetricHistory(metric.id);
         const latest = history.length > 0 ? history[history.length - 1] : null;
         const currentVal = latest ? latest.val : "--";
 
-        let deltaBadge = `<span class="text-[10px] text-gray-400">Без змін</span>`;
+        const isPositiveGood = metric.id === "waist"
+          ? false
+          : (metric.id === "weight" ? isGainingWeight : true);
+
+        let deltaBadge = `<span class="text-[10px] text-gray-400">Старт</span>`;
         if (history.length >= 2) {
           const prev = history[history.length - 2].val;
           const diff = Math.round((latest.val - prev) * 10) / 10;
-          if (diff > 0) {
-            deltaBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">+${diff} ${metric.unit}</span>`;
-          } else if (diff < 0) {
-            deltaBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">${diff} ${metric.unit}</span>`;
+          if (diff === 0) {
+            deltaBadge = `<span class="text-[10px] font-semibold text-gray-400">0 ${metric.unit}</span>`;
+          } else {
+            const good = isPositiveGood ? diff > 0 : diff < 0;
+            const cls = good
+              ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50"
+              : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50";
+            deltaBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${cls}">${diff > 0 ? "+" : ""}${diff} ${metric.unit}</span>`;
           }
         }
 
         const tile = document.createElement("div");
-        tile.className = "bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 transition cursor-pointer flex flex-col justify-between space-y-1.5";
+        tile.className = "bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 transition cursor-pointer flex flex-col justify-between space-y-2";
         tile.innerHTML = `
-          <div class="flex items-center justify-between gap-1">
-            <span class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">${metric.name}</span>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate pr-1">${metric.name}</span>
             ${deltaBadge}
           </div>
-          <div class="flex items-baseline space-x-1">
-            <span class="text-xl font-black text-gray-900 dark:text-white">${currentVal}</span>
-            <span class="text-xs text-gray-400 font-medium">${metric.unit}</span>
-          </div>
-          <div>
-            ${buildSparklineSvg(history)}
+          <div class="flex items-end justify-between pt-0.5">
+            <div>
+              <span class="text-lg font-extrabold text-gray-900 dark:text-white leading-none">${currentVal}</span>
+              <span class="text-[11px] font-medium text-gray-400 ml-0.5">${metric.unit}</span>
+            </div>
+            ${buildSparklineSVG(history, isPositiveGood)}
           </div>
         `;
 
@@ -2637,13 +2629,13 @@
     // Unified Weekly Check-in Modal Handlers
     const wcModal = document.getElementById("weekly-checkin-modal");
     document.getElementById("open-weekly-checkin-btn").addEventListener("click", () => {
-      document.getElementById("wc-date").value = getDietDayKey();
-      document.getElementById("wc-weight").value = getLatestMetricValue("weight", userProfile.weight || 76.6);
-      document.getElementById("wc-waist").value = getLatestMetricValue("waist", 84.0);
-      document.getElementById("wc-chest").value = getLatestMetricValue("chest", 106.0);
-      document.getElementById("wc-hips").value = getLatestMetricValue("hips", 100.0);
-      document.getElementById("wc-bicep").value = getLatestMetricValue("bicep", 38.0);
-      document.getElementById("wc-thigh").value = getLatestMetricValue("thigh", 60.0);
+      document.getElementById("wc-date").value = new Date().toISOString().split("T")[0];
+      document.getElementById("wc-weight").value = getLatestMetricVal("weight", userProfile.weight || 76.6);
+      document.getElementById("wc-waist").value = getLatestMetricVal("waist", 84.0);
+      document.getElementById("wc-chest").value = getLatestMetricVal("chest", 106.0);
+      document.getElementById("wc-hips").value = getLatestMetricVal("hips", 100.0);
+      document.getElementById("wc-bicep").value = getLatestMetricVal("bicep", 38.0);
+      document.getElementById("wc-thigh").value = getLatestMetricVal("thigh", 60.0);
       wcModal.classList.remove("hidden");
     });
 
@@ -2652,41 +2644,48 @@
 
     document.getElementById("weekly-checkin-form").addEventListener("submit", (e) => {
       e.preventDefault();
-      const dateStr = document.getElementById("wc-date").value || getDietDayKey();
-      const entries = {
-        weight: parseDecimalInput(document.getElementById("wc-weight").value),
-        waist: parseDecimalInput(document.getElementById("wc-waist").value),
-        chest: parseDecimalInput(document.getElementById("wc-chest").value),
-        hips: parseDecimalInput(document.getElementById("wc-hips").value),
-        bicep: parseDecimalInput(document.getElementById("wc-bicep").value),
-        thigh: parseDecimalInput(document.getElementById("wc-thigh").value)
-      };
+      const dateStr = document.getElementById("wc-date").value || new Date().toISOString().split("T")[0];
+      const fields = [
+        { id: "weight", inputId: "wc-weight" },
+        { id: "waist", inputId: "wc-waist" },
+        { id: "chest", inputId: "wc-chest" },
+        { id: "hips", inputId: "wc-hips" },
+        { id: "bicep", inputId: "wc-bicep" },
+        { id: "thigh", inputId: "wc-thigh" }
+      ];
 
-      Object.keys(entries).forEach(mId => {
-        const val = entries[mId];
+      let updatedCount = 0;
+      fields.forEach(f => {
+        const val = parseDecimalInput(document.getElementById(f.inputId).value);
         if (val > 0) {
-          if (!measurementsData[mId]) measurementsData[mId] = [];
-          const existingIdx = measurementsData[mId].findIndex(x => x.date === dateStr);
+          if (!measurementsData[f.id]) measurementsData[f.id] = [];
+          const existingIdx = measurementsData[f.id].findIndex(x => x.date === dateStr);
           if (existingIdx !== -1) {
-            measurementsData[mId][existingIdx].val = val;
+            measurementsData[f.id][existingIdx].val = val;
           } else {
-            measurementsData[mId].push({ date: dateStr, val: val });
+            measurementsData[f.id].push({ date: dateStr, val });
           }
-          measurementsData[mId].sort((a, b) => new Date(a.date) - new Date(b.date));
+          measurementsData[f.id].sort((a, b) => new Date(a.date) - new Date(b.date));
+          updatedCount++;
+
+          if (f.id === "weight") {
+            userProfile.weight = val;
+          }
         }
       });
 
-      if (entries.weight > 0) {
-        userProfile.weight = entries.weight;
-        saveUserProfile();
-        updateGoalButtonsUI();
+      if (updatedCount === 0) {
+        showToast("Введіть хоча б одне значення");
+        return;
       }
 
+      saveUserProfile();
       saveMeasurementsToStorage();
       syncSaveToServer();
       wcModal.classList.add("hidden");
+      updateGoalButtonsUI();
       renderMeasurementsList();
-      showToast("Тижневий чекін збережено!");
+      showToast(`Збережено ${updatedCount} показників за ${dateStr}`);
     });
 
     function openMetricDetail(metricId) {
@@ -2703,6 +2702,7 @@
       renderMetricDetailView();
     }
 
+    // Target Weight Progress Widget
     function renderTargetWeightWidget(history) {
       const widget = document.getElementById("target-weight-widget");
       const prompt = document.getElementById("set-target-weight-prompt");
@@ -2842,7 +2842,7 @@
         pathD += ` L ${points[i].x} ${points[i].y}`;
       }
 
-      let areaD = pathD + ` L ${points[points.length - 1].x} ${pTop + plotH} L ${points[0].x} ${pTop + plotH} Z`;
+      let areaD = pathD + ` L ${points[points.length-1].x} ${pTop + plotH} L ${points[0].x} ${pTop + plotH} Z`;
 
       let dotsHtml = "";
       points.forEach((pt) => {
@@ -2862,7 +2862,7 @@
             </linearGradient>
           </defs>
           <line x1="${pLeft}" y1="${pTop}" x2="${width - pRight}" y2="${pTop}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
-          <line x1="${pLeft}" y1="${pTop + plotH / 2}" x2="${width - pRight}" y2="${pTop + plotH / 2}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
+          <line x1="${pLeft}" y1="${pTop + plotH/2}" x2="${width - pRight}" y2="${pTop + plotH/2}" stroke="#E2E8F0" stroke-dasharray="3" class="dark:stroke-slate-700"/>
           <line x1="${pLeft}" y1="${pTop + plotH}" x2="${width - pRight}" y2="${pTop + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-600"/>
 
           <path d="${areaD}" fill="url(#chartGrad)"/>
@@ -2964,8 +2964,17 @@
 
     // Target Weight Edit Modal logic
     const twModal = document.getElementById("target-weight-modal");
-    document.getElementById("edit-target-weight-btn").addEventListener("click", openTargetWeightModalQuick);
-    document.getElementById("prompt-add-target-btn").addEventListener("click", openTargetWeightModalQuick);
+    document.getElementById("edit-target-weight-btn").addEventListener("click", () => {
+      document.getElementById("tw-modal-input").value = userProfile.targetWeight || "";
+      twModal.classList.remove("hidden");
+      document.getElementById("tw-modal-input").focus();
+    });
+
+    document.getElementById("prompt-add-target-btn").addEventListener("click", () => {
+      document.getElementById("tw-modal-input").value = userProfile.targetWeight || "";
+      twModal.classList.remove("hidden");
+      document.getElementById("tw-modal-input").focus();
+    });
 
     document.getElementById("close-tw-modal-x").addEventListener("click", () => {
       twModal.classList.add("hidden");
@@ -2976,10 +2985,8 @@
       saveUserProfile();
       syncSaveToServer();
       twModal.classList.add("hidden");
-      if (!document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
-        renderMetricDetailView();
-      }
-      renderMeasurementsList();
+      renderMetricDetailView();
+      renderOverviewTargetCard();
       showToast("Цільову вагу видалено");
     });
 
@@ -2988,7 +2995,7 @@
       saveUserProfile();
       syncSaveToServer();
       renderMetricDetailView();
-      renderMeasurementsList();
+      renderOverviewTargetCard();
       showToast("Цільову вагу видалено");
     });
 
@@ -2999,17 +3006,15 @@
         saveUserProfile();
         syncSaveToServer();
         twModal.classList.add("hidden");
-        if (!document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
-          renderMetricDetailView();
-        }
-        renderMeasurementsList();
+        renderMetricDetailView();
+        renderOverviewTargetCard();
         showToast("Цільову вагу оновлено!");
       } else {
         showToast("Введіть коректну вагу");
       }
     });
 
-    // Add Single Measurement Modal logic
+    // Add Measurement Modal logic
     const addModal = document.getElementById("add-measurement-modal");
     document.getElementById("open-add-measurement-modal-btn").addEventListener("click", () => {
       const metric = MEASUREMENTS_CONFIG.find(m => m.id === selectedMetricId);
@@ -3021,7 +3026,7 @@
       const history = measurementsData[selectedMetricId] || [];
       const latest = history.length > 0 ? history[history.length - 1] : null;
       document.getElementById("modal-metric-input").value = latest ? latest.val : "";
-      document.getElementById("modal-metric-date").value = getDietDayKey();
+      document.getElementById("modal-metric-date").value = new Date().toISOString().split("T")[0];
 
       addModal.classList.remove("hidden");
       document.getElementById("modal-metric-input").focus();
@@ -3092,8 +3097,8 @@
       document.getElementById("view-history").classList.toggle("hidden", viewName !== "history");
       document.getElementById("view-settings").classList.toggle("hidden", viewName !== "settings");
 
-      document.getElementById("top-nutrition-summary").classList.toggle("hidden", viewName !== "calculator");
-      document.getElementById("goal-selector-container").classList.toggle("hidden", viewName !== "calculator");
+      const resetBtn = document.getElementById("reset-day-btn");
+      if (resetBtn) resetBtn.classList.toggle("hidden", viewName !== "calculator");
 
       const titleEl = document.getElementById("top-title-text");
       if (viewName === "calculator") titleEl.textContent = "Раціон";
@@ -3124,297 +3129,192 @@
       updateReminderBadges();
     }
 
-    document.getElementById("manual-sync-now-btn").addEventListener("click", async () => {
-      showToast("Синхронізація із сервером...");
-      const ok = await syncSaveToServer(true);
-      showToast(ok ? "Дані та бекап збережено на сервері!" : "Помилка з'єднання із сервером");
-    });
-
     // ==========================================
-    // HISTORY TAB: BENTO SUMMARY, 28-DAY HEATMAP, 7-DAY BAR CHART & COLLAPSIBLE CARDS
+    // HISTORY VIEW (28-DAY HEATMAP + 7-DAY BAR CHART + COLLAPSIBLE CARDS)
     // ==========================================
-    function getRecordDayKey(entry) {
-      if (entry.dietDayKey) return entry.dietDayKey;
-      if (entry.id && typeof entry.id === "number" && entry.id > 1600000000000) {
-        return getDietDayKey(new Date(entry.id));
-      }
-      return null;
-    }
-
-    function computeEntryCategoryShares(entry) {
-      if (entry.categoryShares && Object.keys(entry.categoryShares).length > 0) {
-        return entry.categoryShares;
-      }
-      const shares = {};
-      (entry.items || []).forEach(it => {
-        const cat = MASTER_CATEGORIES.find(c => c.id === it.category);
-        if (!cat) return;
-        const prod = cat.items.find(p => p.name === it.name || (p.maintenance && p.maintenance.name === it.name) || (p.deficit && p.deficit.name === it.name));
-        if (prod) {
-          const baseW = getItemEffectiveBase(prod);
-          if (baseW > 0) {
-            shares[cat.id] = (shares[cat.id] || 0) + Math.round((Number(it.weight) / baseW) * 100);
-          }
-        }
-      });
-      return shares;
-    }
-
-    function renderHistory() {
+    function renderHistoryAnalytics() {
       const bentoEl = document.getElementById("history-bento-summary");
       const heatmapEl = document.getElementById("history-heatmap-card");
       const barChartEl = document.getElementById("history-bar-chart-card");
-      const list = document.getElementById("history-list");
+      if (!bentoEl || !heatmapEl || !barChartEl) return;
 
       const meta = calculateUserMetabolism();
-      const defaultTargetKcal = meta.goals[currentGoalKey].targetKcal;
-      const bodyWeight = Number(userProfile.weight) || 76.6;
-      const targetProtein = Math.round(bodyWeight * 2.0);
+      const defaultTarget = meta.goals[currentGoalKey].targetKcal;
+      const bodyW = Number(userProfile.weight) || 76.6;
 
-      const recordByKey = {};
-      (historyRecords || []).forEach(rec => {
-        const k = getRecordDayKey(rec);
-        if (k && !recordByKey[k]) {
-          recordByKey[k] = rec;
-        }
+      // Map records by dietDayKey
+      const recByDay = {};
+      historyRecords.forEach(r => {
+        const k = r.dietDayKey || r.shortDate;
+        if (k) recByDay[k] = r;
       });
 
-      const todayShifted = getShiftedDietDate(new Date());
-      const todayKey = getDietDayKey(new Date());
-
-      function getOffsetDietKey(daysBack) {
-        const d = new Date(todayShifted.getTime() - daysBack * 24 * 60 * 60 * 1000);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return { key: `${y}-${m}-${day}`, dateObj: d };
-      }
-
-      // 1. 7-Day Bento Summary
-      const last7Days = [];
+      // Last 7 days array (oldest -> today)
+      const last7 = [];
       for (let i = 6; i >= 0; i--) {
-        const info = getOffsetDietKey(i);
-        const rec = recordByKey[info.key] || null;
-        last7Days.push({
-          key: info.key,
-          dateObj: info.dateObj,
-          rec,
-          kcal: rec ? (Number(rec.totalCalories) || 0) : 0,
-          protein: rec ? (Number(rec.totalProtein) || 0) : 0,
-          target: rec ? (Number(rec.targetCalories) || defaultTargetKcal) : defaultTargetKcal
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const key = getDietDayKey(d);
+        const shifted = getShiftedDietDate(d);
+        const dayShort = shifted.toLocaleDateString("uk-UA", { weekday: "short" });
+        const rec = recByDay[key] || null;
+        last7.push({
+          key,
+          dayShort: dayShort.charAt(0).toUpperCase() + dayShort.slice(1),
+          kcal: rec ? Number(rec.totalCalories) : 0,
+          protein: rec ? Number(rec.totalProtein) : 0,
+          target: rec ? Number(rec.targetCalories) : defaultTarget
         });
       }
 
-      const active7 = last7Days.filter(d => d.kcal > 0);
+      const active7 = last7.filter(d => d.kcal > 0);
       const avgKcal = active7.length > 0 ? Math.round(active7.reduce((s, d) => s + d.kcal, 0) / active7.length) : 0;
       const avgProt = active7.length > 0 ? Math.round((active7.reduce((s, d) => s + d.protein, 0) / active7.length) * 10) / 10 : 0;
-      const avgKcalPct = defaultTargetKcal > 0 ? Math.round((avgKcal / defaultTargetKcal) * 100) : 0;
-      const protPerKg = bodyWeight > 0 ? (avgProt / bodyWeight).toFixed(1) : "0.0";
-      const avgProtPct = targetProtein > 0 ? Math.min(100, Math.round((avgProt / targetProtein) * 100)) : 0;
+      const protPerKg = bodyW > 0 ? Math.round((avgProt / bodyW) * 10) / 10 : 0;
+      const kcalAdherence = defaultTarget > 0 && avgKcal > 0 ? Math.round((avgKcal / defaultTarget) * 100) : 0;
 
-      if (bentoEl) {
-        bentoEl.innerHTML = `
-          <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Калорії (7 дн.)</span>
-              <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">${avgKcalPct}% норми</span>
-            </div>
-            <div class="flex items-baseline space-x-1">
-              <span class="text-xl font-black text-gray-900 dark:text-white">${avgKcal.toLocaleString("uk-UA")}</span>
-              <span class="text-[11px] text-gray-400">ккал/д</span>
-            </div>
-            <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-              <div class="bg-blue-600 h-full rounded-full transition-all" style="width: ${Math.min(100, avgKcalPct)}%"></div>
-            </div>
+      bentoEl.innerHTML = `
+        <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs">
+          <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">Середні калорії (7 дн.)</span>
+          <div class="flex items-baseline space-x-1.5 mt-1">
+            <strong class="text-lg font-extrabold text-gray-900 dark:text-white">${avgKcal.toLocaleString("uk-UA")}</strong>
+            <span class="text-[11px] text-gray-400">ккал/день</span>
           </div>
+          <span class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 block mt-0.5">
+            ${active7.length > 0 ? `${kcalAdherence}% від поточної норми` : "Немає даних за тиждень"}
+          </span>
+        </div>
 
-          <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Білок (7 дн.)</span>
-              <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">${protPerKg} г/кг</span>
-            </div>
-            <div class="flex items-baseline space-x-1">
-              <span class="text-xl font-black text-gray-900 dark:text-white">${avgProt}</span>
-              <span class="text-[11px] text-gray-400">г/день</span>
-            </div>
-            <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-              <div class="bg-emerald-500 h-full rounded-full transition-all" style="width: ${avgProtPct}%"></div>
-            </div>
+        <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs">
+          <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">Середній білок (7 дн.)</span>
+          <div class="flex items-baseline space-x-1.5 mt-1">
+            <strong class="text-lg font-extrabold text-gray-900 dark:text-white">${avgProt} г</strong>
+            <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">(${protPerKg} г/кг)</span>
           </div>
-        `;
-      }
+          <span class="text-[10px] text-gray-400 block mt-0.5">Орієнтир: 1.6–2.2 г/кг ваги</span>
+        </div>
+      `;
 
-      // 2. 28-Day Discipline Heatmap & Streak
-      let streak = 0;
-      for (let i = 0; i < 60; i++) {
-        const info = getOffsetDietKey(i);
-        const rec = recordByKey[info.key];
-        if (!rec || !rec.totalCalories) {
-          if (i === 0) continue;
-          break;
-        }
-        const tKcal = Number(rec.targetCalories) || defaultTargetKcal;
-        const ratio = tKcal > 0 ? (Number(rec.totalCalories) / tKcal) : 0;
-        if (ratio >= 0.90 && ratio <= 1.10) {
-          streak++;
-        } else if (i === 0 && ratio < 0.90) {
-          continue;
-        } else {
-          break;
-        }
-      }
-
-      const jsDay = todayShifted.getDay();
-      const mondayOffset = (jsDay + 6) % 7;
-      const currentWeekSunday = new Date(todayShifted.getTime() + (6 - mondayOffset) * 24 * 60 * 60 * 1000);
-      const gridStart = new Date(currentWeekSunday.getTime() - 27 * 24 * 60 * 60 * 1000);
-
-      const weekdayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
-      let cellsHtml = "";
-      for (let idx = 0; idx < 28; idx++) {
-        const cellDate = new Date(gridStart.getTime() + idx * 24 * 60 * 60 * 1000);
-        const y = cellDate.getFullYear();
-        const m = String(cellDate.getMonth() + 1).padStart(2, "0");
-        const d = String(cellDate.getDate()).padStart(2, "0");
-        const key = `${y}-${m}-${d}`;
-        const dayNum = cellDate.getDate();
-        const isFuture = key > todayKey;
-        const isToday = key === todayKey;
-        const rec = recordByKey[key];
-
-        let cellClass = "bg-gray-100 dark:bg-slate-700/60 text-gray-500 dark:text-slate-400";
-        let clickableAttr = "";
-
-        if (isFuture) {
-          cellClass = "bg-gray-50/60 dark:bg-slate-800/40 text-gray-300 dark:text-slate-600 opacity-50";
-        } else if (rec && Number(rec.totalCalories) > 0) {
-          const tKcal = Number(rec.targetCalories) || defaultTargetKcal;
-          const ratio = tKcal > 0 ? (Number(rec.totalCalories) / tKcal) : 0;
-          clickableAttr = `onclick="focusHistoryDayCard('${key}')"`;
-          if (ratio >= 0.90 && ratio <= 1.10) {
-            cellClass = "bg-emerald-500 text-white font-bold shadow-2xs cursor-pointer active:scale-95";
-          } else if (ratio < 0.90) {
-            cellClass = "bg-blue-500 text-white font-bold shadow-2xs cursor-pointer active:scale-95";
+      // 28-Day Discipline Heatmap & Streak
+      const cells28 = [];
+      for (let i = 27; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const key = getDietDayKey(d);
+        const shifted = getShiftedDietDate(d);
+        const dayNum = shifted.getDate();
+        const rec = recByDay[key] || null;
+        let status = "empty";
+        let colorCls = "bg-gray-100 dark:bg-slate-700/60 text-gray-400 dark:text-gray-500";
+        if (rec && rec.totalCalories > 0) {
+          const ratio = rec.totalCalories / (rec.targetCalories || defaultTarget);
+          if (ratio >= 0.88 && ratio <= 1.12) {
+            status = "in_zone";
+            colorCls = "bg-emerald-500 text-white font-bold";
+          } else if (ratio < 0.88) {
+            status = "under";
+            colorCls = "bg-blue-500/80 text-white font-bold";
           } else {
-            cellClass = "bg-amber-500 text-white font-bold shadow-2xs cursor-pointer active:scale-95";
+            status = "over";
+            colorCls = "bg-amber-500 text-white font-bold";
           }
         }
-
-        const ringClass = isToday ? "ring-2 ring-offset-1 ring-blue-600 dark:ring-blue-400 dark:ring-offset-slate-800 font-extrabold" : "";
-
-        cellsHtml += `
-          <div ${clickableAttr} class="h-7 rounded-lg flex items-center justify-center text-[11px] transition ${cellClass} ${ringClass}">
-            ${dayNum}
-          </div>
-        `;
+        cells28.push({ key, dayNum, status, colorCls });
       }
 
-      if (heatmapEl) {
-        heatmapEl.innerHTML = `
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-bold text-gray-900 dark:text-white">Календар дисципліни (28 дн.)</span>
-            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-              <span>🔥 Серія в нормі: ${streak} дн.</span>
-            </span>
-          </div>
-
-          <div class="grid grid-cols-7 gap-1.5 text-center">
-            ${weekdayNames.map(w => `<div class="text-[10px] font-bold text-gray-400 dark:text-gray-500 pb-0.5">${w}</div>`).join("")}
-            ${cellsHtml}
-          </div>
-
-          <div class="flex items-center justify-between flex-wrap gap-2 pt-1.5 border-t border-gray-100 dark:border-slate-700/60 text-[10px] text-gray-500 dark:text-gray-400">
-            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span><span>Норма (±10%)</span></span>
-            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-blue-500"></span><span>Недобір</span></span>
-            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-amber-500"></span><span>Перебір</span></span>
-            <span class="inline-flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-gray-200 dark:bg-slate-700"></span><span>Немає записів</span></span>
-          </div>
-        `;
+      // Compute active streak (consecutive logged days up to today/yesterday)
+      let streak = 0;
+      for (let i = cells28.length - 1; i >= 0; i--) {
+        if (cells28[i].status !== "empty") {
+          streak++;
+        } else if (i < cells28.length - 1) {
+          break;
+        }
       }
 
-      // 3. 7-Day SVG Bar Chart with Dashed Target Line
-      if (barChartEl) {
-        const width = 330;
-        const height = 165;
-        const pLeft = 14;
-        const pRight = 14;
-        const pTop = 24;
-        const pBottom = 24;
-        const plotW = width - pLeft - pRight;
-        const plotH = height - pTop - pBottom;
+      heatmapEl.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-900 dark:text-white">Дисципліна за 28 днів</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+            🔥 Серія: ${streak} дн.
+          </span>
+        </div>
+        <div class="grid grid-cols-7 gap-1.5">
+          ${cells28.map(c => `
+            <div class="h-7 rounded-lg flex items-center justify-center text-[10px] ${c.colorCls}" title="${c.key}">
+              ${c.dayNum}
+            </div>
+          `).join("")}
+        </div>
+        <div class="flex items-center justify-between text-[10px] text-gray-400 pt-0.5">
+          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500 inline-block"></span><span>В коридорі ±12%</span></span>
+          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-blue-500/80 inline-block"></span><span>Недобір</span></span>
+          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-amber-500 inline-block"></span><span>Профіцит</span></span>
+        </div>
+      `;
 
-        const maxBarVal = Math.max(defaultTargetKcal * 1.18, ...last7Days.map(d => d.kcal), 1000);
-        const normY = pTop + plotH - (defaultTargetKcal / maxBarVal) * plotH;
-        const colStep = plotW / 7;
-        const barW = 24;
+      // 7-Day Bar Chart with Target Line
+      const maxBarVal = Math.max(defaultTarget * 1.15, ...last7.map(d => d.kcal), 1);
+      const targetLineBottomPct = Math.min(95, Math.round((defaultTarget / maxBarVal) * 100));
 
-        const barsSvg = last7Days.map((d, idx) => {
-          const cx = pLeft + idx * colStep + colStep / 2;
-          const x = cx - barW / 2;
-          const dateLabel = `${String(d.dateObj.getDate()).padStart(2, "0")}.${String(d.dateObj.getMonth() + 1).padStart(2, "0")}`;
-
-          if (d.kcal <= 0) {
+      barChartEl.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-900 dark:text-white">Калорійність за 7 днів</span>
+          <span class="text-[10px] text-gray-400">Пунктир: норма ${defaultTarget} ккал</span>
+        </div>
+        <div class="relative h-28 pt-3 flex items-end justify-between gap-2">
+          <div class="absolute left-0 right-0 border-t border-dashed border-blue-500/70 pointer-events-none" style="bottom: calc(${targetLineBottomPct}% * 0.8 + 16px);"></div>
+          ${last7.map(d => {
+            const hPct = d.kcal > 0 ? Math.max(8, Math.min(100, Math.round((d.kcal / maxBarVal) * 100))) : 4;
+            const ratio = d.kcal / (d.target || defaultTarget);
+            let barCls = "bg-gray-200 dark:bg-slate-700";
+            if (d.kcal > 0) {
+              barCls = ratio > 1.12 ? "bg-amber-500" : (ratio >= 0.88 ? "bg-emerald-500" : "bg-blue-500");
+            }
             return `
-              <rect x="${x.toFixed(1)}" y="${(pTop + plotH - 6).toFixed(1)}" width="${barW}" height="6" rx="3" fill="#CBD5E1" fill-opacity="0.45" class="dark:fill-slate-700" />
-              <text x="${cx.toFixed(1)}" y="${height - 6}" text-anchor="middle" font-size="9" fill="#94A3B8">${dateLabel}</text>
+              <div class="flex-1 flex flex-col items-center h-full justify-end">
+                <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 mb-0.5">${d.kcal > 0 ? d.kcal : ""}</span>
+                <div class="w-full max-w-[26px] rounded-t-md transition-all ${barCls}" style="height: ${Math.round(hPct * 0.78)}%;"></div>
+                <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mt-1">${d.dayShort}</span>
+              </div>
             `;
-          }
+          }).join("")}
+        </div>
+      `;
+    }
 
-          const ratio = d.target > 0 ? (d.kcal / d.target) : 0;
-          let fillHex = "#2563EB";
-          if (ratio >= 0.90 && ratio <= 1.10) fillHex = "#10B981";
-          else if (ratio > 1.10) fillHex = "#F59E0B";
+    function renderHistory() {
+      renderHistoryAnalytics();
 
-          const barH = Math.max(8, (d.kcal / maxBarVal) * plotH);
-          const y = pTop + plotH - barH;
-
-          return `
-            <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" rx="5" fill="${fillHex}" />
-            <text x="${cx.toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${fillHex}">${d.kcal}</text>
-            <text x="${cx.toFixed(1)}" y="${height - 6}" text-anchor="middle" font-size="9" font-weight="600" fill="#64748B" class="dark:fill-slate-400">${dateLabel}</text>
-          `;
-        }).join("");
-
-        barChartEl.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-gray-900 dark:text-white">Калорійність за останні 7 днів</span>
-            <span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">Норма: ${defaultTargetKcal} ккал</span>
-          </div>
-          <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto overflow-visible">
-            <line x1="${pLeft}" y1="${pTop + plotH}" x2="${width - pRight}" y2="${pTop + plotH}" stroke="#CBD5E1" class="dark:stroke-slate-700" />
-            ${barsSvg}
-            <line x1="${pLeft}" y1="${normY.toFixed(1)}" x2="${width - pRight}" y2="${normY.toFixed(1)}" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="4 3" />
-          </svg>
-        `;
-      }
-
-      // 4. Collapsible Daily Cards List (NO "Повторити день" button)
+      const list = document.getElementById("history-list");
       list.innerHTML = "";
 
       if (historyRecords.length === 0) {
         list.innerHTML = `
-          <div class="text-center py-8 bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-200 dark:border-slate-700 text-gray-400 dark:text-gray-500 text-xs">
+          <div class="text-center py-8 text-gray-400 dark:text-gray-500 text-xs bg-white dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-800">
             Історія поки що порожня.<br>Коли ви вносите продукти, вони автоматично зберігаються за поточну добу (03:00 – 02:59).
           </div>
         `;
         return;
       }
 
-      historyRecords.forEach(entry => {
-        const dayKey = getRecordDayKey(entry) || "";
-        const card = document.createElement("div");
-        if (dayKey) card.id = `history-day-card-${dayKey}`;
-        card.className = "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3.5 shadow-xs transition-all";
+      const catColorMap = {};
+      MASTER_CATEGORIES.forEach(c => { catColorMap[c.id] = c.badgeBg; });
 
-        const shares = computeEntryCategoryShares(entry);
-        const catPillsHtml = MASTER_CATEGORIES
-          .filter(c => shares[c.id] && shares[c.id] > 0)
-          .map(c => `
-            <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-white" style="background-color: ${c.badgeBg};">
-              <span>${c.id}</span>
-              <span class="opacity-90">${shares[c.id]}%</span>
-            </span>
-          `).join("");
+      historyRecords.forEach(entry => {
+        const card = document.createElement("div");
+        card.className = "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 shadow-xs transition-colors";
+
+        // Compute category badges from stored categoryShares or items
+        const shares = entry.categoryShares || {};
+        if (Object.keys(shares).length === 0 && Array.isArray(entry.items)) {
+          entry.items.forEach(it => {
+            if (it.category) shares[it.category] = (shares[it.category] || 0) + 1;
+          });
+        }
+        const catBadgesHtml = Object.keys(shares).map(catId => {
+          const bg = catColorMap[catId] || "#475569";
+          const valLabel = entry.categoryShares ? `${shares[catId]}%` : `${shares[catId]}шт`;
+          return `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: ${bg};">${catId} ${valLabel}</span>`;
+        }).join("");
 
         const itemsHtml = (entry.items || []).map(it => `
           <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
@@ -3424,21 +3324,22 @@
         `).join("");
 
         card.innerHTML = `
-          <div class="history-card-header flex justify-between items-start gap-2 cursor-pointer select-none">
-            <div class="space-y-1.5 flex-1 min-w-0">
+          <div class="history-card-header flex justify-between items-center cursor-pointer select-none">
+            <div class="space-y-1.5 flex-1 min-w-0 pr-2">
               <div class="flex items-center flex-wrap gap-1.5">
-                <span class="text-xs font-extrabold text-gray-900 dark:text-white">${entry.date}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
                   ${entry.goal}
                 </span>
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center flex-wrap gap-x-3 gap-y-0.5">
                 <span>🔥 <strong class="text-gray-800 dark:text-gray-200">${entry.totalCalories}</strong> / ${entry.targetCalories} ккал</span>
                 <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
+                <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
               </div>
-              ${catPillsHtml ? `<div class="flex items-center flex-wrap gap-1 pt-0.5">${catPillsHtml}</div>` : ""}
+              ${catBadgesHtml ? `<div class="flex items-center flex-wrap gap-1 pt-0.5">${catBadgesHtml}</div>` : ""}
             </div>
-            <div class="flex items-center text-gray-400 shrink-0 pt-1">
+            <div class="flex items-center space-x-1 text-gray-400 shrink-0 pl-1">
               <svg class="history-chevron w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -3465,33 +3366,13 @@
       });
     }
 
-    function focusHistoryDayCard(dayKey) {
-      const card = document.getElementById(`history-day-card-${dayKey}`);
-      if (!card) return;
-      const drawerEl = card.querySelector(".history-items-drawer");
-      const chevronEl = card.querySelector(".history-chevron");
-      if (drawerEl && drawerEl.classList.contains("hidden")) {
-        drawerEl.classList.remove("hidden");
-        if (chevronEl) chevronEl.style.transform = "rotate(180deg)";
-      }
-      card.scrollIntoView({ behavior: "smooth", block: "center" });
-      card.classList.add("ring-2", "ring-blue-500");
-      setTimeout(() => card.classList.remove("ring-2", "ring-blue-500"), 1400);
-    }
-
     const clearHistoryModal = document.getElementById("clear-history-modal");
     document.getElementById("clear-history-btn").addEventListener("click", () => {
-      if (historyRecords.length === 0) {
-        showToast("Історія вже порожня");
-        return;
-      }
       clearHistoryModal.classList.remove("hidden");
     });
-
     document.getElementById("clear-hist-cancel-btn").addEventListener("click", () => {
       clearHistoryModal.classList.add("hidden");
     });
-
     document.getElementById("clear-hist-confirm-btn").addEventListener("click", () => {
       historyRecords = [];
       try {
@@ -3504,114 +3385,65 @@
     });
 
     // ==========================================
-    // MY NORMS TAB: METABOLISM CHAIN, ACCORDION & VISIBILITY TOGGLES
+    // SETTINGS & PROFILE VIEW (REDESIGNED)
     // ==========================================
     function renderProfileDetails() {
       const chainBox = document.getElementById("metabolism-chain-box");
-      const protScaleBox = document.getElementById("protein-scale-box");
+      const protBox = document.getElementById("protein-scale-box");
       const grid = document.getElementById("profile-details-grid");
       const meta = calculateUserMetabolism();
       const genderStr = userProfile.gender === "female" ? "Жінка" : "Чоловік";
-      const activeGoalObj = meta.goals[currentGoalKey];
-      const w = Number(userProfile.weight) || 76.6;
+      const activeGoal = meta.goals[currentGoalKey];
+      const bodyW = Number(userProfile.weight) || 76.6;
 
       if (chainBox) {
         chainBox.innerHTML = `
-          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl border border-gray-100 dark:border-slate-700">
-            <span class="text-[10px] text-gray-400 block font-medium">Базовий BMR</span>
-            <strong class="text-xs font-extrabold text-gray-900 dark:text-white mt-0.5 block">${meta.bmr} ккал</strong>
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2.5 rounded-xl border border-gray-100 dark:border-slate-700">
+            <span class="text-[10px] text-gray-400 block">1. Базовий (BMR)</span>
+            <strong class="text-sm font-extrabold text-gray-900 dark:text-white">${meta.bmr}</strong>
+            <span class="text-[10px] text-gray-400 block">ккал спокою</span>
           </div>
-          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl border border-gray-100 dark:border-slate-700">
-            <span class="text-[10px] text-gray-400 block font-medium">Норма (×1.62)</span>
-            <strong class="text-xs font-extrabold text-gray-900 dark:text-white mt-0.5 block">${meta.tdee} ккал</strong>
+          <div class="bg-gray-50 dark:bg-slate-700/50 p-2.5 rounded-xl border border-gray-100 dark:border-slate-700">
+            <span class="text-[10px] text-gray-400 block">2. Норма (TDEE)</span>
+            <strong class="text-sm font-extrabold text-gray-900 dark:text-white">${meta.tdee}</strong>
+            <span class="text-[10px] text-gray-400 block">підтримка ваги</span>
           </div>
-          <div class="bg-blue-50 dark:bg-blue-950/50 p-2 rounded-xl border border-blue-200 dark:border-blue-800">
-            <span class="text-[10px] text-blue-600 dark:text-blue-400 block font-bold truncate">${activeGoalObj.name}</span>
-            <strong class="text-xs font-black text-blue-700 dark:text-blue-300 mt-0.5 block">${activeGoalObj.targetKcal} ккал</strong>
+          <div class="bg-blue-50 dark:bg-blue-950/50 p-2.5 rounded-xl border border-blue-200 dark:border-blue-800">
+            <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block">3. ${activeGoal.name}</span>
+            <strong class="text-sm font-extrabold text-blue-600 dark:text-blue-400">${activeGoal.targetKcal}</strong>
+            <span class="text-[10px] text-blue-500/80 block">активна ціль</span>
           </div>
         `;
       }
 
-      if (protScaleBox) {
-        const minProt = Math.round(w * 1.8);
-        const maxProt = Math.round(w * 2.2);
-        let todayProt = 0;
-        MASTER_CATEGORIES.forEach(cat => {
-          cat.items.forEach(it => {
-            const amt = consumed[it.id] || 0;
-            if (amt > 0) {
-              const baseW = getItemEffectiveBase(it);
-              const baseP = getItemEffectiveProtein(it);
-              if (baseW > 0) todayProt += (amt / baseW) * baseP;
-            }
-          });
-        });
-        todayProt = Math.round(todayProt * 10) / 10;
-        const curRatio = (todayProt / w).toFixed(1);
-        const fillPct = Math.min(100, Math.round((todayProt / maxProt) * 100));
-
-        protScaleBox.innerHTML = `
+      if (protBox) {
+        const minProt = Math.round(bodyW * 1.6);
+        const optProt = Math.round(bodyW * 2.0);
+        protBox.innerHTML = `
           <div class="flex items-center justify-between text-[11px]">
-            <span class="font-bold text-gray-700 dark:text-gray-200">Цільовий білок (1.8–2.2 г/кг):</span>
-            <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${minProt}–${maxProt} г <span class="text-gray-400 font-normal">(зараз ${curRatio} г/кг)</span></span>
+            <span class="font-semibold text-gray-700 dark:text-gray-200">🥩 Рекомендований білок на день:</span>
+            <strong class="text-emerald-600 dark:text-emerald-400">${minProt}–${optProt} г (1.6–2.0 г/кг)</strong>
           </div>
-          <div class="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-1.5 overflow-hidden">
-            <div class="bg-emerald-500 h-full rounded-full transition-all" style="width: ${fillPct}%"></div>
-          </div>
-        `;
-      }
-
-      if (grid) {
-        grid.innerHTML = `
-          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl text-center">
-            <span class="text-gray-400 block text-[10px]">Стать / вік</span>
-            <strong class="text-gray-900 dark:text-white font-bold">${genderStr}, ${meta.age} р.</strong>
-          </div>
-          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl text-center">
-            <span class="text-gray-400 block text-[10px]">Зріст / Вага</span>
-            <strong class="text-gray-900 dark:text-white font-bold">${userProfile.height} см / ${userProfile.weight} кг</strong>
-          </div>
-          <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl text-center">
-            <span class="text-gray-400 block text-[10px]">Цільова вага</span>
-            <strong class="text-blue-600 dark:text-blue-400 font-bold">${userProfile.targetWeight ? userProfile.targetWeight + " кг" : "Не задана"}</strong>
+          <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-slate-600 overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full" style="width: 78%;"></div>
           </div>
         `;
       }
-    }
 
-    function computeLiveSettingsMacros(it, rawVal) {
-      const specs = getItemSpecs(it);
-      const effBase = parseDecimalInput(rawVal);
-      if (specs.base <= 0 || effBase <= 0) {
-        return { kcal: 0, protein: 0 };
-      }
-      return {
-        kcal: Math.round((effBase / specs.base) * specs.kcal),
-        protein: Math.round((effBase / specs.base) * specs.protein * 10) / 10
-      };
-    }
-
-    function toggleSettingsCategoryAccordion(catId) {
-      openSettingsCats[catId] = !openSettingsCats[catId];
-      renderSettings();
-    }
-
-    function toggleProductVisibilityInSettings(itemId) {
-      if (hiddenItemsMap[itemId]) {
-        delete hiddenItemsMap[itemId];
-      } else {
-        hiddenItemsMap[itemId] = true;
-        if (currentlyExpandedId === itemId) {
-          closeProductDrawer(itemId);
-        }
-      }
-      try {
-        localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
-      } catch (e) {}
-      syncSaveToServer();
-      updateValuesInPlace();
-      renderSettings();
-      showToast(hiddenItemsMap[itemId] ? "Продукт приховано з головного екрана" : "Продукт повернуто в раціон");
+      grid.innerHTML = `
+        <div class="bg-gray-50 dark:bg-slate-700/40 p-2 rounded-xl text-center">
+          <span class="text-gray-400 block text-[10px]">Стать / Вік</span>
+          <strong class="text-gray-900 dark:text-white font-bold">${genderStr}, ${meta.age} р.</strong>
+        </div>
+        <div class="bg-gray-50 dark:bg-slate-700/40 p-2 rounded-xl text-center">
+          <span class="text-gray-400 block text-[10px]">Зріст / Вага</span>
+          <strong class="text-gray-900 dark:text-white font-bold">${userProfile.height} см / ${userProfile.weight} кг</strong>
+        </div>
+        <div class="bg-gray-50 dark:bg-slate-700/40 p-2 rounded-xl text-center">
+          <span class="text-gray-400 block text-[10px]">Цільова вага</span>
+          <strong class="text-blue-600 dark:text-blue-400 font-bold">${userProfile.targetWeight ? userProfile.targetWeight + " кг" : "Не задана"}</strong>
+        </div>
+      `;
     }
 
     function renderSettings() {
@@ -3619,98 +3451,119 @@
       container.innerHTML = "";
 
       MASTER_CATEGORIES.forEach(cat => {
-        const isOpen = Boolean(openSettingsCats[cat.id]);
-        const activeCount = cat.items.filter(it => !hiddenItemsMap[it.id]).length;
-        const totalCount = cat.items.length;
-        const modifiedCount = cat.items.filter(it => {
-          const ck = `${it.id}_${currentGoalKey}`;
-          return customBaseMap[ck] !== undefined && customBaseMap[ck] > 0;
-        }).length;
+        const isCatOpen = Boolean(openSettingsCats[cat.id]);
+        const modifiedCount = cat.items.filter(it => customBaseMap[`${it.id}_${currentGoalKey}`] !== undefined).length;
+        const hiddenCount = cat.items.filter(it => Boolean(hiddenItemsMap[it.id])).length;
 
         const catBox = document.createElement("div");
-        catBox.className = "border border-gray-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-xs overflow-hidden";
+        catBox.className = "border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 overflow-hidden";
+
+        let statusBadges = "";
+        if (modifiedCount > 0) {
+          statusBadges += `<span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[10px] font-bold">змінено: ${modifiedCount}</span>`;
+        }
+        if (hiddenCount > 0) {
+          statusBadges += `<span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-[10px] font-semibold">сховано: ${hiddenCount}</span>`;
+        }
 
         let rowsHtml = "";
         cat.items.forEach(it => {
           const specs = getItemSpecs(it);
           const currentBase = getItemEffectiveBase(it);
+          const effKcal = getItemEffectiveKcal(it);
+          const effProt = getItemEffectiveProtein(it);
           const isHidden = Boolean(hiddenItemsMap[it.id]);
-          const live = computeLiveSettingsMacros(it, currentBase);
-
-          const eyeIconSvg = isHidden
-            ? `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>`
-            : `<svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
 
           rowsHtml += `
-            <div class="flex items-center justify-between gap-2 py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0 ${isHidden ? "opacity-50" : ""}">
-              <div class="flex items-center space-x-2 min-w-0 flex-1">
-                <button type="button" onclick="toggleProductVisibilityInSettings('${it.id}')" title="${isHidden ? "Показати в раціоні" : "Приховати з раціону"}" class="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-700/80 hover:bg-blue-50 dark:hover:bg-slate-600 transition shrink-0">
-                  ${eyeIconSvg}
-                </button>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate ${isHidden ? "line-through" : ""}">${specs.name}</div>
-                  <div id="settings-macro-preview-${it.id}" class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
-                    ${live.kcal} ккал • ${live.protein} г білка
-                  </div>
-                </div>
+            <div class="flex items-center justify-between text-xs py-2 border-b border-gray-100 dark:border-slate-700/50 last:border-0 ${isHidden ? "opacity-50" : ""}">
+              <div class="min-w-0 flex-1 pr-2">
+                <span class="text-gray-800 dark:text-gray-200 text-xs font-medium block truncate">${specs.name}</span>
+                <span id="settings-macro-preview-${it.id}" class="text-[10px] text-gray-400 dark:text-gray-500 block mt-0.5">
+                  ${effKcal} ккал • ${effProt} г білка
+                </span>
               </div>
               <div class="flex items-center space-x-1.5 shrink-0">
                 <input 
-                  type="text" 
-                  data-base-item-id="${it.id}" 
-                  value="${currentBase}" 
+                  type="text"
                   inputmode="decimal"
                   enterkeyhint="done"
-                  autocomplete="off"
-                  class="w-16 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  data-base-item-id="${it.id}" 
+                  value="${currentBase}" 
+                  class="w-14 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                <span class="text-gray-400 text-xs w-4">${it.unit}</span>
+                <span class="text-gray-400 text-[11px] w-4">${it.unit}</span>
+                <button type="button" data-toggle-vis-id="${it.id}" class="toggle-item-vis-btn p-1.5 rounded-lg ${isHidden ? "bg-gray-200 dark:bg-slate-700 text-gray-500" : "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400"} transition" title="${isHidden ? "Показати в раціоні" : "Приховати з раціону"}">
+                  ${isHidden ? "🙈" : "👁"}
+                </button>
               </div>
             </div>
           `;
         });
 
         catBox.innerHTML = `
-          <div onclick="toggleSettingsCategoryAccordion('${cat.id}')" class="p-3 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-gray-50/70 dark:hover:bg-slate-750 transition">
-            <div class="flex items-center space-x-2.5 min-w-0">
-              <span class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-white text-xs shrink-0" style="background-color: ${cat.badgeBg};">${cat.id}</span>
-              <div class="min-w-0">
-                <h3 class="text-xs font-bold text-gray-900 dark:text-white truncate">${cat.name}</h3>
-                <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">${cat.desc}</p>
-              </div>
+          <div class="settings-cat-header flex items-center justify-between p-3 cursor-pointer select-none hover:bg-gray-50/70 dark:hover:bg-slate-750 transition">
+            <div class="flex items-center space-x-2 min-w-0">
+              <span class="w-5 h-5 rounded flex items-center justify-center font-bold text-white text-[11px] shrink-0" style="background-color: ${cat.badgeBg};">${cat.id}</span>
+              <h3 class="text-xs font-bold text-gray-900 dark:text-white truncate">${cat.name}</h3>
             </div>
             <div class="flex items-center space-x-1.5 shrink-0">
-              ${modifiedCount > 0 ? `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">Змінено: ${modifiedCount}</span>` : ""}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300">${activeCount}/${totalCount}</span>
-              <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              ${statusBadges}
+              <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" style="transform: rotate(${isCatOpen ? "180deg" : "0deg"});" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
               </svg>
             </div>
           </div>
-          <div class="${isOpen ? "block" : "hidden"} px-3 pb-2.5 pt-1 border-t border-gray-100 dark:border-slate-700/60">
+          <div class="settings-cat-body ${isCatOpen ? "" : "hidden"} px-3 pb-2.5 pt-1 border-t border-gray-100 dark:border-slate-700/60">
             ${rowsHtml}
           </div>
         `;
+
+        catBox.querySelector(".settings-cat-header").addEventListener("click", () => {
+          openSettingsCats[cat.id] = !openSettingsCats[cat.id];
+          renderSettings();
+        });
+
         container.appendChild(catBox);
       });
 
+      // Live macro preview while typing new gram portion
       container.querySelectorAll("input[data-base-item-id]").forEach(inp => {
-        inp.addEventListener("input", (e) => {
-          const itemId = e.target.getAttribute("data-base-item-id");
-          let targetItem = null;
+        inp.addEventListener("input", () => {
+          const itemId = inp.getAttribute("data-base-item-id");
+          const newBase = parseDecimalInput(inp.value);
+          let foundItem = null;
           for (const c of MASTER_CATEGORIES) {
-            const found = c.items.find(x => x.id === itemId);
-            if (found) {
-              targetItem = found;
-              break;
-            }
+            foundItem = c.items.find(x => x.id === itemId);
+            if (foundItem) break;
           }
-          if (!targetItem) return;
-          const live = computeLiveSettingsMacros(targetItem, e.target.value);
+          if (!foundItem) return;
+          const specs = getItemSpecs(foundItem);
           const previewEl = document.getElementById(`settings-macro-preview-${itemId}`);
-          if (previewEl) {
-            previewEl.textContent = `${live.kcal} ккал • ${live.protein} г білка`;
+          if (previewEl && specs.base > 0) {
+            const pKcal = Math.round((newBase / specs.base) * specs.kcal);
+            const pProt = Math.round((newBase / specs.base) * specs.protein * 10) / 10;
+            previewEl.textContent = `${pKcal} ккал • ${pProt} г білка`;
           }
+        });
+      });
+
+      // Visibility toggle buttons
+      container.querySelectorAll(".toggle-item-vis-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const itemId = btn.getAttribute("data-toggle-vis-id");
+          if (hiddenItemsMap[itemId]) {
+            delete hiddenItemsMap[itemId];
+            showToast("Продукт повернуто в раціон");
+          } else {
+            hiddenItemsMap[itemId] = true;
+            consumed[itemId] = 0;
+            showToast("Продукт приховано з головного екрана");
+          }
+          try {
+            localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
+          } catch (e) {}
+          renderSettings();
+          updateValuesInPlace();
         });
       });
     }
@@ -3726,7 +3579,6 @@
       try {
         localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
       } catch (e) {}
-      syncSaveToServer();
       updateValuesInPlace();
       showToast("Норми збережено!");
       switchView("calculator");
@@ -3739,24 +3591,26 @@
         localStorage.removeItem(userBaseKey);
         localStorage.removeItem(hiddenItemsKey);
       } catch (e) {}
-      syncSaveToServer();
       renderSettings();
       updateValuesInPlace();
       showToast("Скинуто до базових значень");
     });
 
-    // Export & Import JSON Backup Handlers
+    // Cloud Sync & JSON Export/Import Handlers in Settings
+    document.getElementById("manual-sync-now-btn").addEventListener("click", async () => {
+      showToast("Синхронізація із сервером...");
+      const ok = await syncSaveToServer(true);
+      showToast(ok ? "Дані та бекап збережено на сервері!" : "Помилка з'єднання із сервером");
+    });
+
     document.getElementById("export-json-btn").addEventListener("click", () => {
       const backupObj = {
         exportedAt: new Date().toISOString(),
-        dietDayKey: getDietDayKey(),
-        userProfile: userProfile,
-        customBaseMap: customBaseMap,
-        hiddenItemsMap: hiddenItemsMap,
-        measurementsData: measurementsData,
-        historyRecords: historyRecords,
-        currentGoal: currentGoalKey,
-        consumed: consumed
+        userProfile,
+        customBaseMap,
+        hiddenItemsMap,
+        measurementsData,
+        historyRecords
       };
       const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -3767,7 +3621,7 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast("Файл резервної копії JSON завантажено");
+      showToast("Резервну копію JSON завантажено");
     });
 
     document.getElementById("import-json-input").addEventListener("change", (e) => {
@@ -3776,48 +3630,37 @@
       const reader = new FileReader();
       reader.onload = (ev) => {
         try {
-          const imported = JSON.parse(ev.target.result);
-          if (!imported || typeof imported !== "object") throw new Error("Invalid JSON");
-
-          if (imported.userProfile) {
-            userProfile = Object.assign(userProfile, imported.userProfile);
+          const parsed = JSON.parse(ev.target.result);
+          if (parsed.userProfile) {
+            userProfile = Object.assign(userProfile, parsed.userProfile);
             saveUserProfile();
           }
-          if (imported.customBaseMap) {
-            customBaseMap = imported.customBaseMap;
+          if (parsed.customBaseMap) {
+            customBaseMap = parsed.customBaseMap;
             localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
           }
-          if (imported.hiddenItemsMap) {
-            hiddenItemsMap = imported.hiddenItemsMap;
+          if (parsed.hiddenItemsMap) {
+            hiddenItemsMap = parsed.hiddenItemsMap;
             localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
           }
-          if (imported.measurementsData) {
-            measurementsData = imported.measurementsData;
+          if (parsed.measurementsData) {
+            measurementsData = parsed.measurementsData;
             saveMeasurementsToStorage();
           }
-          if (Array.isArray(imported.historyRecords)) {
-            historyRecords = imported.historyRecords;
+          if (Array.isArray(parsed.historyRecords)) {
+            historyRecords = parsed.historyRecords;
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
           }
-          if (imported.currentGoal) {
-            currentGoalKey = imported.currentGoal;
-          }
-          if (imported.dietDayKey === getDietDayKey() && imported.consumed) {
-            for (const k in imported.consumed) {
-              if (Object.prototype.hasOwnProperty.call(consumed, k)) {
-                consumed[k] = Number(imported.consumed[k]) || 0;
-              }
-            }
-          }
-
           updateGoalButtonsUI();
+          buildCalculatorDOM();
           updateValuesInPlace();
+          renderMeasurementsList();
           renderProfileDetails();
           renderSettings();
           syncSaveToServer(true);
-          showToast("Резервну копію успішно відновлено!");
+          showToast("Дані з резервної копії відновлено!");
         } catch (err) {
-          showToast("Помилка: некоректний JSON-файл");
+          showToast("Помилка читання JSON-файлу");
         }
       };
       reader.readAsText(file);
@@ -3826,33 +3669,39 @@
 
     // Reopen Onboarding from settings
     document.getElementById("reopen-onboarding-btn").addEventListener("click", () => {
-      openOnboardingModal(true);
+      openOnboardingModal();
     });
 
     // ==========================================
-    // ONBOARDING WIZARD LOGIC (Birthday, Gender, Height, Weight, Target Weight, Optional Measurements)
+    // ONBOARDING WIZARD LOGIC
     // ==========================================
     function checkOnboardingNeeded() {
       if (!userProfile.hasCompletedOnboarding) {
-        openOnboardingModal(false);
+        openOnboardingModal();
       }
     }
 
-    function openOnboardingModal(isEditing = false) {
+    function openOnboardingModal() {
       const modal = document.getElementById("onboarding-modal");
-      const genderRadio = document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || "male"}"]`);
-      if (genderRadio) genderRadio.checked = true;
+      document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || "male"}"]`).checked = true;
       document.getElementById("ob-birthday").value = userProfile.birthday || "1991-05-15";
 
-      if (isEditing) {
-        document.getElementById("ob-height").value = userProfile.height || "";
-        document.getElementById("ob-weight").value = userProfile.weight || "";
+      if (userProfile.hasCompletedOnboarding) {
+        document.getElementById("ob-height").value = userProfile.height || 183;
+        document.getElementById("ob-weight").value = userProfile.weight || 76.6;
         document.getElementById("ob-target-weight").value = userProfile.targetWeight || "";
-        document.getElementById("ob-waist").value = getLatestMetricValue("waist", "");
-        document.getElementById("ob-hips").value = getLatestMetricValue("hips", "");
-        document.getElementById("ob-bicep").value = getLatestMetricValue("bicep", "");
-        document.getElementById("ob-chest").value = getLatestMetricValue("chest", "");
-        document.getElementById("ob-thigh").value = getLatestMetricValue("thigh", "");
+
+        const w = measurementsData.waist && measurementsData.waist.length ? measurementsData.waist[measurementsData.waist.length - 1].val : "";
+        const h = measurementsData.hips && measurementsData.hips.length ? measurementsData.hips[measurementsData.hips.length - 1].val : "";
+        const b = measurementsData.bicep && measurementsData.bicep.length ? measurementsData.bicep[measurementsData.bicep.length - 1].val : "";
+        const c = measurementsData.chest && measurementsData.chest.length ? measurementsData.chest[measurementsData.chest.length - 1].val : "";
+        const th = measurementsData.thigh && measurementsData.thigh.length ? measurementsData.thigh[measurementsData.thigh.length - 1].val : "";
+
+        document.getElementById("ob-waist").value = w;
+        document.getElementById("ob-hips").value = h;
+        document.getElementById("ob-bicep").value = b;
+        document.getElementById("ob-chest").value = c;
+        document.getElementById("ob-thigh").value = th;
       } else {
         document.getElementById("ob-height").value = "";
         document.getElementById("ob-weight").value = "";
@@ -3887,19 +3736,21 @@
 
       saveUserProfile();
 
-      const todayStr = getDietDayKey();
-      const waistVal = parseDecimalInput(document.getElementById("ob-waist").value);
-      const hipsVal = parseDecimalInput(document.getElementById("ob-hips").value);
-      const bicepVal = parseDecimalInput(document.getElementById("ob-bicep").value);
-      const chestVal = parseDecimalInput(document.getElementById("ob-chest").value);
-      const thighVal = parseDecimalInput(document.getElementById("ob-thigh").value);
+      const todayStr = new Date().toISOString().split("T")[0];
+      const waistVal = parseDecimalInput(document.getElementById("ob-waist").value) || 84.0;
+      const hipsVal = parseDecimalInput(document.getElementById("ob-hips").value) || 100.0;
+      const bicepVal = parseDecimalInput(document.getElementById("ob-bicep").value) || 38.0;
+      const chestVal = parseDecimalInput(document.getElementById("ob-chest").value) || 106.0;
+      const thighVal = parseDecimalInput(document.getElementById("ob-thigh").value) || 60.0;
 
-      measurementsData.weight = [{ date: todayStr, val: weight }];
-      if (waistVal > 0) measurementsData.waist = [{ date: todayStr, val: waistVal }];
-      if (hipsVal > 0) measurementsData.hips = [{ date: todayStr, val: hipsVal }];
-      if (bicepVal > 0) measurementsData.bicep = [{ date: todayStr, val: bicepVal }];
-      if (chestVal > 0) measurementsData.chest = [{ date: todayStr, val: chestVal }];
-      if (thighVal > 0) measurementsData.thigh = [{ date: todayStr, val: thighVal }];
+      measurementsData = {
+        weight: [{ date: todayStr, val: weight }],
+        waist: [{ date: todayStr, val: waistVal }],
+        hips: [{ date: todayStr, val: hipsVal }],
+        bicep: [{ date: todayStr, val: bicepVal }],
+        chest: [{ date: todayStr, val: chestVal }],
+        thigh: [{ date: todayStr, val: thighVal }]
+      };
       saveMeasurementsToStorage();
 
       document.getElementById("onboarding-modal").classList.add("hidden");
@@ -3907,7 +3758,7 @@
       buildCalculatorDOM();
       updateValuesInPlace();
       renderMeasurementsList();
-      syncSaveToServer(true);
+      syncSaveToServer();
       showToast("Анкету заповнено! Раціон перераховано.");
     });
 
