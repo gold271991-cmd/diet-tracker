@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Раціон та Заміри</title>
   <!-- PWA & Mobile Standalone Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,7 @@
   <script>
     tailwind.config = {
       darkMode: 'class',
-    }
+    };
   </script>
   <style>
     :root {
@@ -51,6 +51,16 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    input, select, textarea {
+      user-select: text;
+    }
+    /* Mobile Keyboard Open UX: hide bottom bar and provide scroll clearance */
+    body.keyboard-open #bottom-nav {
+      display: none !important;
+    }
+    body.keyboard-open {
+      padding-bottom: 56vh !important;
     }
     .slider-container {
       touch-action: pan-y;
@@ -113,6 +123,14 @@
       border: 2px solid white;
       box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -131,24 +149,24 @@
       
       <!-- Top controls -->
       <div class="flex items-center justify-between mb-2.5">
-        <div class="flex items-center space-x-2.5">
-          <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Закрити / Назад">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 shrink-0" title="Закрити / Назад">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center space-x-2">
-              <h1 id="top-title-text" class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none">Раціон</h1>
-              <span id="user-name-display" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
+              <h1 id="top-title-text" class="text-lg font-bold text-gray-900 dark:text-white tracking-tight leading-none truncate">Раціон</h1>
+              <span id="user-name-display" class="text-xs font-semibold text-blue-600 dark:text-blue-400 truncate"></span>
             </div>
-            <div class="text-xs text-gray-400 dark:text-gray-500 leading-tight mt-1" id="athlete-profile-summary">
+            <div class="text-xs text-gray-400 dark:text-gray-500 leading-tight mt-1 truncate" id="athlete-profile-summary">
               Чоловік, 35 р, 183 см • 76.6 кг
             </div>
           </div>
         </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 shrink-0">
           <!-- Live Sync & Save Indicator Badge -->
           <div id="autosave-badge" class="flex items-center space-x-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full transition-opacity duration-300">
             <svg id="sync-icon-ok" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +256,7 @@
             <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
             </svg>
-            <span>Натисніть на продукт, щоб відкрити введення. Клік повз нього автоматично згортає вікно.</span>
+            <span>Натисніть на продукт для введення. Клавіша <b>✓</b> на клавіатурі або клік повз картку зберігає та згортає вікно.</span>
           </div>
         </div>
 
@@ -385,25 +403,24 @@
 
       <!-- 4. Base Settings View & Profile Configuration -->
       <div id="view-settings" class="space-y-3.5 hidden">
-        <!-- Cloud Sync & User ID Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
+        <!-- Automatic Cloud Sync & Telegram Binding Card (No manual ID entry) -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
               <h2 class="text-sm font-bold text-gray-900 dark:text-white">Хмарна синхронізація та бекап</h2>
-              <p id="settings-sync-detail" class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Перевірка з'єднання...</p>
+              <p id="settings-sync-detail" class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">Перевірка з'єднання...</p>
             </div>
             <button id="manual-sync-now-btn" type="button" class="text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 px-3 py-1.5 rounded-xl transition shadow-xs shrink-0">
               Синхронізувати
             </button>
           </div>
-          <div class="pt-1 border-t border-gray-100 dark:border-slate-700/60">
-            <label class="block text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">Персональний ID синхронізації (однаковий на ПК і телефоні):</label>
-            <div class="flex space-x-2">
-              <input type="text" id="settings-sync-id-input" class="flex-1 py-1.5 px-2.5 text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <button id="save-sync-id-btn" type="button" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-xl transition">
-                Застосувати ID
-              </button>
-            </div>
+          <div class="pt-2 border-t border-gray-100 dark:border-slate-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+            <span class="flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+              <span id="telegram-binding-status">Автоматична прив'язка до Telegram ID</span>
+            </span>
           </div>
         </div>
 
@@ -470,7 +487,7 @@
       </button>
     </nav>
 
-    <!-- ONBOARDING MODAL (Full Initial Questionnaire for New Users) -->
+    <!-- ONBOARDING MODAL (Initial Questionnaire with Birthday & Optional Circumferences, No Activity Selector) -->
     <div id="onboarding-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
       <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="text-center space-y-1">
@@ -508,7 +525,7 @@
             </div>
           </div>
 
-          <!-- Birthday & Height -->
+          <!-- Birthday & Height (NO age field, NO activity field) -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Дата народження:</label>
@@ -516,46 +533,49 @@
             </div>
             <div>
               <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Зріст (см):</label>
-              <input type="number" id="ob-height" value="183" min="120" max="230" required class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="number" id="ob-height" value="183" min="120" max="230" inputmode="numeric" enterkeyhint="done" required class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
-          <!-- Initial Measurements Grid -->
-          <div class="space-y-1 pt-1">
-            <span class="block font-bold text-gray-900 dark:text-white text-xs">Поточні заміри тіла:</span>
+          <!-- Current Weight & Target Weight -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Поточна вага (кг):</label>
+              <input type="number" step="0.1" id="ob-weight" value="76.6" inputmode="decimal" enterkeyhint="done" required class="w-full py-2 px-2.5 text-xs font-bold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Цільова вага (кг):</label>
+              <input type="number" step="0.1" id="ob-target-weight" value="82.0" placeholder="Наприклад 80.0" inputmode="decimal" enterkeyhint="done" class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <!-- Optional Body Circumferences -->
+          <div class="space-y-1.5 pt-1 border-t border-gray-100 dark:border-slate-700/70">
+            <span class="block font-bold text-gray-900 dark:text-white text-xs leading-snug">
+              Заміри обхватів (опціонально — можна заповнити пізніше у вкладці «Заміри»):
+            </span>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-[11px] text-gray-500 dark:text-gray-400">Поточна вага (кг):</label>
-                <input type="number" step="0.1" id="ob-weight" value="76.6" required class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
-              </div>
-              <div>
                 <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват талії (см):</label>
-                <input type="number" step="0.5" id="ob-waist" value="84.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <input type="number" step="0.5" id="ob-waist" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div>
                 <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват стегон (см):</label>
-                <input type="number" step="0.5" id="ob-hips" value="100.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <input type="number" step="0.5" id="ob-hips" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div>
                 <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват плеча (см):</label>
-                <input type="number" step="0.5" id="ob-bicep" value="38.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <input type="number" step="0.5" id="ob-bicep" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
               <div>
                 <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват грудей (см):</label>
-                <input type="number" step="0.5" id="ob-chest" value="106.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <input type="number" step="0.5" id="ob-chest" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
-              <div>
+              <div class="col-span-2">
                 <label class="block text-[11px] text-gray-500 dark:text-gray-400">Обхват стегна (см):</label>
-                <input type="number" step="0.5" id="ob-thigh" value="60.0" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+                <input type="number" step="0.5" id="ob-thigh" placeholder="Пізніше" inputmode="decimal" enterkeyhint="done" class="w-full py-1.5 px-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
               </div>
             </div>
-          </div>
-
-          <!-- Target Weight (Optional) -->
-          <div class="pt-1">
-            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Цільова вага (кг, опціонально):</label>
-            <input type="number" step="0.1" id="ob-target-weight" value="82.0" placeholder="Наприклад 80.0" class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <span class="text-[10px] text-gray-400">Якщо вказати, на графіку ваги з'явиться шкала прогресу до мети.</span>
           </div>
 
           <div class="pt-2">
@@ -583,8 +603,10 @@
               type="number" 
               id="modal-metric-input" 
               step="0.1" 
+              inputmode="decimal"
+              enterkeyhint="done"
               class="w-full text-center text-xl font-bold py-2.5 px-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="0.0"
+              placeholder="0"
             >
           </div>
 
@@ -614,7 +636,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Вкажіть бажану вагу (кг):</label>
-          <input type="number" step="0.1" id="tw-modal-input" placeholder="Наприклад 80.0" class="w-full text-center text-xl font-bold py-2.5 px-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <input type="number" step="0.1" id="tw-modal-input" placeholder="Наприклад 80.0" inputmode="decimal" enterkeyhint="done" class="w-full text-center text-xl font-bold py-2.5 px-3 text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
         <div class="flex justify-end space-x-2 pt-1">
           <button id="tw-modal-delete-btn" type="button" class="px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition">Видалити ціль</button>
@@ -624,7 +646,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 text-xs font-semibold px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50">
+    <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 text-xs font-semibold px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50 whitespace-nowrap">
       Збережено!
     </div>
 
@@ -671,7 +693,7 @@
 
     let activeDietDay = getDietDayKey();
 
-    // Надійне отримання єдиного ID користувача для всіх пристроїв
+    // Надійне автоматичне отримання ID користувача з Telegram WebApp або URL
     function getSyncUserId() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -698,14 +720,20 @@
       return "167040233";
     }
 
-    function setCustomSyncUserId(newId) {
-      const cleanId = String(newId || '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
-      if (!cleanId) return false;
-      localStorage.setItem("diet_permanent_tg_id", cleanId);
-      userId = cleanId;
-      return true;
+    function getSyncHeaders(includeContentType = false) {
+      const headers = {};
+      if (includeContentType) {
+        headers["Content-Type"] = "application/json";
+      }
+      if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.initData === "string" && window.Telegram.WebApp.initData.length > 0) {
+        headers["X-Telegram-Init-Data"] = window.Telegram.WebApp.initData;
+      }
+      return headers;
     }
 
+    // ==========================================
+    // ТОЧНІ НОРМИ ПРОДУКТІВ (ВСІ 8 КАТЕГОРІЙ А–Ж)
+    // ==========================================
     const MASTER_CATEGORIES = [
       {"id": "A", "name": "Категорія А", "desc": "Складні вуглеводи (каші, бобові, картопля, хліб)", "badgeBg": "#2563EB", "items": [
         {"id": "a_bobovi", "name": "Бобові", "unit": "г", "note": "", "maintenance": {"base": 170, "kcal": 527, "protein": 34}, "deficit": {"base": 100, "kcal": 310, "protein": 20}, "surplus": {"base": 230, "kcal": 715, "protein": 46}},
@@ -775,7 +803,7 @@
       {"id": "thigh", "name": "Обхват стегна", "unit": "см", "step": "0.5", "icon": "thigh", "target": "60.0"}
     ];
 
-    // User Profile Configuration
+    // User Profile Configuration (NO activity property)
     let userProfile = {
       gender: 'male',
       birthday: '1991-05-15',
@@ -1017,11 +1045,11 @@
     // User Body Measurements storage
     let measurementsData = {
       weight: [{ date: getDietDayKey(), val: userProfile.weight || 76.6 }],
-      bicep: [{ date: getDietDayKey(), val: 38.0 }],
-      chest: [{ date: getDietDayKey(), val: 106.0 }],
-      waist: [{ date: getDietDayKey(), val: 84.0 }],
-      hips: [{ date: getDietDayKey(), val: 100.0 }],
-      thigh: [{ date: getDietDayKey(), val: 60.0 }]
+      bicep: [],
+      chest: [],
+      waist: [],
+      hips: [],
+      thigh: []
     };
 
     try {
@@ -1085,7 +1113,7 @@
         } else if (state === 'syncing') {
           detailEl.textContent = 'Обмін даними із сервером...';
         } else if (state === 'offline') {
-          detailEl.textContent = `Немає зв'язку з сервером${lastCloudSyncError ? ' (' + lastCloudSyncError + ')' : ''}`;
+          detailEl.textContent = `Локальний режим${lastCloudSyncError ? ' (' + lastCloudSyncError + ')' : ''}`;
         } else if (lastCloudSyncTime) {
           detailEl.textContent = `Синхронізовано о ${lastCloudSyncTime}`;
         }
@@ -1102,6 +1130,7 @@
       try {
         const resp = await fetch(`${BACKEND_URL}/api/sync/get?userId=${encodeURIComponent(syncId)}`, {
           method: 'GET',
+          headers: getSyncHeaders(false),
           cache: 'no-store',
           signal: controller.signal
         });
@@ -1164,14 +1193,15 @@
           setSyncBadgeState('saved');
           return true;
         } else {
-          // Файлу на сервері ще немає: якщо анкета вже заповнена локально — одразу створюємо бекап на сервері
-          setSyncBadgeState('saved', 'Створення першого бекапу на сервері...');
-          await syncSaveToServer(true);
+          setSyncBadgeState('saved', 'Очікує першого збереження...');
+          if (userProfile.hasCompletedOnboarding) {
+            await syncSaveToServer(true);
+          }
           return false;
         }
       } catch (e) {
         clearTimeout(timeoutId);
-        lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'мережа/CORS';
+        lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'офлайн';
         setSyncBadgeState('offline');
         return false;
       }
@@ -1201,7 +1231,7 @@
         try {
           const resp = await fetch(`${BACKEND_URL}/api/sync/save`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getSyncHeaders(true),
             body: JSON.stringify({ userId: syncId, payload: payload }),
             signal: controller.signal
           });
@@ -1219,7 +1249,7 @@
           }
         } catch (e) {
           clearTimeout(timeoutId);
-          lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'мережа/CORS';
+          lastCloudSyncError = e.name === 'AbortError' ? 'таймаут 10с' : 'офлайн';
           setSyncBadgeState('offline');
           return false;
         }
@@ -1379,7 +1409,9 @@
                     data-cat-id="${cat.id}"
                     min="0" 
                     step="1"
-                    value="0"
+                    inputmode="decimal"
+                    enterkeyhint="done"
+                    value=""
                     placeholder="0"
                     class="w-16 text-center py-1.5 px-1.5 text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   >
@@ -1545,10 +1577,12 @@
             }
           }
           if (numInput) {
+            // Never show pre-filled '0' — keep empty string with placeholder="0" when itemWeight === 0
+            const displayVal = itemWeight === 0 ? '' : String(itemWeight);
             if (sourceType === 'slider' && activeItemId === it.id) {
-              numInput.value = itemWeight;
+              numInput.value = displayVal;
             } else if (activeItemId !== it.id) {
-              numInput.value = itemWeight;
+              numInput.value = displayVal;
             }
           }
         });
@@ -1666,6 +1700,82 @@
         localStorage.setItem(historyKey, JSON.stringify(historyRecords));
       } catch (e) {}
     }
+
+    // ==========================================
+    // MOBILE KEYBOARD UX (AUTO-SCROLL, ZERO HANDLING, ENTER ✓)
+    // ==========================================
+    (function setupMobileKeyboardUX() {
+      let blurTimer = null;
+
+      document.addEventListener('focusin', (e) => {
+        const inp = e.target;
+        if (!inp || inp.tagName !== 'INPUT') return;
+        if (!['number', 'text', 'tel', 'date'].includes(inp.type)) return;
+
+        clearTimeout(blurTimer);
+        document.body.classList.add('keyboard-open');
+
+        if (inp.value === '0' || inp.value === '0.0') {
+          inp.value = '';
+        } else if (inp.value.length > 0 && inp.type !== 'date') {
+          setTimeout(() => {
+            try { inp.select(); } catch (err) {}
+          }, 15);
+        }
+
+        const scrollTarget = inp.closest('.product-card') || inp.closest('#onboarding-form > div') || inp.closest('#add-measurement-modal .space-y-2\\.5 > div') || inp;
+        const doScroll = () => {
+          try {
+            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch (err) {}
+        };
+        setTimeout(doScroll, 120);
+        setTimeout(doScroll, 350);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        const inp = e.target;
+        if (!inp || inp.tagName !== 'INPUT') return;
+
+        if (e.key === 'Enter' || e.keyCode === 13) {
+          const itemId = inp.getAttribute('data-item-id');
+          if (itemId) {
+            e.preventDefault();
+            const val = Math.max(0, Number(inp.value) || 0);
+            consumed[itemId] = val;
+            inp.blur();
+            closeAllProductDrawers();
+            updateValuesInPlace();
+            return;
+          }
+
+          if (!inp.closest('form')) {
+            e.preventDefault();
+            inp.blur();
+          }
+        }
+      });
+
+      document.addEventListener('focusout', (e) => {
+        const inp = e.target;
+        if (inp && inp.tagName === 'INPUT') {
+          const itemId = inp.getAttribute('data-item-id');
+          if (itemId) {
+            const val = Math.max(0, Number(inp.value) || 0);
+            consumed[itemId] = val;
+            inp.value = val === 0 ? '' : String(val);
+            updateValuesInPlace();
+          }
+        }
+
+        blurTimer = setTimeout(() => {
+          const active = document.activeElement;
+          if (!active || active.tagName !== 'INPUT') {
+            document.body.classList.remove('keyboard-open');
+          }
+        }, 150);
+      });
+    })();
 
     // Single-active accordion & click-outside-to-collapse
     let outsideClickBound = false;
@@ -2168,7 +2278,7 @@
 
       document.getElementById('modal-metric-title').textContent = `Редагувати: ${metric.name}`;
       document.getElementById('modal-metric-unit').textContent = metric.unit;
-      document.getElementById('modal-metric-input').value = val;
+      document.getElementById('modal-metric-input').value = val || '';
       document.getElementById('modal-metric-date').value = date;
 
       addModal.classList.remove('hidden');
@@ -2247,7 +2357,7 @@
 
       const history = measurementsData[selectedMetricId] || [];
       const latest = history.length > 0 ? history[history.length - 1] : null;
-      document.getElementById('modal-metric-input').value = latest ? latest.val : '';
+      document.getElementById('modal-metric-input').value = (latest && latest.val > 0) ? latest.val : '';
       document.getElementById('modal-metric-date').value = new Date().toISOString().split('T')[0];
 
       addModal.classList.remove('hidden');
@@ -2344,8 +2454,6 @@
       } else if (viewName === 'history') {
         renderHistory();
       } else if (viewName === 'settings') {
-        const syncInput = document.getElementById('settings-sync-id-input');
-        if (syncInput) syncInput.value = getSyncUserId();
         renderProfileDetails();
         renderSettings();
       }
@@ -2353,27 +2461,11 @@
       updateReminderBadges();
     }
 
-    // Керування ID та ручною синхронізацією у вкладці «Мої норми»
-    document.getElementById('save-sync-id-btn').addEventListener('click', async () => {
-      const val = document.getElementById('settings-sync-id-input').value;
-      if (!setCustomSyncUserId(val)) {
-        showToast('Введіть коректний ID');
-        return;
-      }
-      showToast('ID оновлено, завантажуємо дані...');
-      const loaded = await syncLoadFromServer();
-      updateGoalButtonsUI();
-      buildCalculatorDOM();
-      updateValuesInPlace();
-      renderMeasurementsList();
-      renderProfileDetails();
-      showToast(loaded ? 'Дані завантажено із сервера!' : 'Новий профіль підключено до сервера');
-    });
-
+    // Manual Sync Button in "Мої норми" (No manual ID input box)
     document.getElementById('manual-sync-now-btn').addEventListener('click', async () => {
       showToast('Синхронізація із сервером...');
       const ok = await syncSaveToServer(true);
-      showToast(ok ? 'Дані та бекап збережено на сервері!' : 'Помилка з\'єднання із сервером');
+      showToast(ok ? 'Дані та бекап збережено на сервері!' : 'Збережено локально на пристрої');
     });
 
     // History View with collapsible day items (collapsed by default, expands on click)
@@ -2492,12 +2584,14 @@
           const currentBase = getItemEffectiveBase(it);
           rowsHtml += `
             <div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-              <span class="text-gray-800 dark:text-gray-200 text-xs font-medium">${specs.name}</span>
-              <div class="flex items-center space-x-1.5">
+              <span class="text-gray-800 dark:text-gray-200 text-xs font-medium pr-2">${specs.name}</span>
+              <div class="flex items-center space-x-1.5 shrink-0">
                 <input 
                   type="number" 
                   data-base-item-id="${it.id}" 
                   value="${currentBase}" 
+                  inputmode="numeric"
+                  enterkeyhint="done"
                   class="w-16 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
                 <span class="text-gray-400 text-xs">${it.unit}</span>
@@ -2530,6 +2624,7 @@
       try {
         localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
       } catch (e) {}
+      syncSaveToServer();
       updateValuesInPlace();
       showToast('Норми збережено!');
       switchView('calculator');
@@ -2540,6 +2635,7 @@
       try {
         localStorage.removeItem(userBaseKey);
       } catch (e) {}
+      syncSaveToServer();
       renderSettings();
       updateValuesInPlace();
       showToast('Скинуто до розрахункових значень');
@@ -2551,7 +2647,7 @@
     });
 
     // ==========================================
-    // ONBOARDING WIZARD LOGIC
+    // ONBOARDING WIZARD LOGIC (Birthday + Optional Circumferences)
     // ==========================================
     function checkOnboardingNeeded() {
       if (!userProfile.hasCompletedOnboarding) {
@@ -2561,17 +2657,19 @@
 
     function openOnboardingModal() {
       const modal = document.getElementById('onboarding-modal');
-      document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`).checked = true;
+      const genderRadio = document.querySelector(`input[name="ob-gender"][value="${userProfile.gender || 'male'}"]`);
+      if (genderRadio) genderRadio.checked = true;
+
       document.getElementById('ob-birthday').value = userProfile.birthday || '1991-05-15';
       document.getElementById('ob-height').value = userProfile.height || 183;
       document.getElementById('ob-weight').value = userProfile.weight || 76.6;
       document.getElementById('ob-target-weight').value = userProfile.targetWeight || '';
 
-      const w = measurementsData.waist && measurementsData.waist.length ? measurementsData.waist[measurementsData.waist.length-1].val : 84;
-      const h = measurementsData.hips && measurementsData.hips.length ? measurementsData.hips[measurementsData.hips.length-1].val : 100;
-      const b = measurementsData.bicep && measurementsData.bicep.length ? measurementsData.bicep[measurementsData.bicep.length-1].val : 38;
-      const c = measurementsData.chest && measurementsData.chest.length ? measurementsData.chest[measurementsData.chest.length-1].val : 106;
-      const th = measurementsData.thigh && measurementsData.thigh.length ? measurementsData.thigh[measurementsData.thigh.length-1].val : 60;
+      const w = (measurementsData.waist && measurementsData.waist.length) ? measurementsData.waist[measurementsData.waist.length - 1].val : '';
+      const h = (measurementsData.hips && measurementsData.hips.length) ? measurementsData.hips[measurementsData.hips.length - 1].val : '';
+      const b = (measurementsData.bicep && measurementsData.bicep.length) ? measurementsData.bicep[measurementsData.bicep.length - 1].val : '';
+      const c = (measurementsData.chest && measurementsData.chest.length) ? measurementsData.chest[measurementsData.chest.length - 1].val : '';
+      const th = (measurementsData.thigh && measurementsData.thigh.length) ? measurementsData.thigh[measurementsData.thigh.length - 1].val : '';
 
       document.getElementById('ob-waist').value = w;
       document.getElementById('ob-hips').value = h;
@@ -2586,10 +2684,11 @@
       e.preventDefault();
 
       const gender = document.querySelector('input[name="ob-gender"]:checked').value;
-      const birthday = document.getElementById('ob-birthday').value;
+      const birthday = document.getElementById('ob-birthday').value || '1991-05-15';
       const height = Number(document.getElementById('ob-height').value) || 183;
       const weight = Number(document.getElementById('ob-weight').value) || 76.6;
-      const targetWeight = Number(document.getElementById('ob-target-weight').value) || null;
+      const rawTarget = Number(document.getElementById('ob-target-weight').value);
+      const targetWeight = rawTarget > 0 ? rawTarget : null;
 
       userProfile.gender = gender;
       userProfile.birthday = birthday;
@@ -2602,20 +2701,39 @@
       saveUserProfile();
 
       const todayStr = new Date().toISOString().split('T')[0];
-      const waistVal = Number(document.getElementById('ob-waist').value) || 84;
-      const hipsVal = Number(document.getElementById('ob-hips').value) || 100;
-      const bicepVal = Number(document.getElementById('ob-bicep').value) || 38;
-      const chestVal = Number(document.getElementById('ob-chest').value) || 106;
-      const thighVal = Number(document.getElementById('ob-thigh').value) || 60;
 
-      measurementsData = {
-        weight: [{ date: todayStr, val: weight }],
-        waist: [{ date: todayStr, val: waistVal }],
-        hips: [{ date: todayStr, val: hipsVal }],
-        bicep: [{ date: todayStr, val: bicepVal }],
-        chest: [{ date: todayStr, val: chestVal }],
-        thigh: [{ date: todayStr, val: thighVal }]
-      };
+      // Upsert today's weight in measurementsData
+      if (!Array.isArray(measurementsData.weight)) measurementsData.weight = [];
+      const wIdx = measurementsData.weight.findIndex(x => x.date === todayStr);
+      if (wIdx !== -1) {
+        measurementsData.weight[wIdx].val = weight;
+      } else {
+        measurementsData.weight.push({ date: todayStr, val: weight });
+      }
+
+      // Only save non-empty optional circumference values
+      const optionalMetrics = [
+        { key: 'waist', inputId: 'ob-waist' },
+        { key: 'hips', inputId: 'ob-hips' },
+        { key: 'bicep', inputId: 'ob-bicep' },
+        { key: 'chest', inputId: 'ob-chest' },
+        { key: 'thigh', inputId: 'ob-thigh' }
+      ];
+
+      optionalMetrics.forEach(({ key, inputId }) => {
+        if (!Array.isArray(measurementsData[key])) measurementsData[key] = [];
+        const rawStr = document.getElementById(inputId).value.trim();
+        const numVal = Number(rawStr);
+        if (rawStr !== '' && numVal > 0) {
+          const idx = measurementsData[key].findIndex(x => x.date === todayStr);
+          if (idx !== -1) {
+            measurementsData[key][idx].val = numVal;
+          } else {
+            measurementsData[key].push({ date: todayStr, val: numVal });
+          }
+        }
+      });
+
       saveMeasurementsToStorage();
 
       document.getElementById('onboarding-modal').classList.add('hidden');
