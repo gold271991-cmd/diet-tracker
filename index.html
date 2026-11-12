@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Раціон та Заміри</title>
   <!-- PWA & Mobile Standalone Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,6 +28,8 @@
       --text-color: #0f172a;
       --text-secondary: #64748b;
       --border-color: #e2e8f0;
+      --app-top-inset: env(safe-area-inset-top, 0px);
+      --app-bottom-inset: env(safe-area-inset-bottom, 0px);
     }
     .dark {
       --bg-color: #0f172a;
@@ -35,6 +37,12 @@
       --text-color: #f8fafc;
       --text-secondary: #94a3b8;
       --border-color: #334155;
+    }
+    #app-header {
+      padding-top: calc(0.875rem + var(--app-top-inset));
+    }
+    #bottom-nav {
+      padding-bottom: calc(0.625rem + var(--app-bottom-inset));
     }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -119,7 +127,7 @@
   <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors relative">
     
     <!-- Top Header -->
-    <header class="relative bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pt-3.5 pb-2.5 transition-colors">
+    <header id="app-header" class="relative bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 transition-colors">
       
       <!-- Top controls -->
       <div class="flex items-center justify-between mb-2.5">
@@ -405,7 +413,7 @@
     </main>
 
     <!-- Bottom Navigation Tabs: [Раціон] [Заміри] [Історія] [Мої норми] -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-4 py-2.5 flex items-center justify-around text-xs font-semibold z-40 transition-colors shadow-lg">
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-4 pt-2.5 flex items-center justify-around text-xs font-semibold z-40 transition-colors shadow-lg">
       <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold" data-view="calculator">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
@@ -438,7 +446,7 @@
     </nav>
 
     <!-- ONBOARDING MODAL (Full Initial Questionnaire for New Users) -->
-    <div id="onboarding-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
+    <div id="onboarding-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
       <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="text-center space-y-1">
           <div class="w-12 h-12 bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">
@@ -615,6 +623,29 @@
     // ==========================================
     const BACKEND_URL = "https://AnatoliiHordiienko.pythonanywhere.com";
 
+    // ==========================================
+    // ЛОГІКА ДОБИ РАЦІОНУ (Скидання о 03:00 ранку)
+    // ==========================================
+    function getShiftedDietDate(dateObj = new Date()) {
+      // Зсуваємо час на 3 години назад: інтервал з 03:00 до 02:59 наступного дня належить до однієї доби раціону
+      return new Date(dateObj.getTime() - 3 * 60 * 60 * 1000);
+    }
+
+    function getDietDayKey(dateObj = new Date()) {
+      const d = getShiftedDietDate(dateObj);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getDietDayFormatted(dateObj = new Date()) {
+      const d = getShiftedDietDate(dateObj);
+      return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    let activeDietDay = getDietDayKey();
+
     // Надійне отримання єдиного ID користувача для ВСІХ пристроїв
     function getSyncUserId() {
       // 1. Перевірка параметра ?tgId= або ?userId= у посиланні браузера
@@ -739,6 +770,47 @@
     let userId = 'default_user';
     let userName = 'Користувач';
 
+    // Розрахунок безпечних відступів для статус-бару Android та кнопок Telegram у повноекранному режимі
+    function applySafeAreaInsets() {
+      let topInset = 0;
+      let bottomInset = 0;
+
+      if (tg) {
+        const sysTop = (tg.safeAreaInset && typeof tg.safeAreaInset.top === 'number') ? tg.safeAreaInset.top : 0;
+        const contentTop = (tg.contentSafeAreaInset && typeof tg.contentSafeAreaInset.top === 'number') ? tg.contentSafeAreaInset.top : 0;
+        const sysBottom = (tg.safeAreaInset && typeof tg.safeAreaInset.bottom === 'number') ? tg.safeAreaInset.bottom : 0;
+
+        topInset = sysTop + contentTop;
+        bottomInset = sysBottom;
+
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (tg.isFullscreen || isStandalone) {
+          const minFullscreenTop = isAndroid ? 86 : 76;
+          if (topInset < minFullscreenTop) {
+            topInset = minFullscreenTop;
+          }
+        }
+      } else {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (isStandalone) {
+          topInset = 36;
+        }
+      }
+
+      const rootStyles = getComputedStyle(document.documentElement);
+      const cssTgSafe = parseFloat(rootStyles.getPropertyValue('--tg-safe-area-inset-top')) || 0;
+      const cssTgContent = parseFloat(rootStyles.getPropertyValue('--tg-content-safe-area-inset-top')) || 0;
+      if (cssTgSafe + cssTgContent > topInset) {
+        topInset = cssTgSafe + cssTgContent;
+      }
+
+      document.documentElement.style.setProperty('--app-top-inset', topInset + 'px');
+      if (bottomInset > 0) {
+        document.documentElement.style.setProperty('--app-bottom-inset', bottomInset + 'px');
+      }
+    }
+
     if (tg) {
       try {
         tg.ready();
@@ -752,9 +824,19 @@
           localStorage.setItem("diet_permanent_tg_id", "tg_" + userId);
         }
         applyTelegramTheme();
+        applySafeAreaInsets();
         tg.onEvent('themeChanged', applyTelegramTheme);
+        tg.onEvent('safeAreaChanged', applySafeAreaInsets);
+        tg.onEvent('contentSafeAreaChanged', applySafeAreaInsets);
+        tg.onEvent('fullscreenChanged', applySafeAreaInsets);
+        tg.onEvent('viewportChanged', applySafeAreaInsets);
       } catch (e) {}
     }
+
+    applySafeAreaInsets();
+    window.addEventListener('resize', applySafeAreaInsets);
+    setTimeout(applySafeAreaInsets, 150);
+    setTimeout(applySafeAreaInsets, 600);
 
     document.getElementById('user-name-display').textContent = userName;
 
@@ -809,18 +891,35 @@
       if (savedProfile) userProfile = Object.assign(userProfile, JSON.parse(savedProfile));
       const savedBases = localStorage.getItem(userBaseKey);
       if (savedBases) customBaseMap = JSON.parse(savedBases);
+      const savedHist = localStorage.getItem(historyKey);
+      if (savedHist) historyRecords = JSON.parse(savedHist);
+
       const savedState = localStorage.getItem(userStateKey);
+      const currentDietDay = getDietDayKey();
       if (savedState) {
         const parsed = JSON.parse(savedState);
-        if (parsed.consumed) {
-          for (const k in parsed.consumed) {
-            if (consumed.hasOwnProperty(k)) consumed[k] = Number(parsed.consumed[k]) || 0;
+        const savedDay = parsed.activeDietDay || null;
+        const isLegacyStaleDay = !savedDay && historyRecords.length > 0 && historyRecords[0].shortDate !== getDietDayFormatted();
+
+        if ((savedDay && savedDay !== currentDietDay) || isLegacyStaleDay) {
+          // Настав новий день після 03:00 — скидаємо спожиті продукти за день
+          Object.keys(consumed).forEach(k => { consumed[k] = 0; });
+          activeDietDay = currentDietDay;
+          localStorage.setItem(userStateKey, JSON.stringify({
+            goal: parsed.goal || currentGoalKey,
+            activeDietDay: activeDietDay,
+            consumed: consumed
+          }));
+        } else {
+          if (parsed.consumed) {
+            for (const k in parsed.consumed) {
+              if (consumed.hasOwnProperty(k)) consumed[k] = Number(parsed.consumed[k]) || 0;
+            }
           }
+          activeDietDay = savedDay || currentDietDay;
         }
         if (parsed.goal) currentGoalKey = parsed.goal;
       }
-      const savedHist = localStorage.getItem(historyKey);
-      if (savedHist) historyRecords = JSON.parse(savedHist);
       const savedM = localStorage.getItem(measurementsKey);
       if (savedM) measurementsData = JSON.parse(savedM);
     } catch (e) {}
@@ -850,15 +949,45 @@
         const json = await resp.json();
         if (json && json.exists && json.data) {
           const remote = json.data;
+          const currentDietDay = getDietDayKey();
+          const remoteDietDay = remote.activeDietDay || null;
           
           if (remote.userProfile) {
             userProfile = Object.assign(userProfile, remote.userProfile);
             userProfile.hasCompletedOnboarding = true;
             localStorage.setItem(profileKey, JSON.stringify(userProfile));
           }
-          if (remote.consumed) {
+          if (remote.historyRecords && Array.isArray(remote.historyRecords)) {
+            const mergedMap = new Map();
+            [...remote.historyRecords, ...historyRecords].forEach(rec => {
+              if (rec && rec.shortDate && !mergedMap.has(rec.shortDate)) {
+                mergedMap.set(rec.shortDate, rec);
+              }
+            });
+            historyRecords = Array.from(mergedMap.values()).slice(0, 30);
+            localStorage.setItem(historyKey, JSON.stringify(historyRecords));
+          }
+
+          const isRemoteLegacyStale = !remoteDietDay && historyRecords.length > 0 && historyRecords[0].shortDate !== getDietDayFormatted();
+
+          if ((remoteDietDay && remoteDietDay !== currentDietDay) || isRemoteLegacyStale) {
+            // На сервері збережено вчорашній раціон — скидаємо для нового дня (після 03:00)
+            Object.keys(consumed).forEach(k => { consumed[k] = 0; });
+            activeDietDay = currentDietDay;
+            localStorage.setItem(userStateKey, JSON.stringify({
+              goal: remote.goal || currentGoalKey,
+              activeDietDay: activeDietDay,
+              consumed: consumed
+            }));
+            syncSaveToServer();
+          } else if (remote.consumed) {
             consumed = Object.assign(consumed, remote.consumed);
-            localStorage.setItem(userStateKey, JSON.stringify({ goal: remote.goal || currentGoalKey, consumed }));
+            activeDietDay = remoteDietDay || currentDietDay;
+            localStorage.setItem(userStateKey, JSON.stringify({
+              goal: remote.goal || currentGoalKey,
+              activeDietDay: activeDietDay,
+              consumed: consumed
+            }));
           }
           if (remote.measurementsData) {
             measurementsData = remote.measurementsData;
@@ -897,6 +1026,8 @@
         const payload = {
           userProfile,
           consumed,
+          activeDietDay: getDietDayKey(),
+          historyRecords,
           goal: currentGoalKey,
           measurementsData,
           customBaseMap,
@@ -1276,7 +1407,7 @@
           if (statsEl) {
             statsEl.innerHTML = isConsumed 
               ? `<span class="text-blue-600 dark:text-blue-400 font-medium">${curKcal} ккал • ${curProtein} г білка</span>`
-              : `<span class="text-gray-400 dark:text-gray-500">${baseKcal} ккал • ${it.protein} г білка</span>`;
+              : `<span class="text-gray-400 dark:text-gray-500">${baseKcal} ккал • ${baseProtein} г білка</span>`;
           }
 
           if (slider) {
@@ -1328,8 +1459,10 @@
 
     function saveCurrentStateToDisk(totalKcal, totalProtein) {
       try {
+        activeDietDay = getDietDayKey();
         const payload = {
           goal: currentGoalKey,
+          activeDietDay: activeDietDay,
           consumed: consumed
         };
         localStorage.setItem(userStateKey, JSON.stringify(payload));
@@ -1363,7 +1496,8 @@
 
       if (consumedList.length === 0) return;
 
-      const todayDate = new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+      // Дата доби раціону з урахуванням зсуву на 03:00 ранку (03:00 - 02:59)
+      const todayDate = getDietDayFormatted();
       const meta = calculateUserMetabolism();
       
       let todayEntry = historyRecords.find(r => r.shortDate === todayDate);
@@ -1575,6 +1709,11 @@
           consumed[it.id] = 0;
         });
       });
+      const todayDate = getDietDayFormatted();
+      historyRecords = historyRecords.filter(r => r.shortDate !== todayDate);
+      try {
+        localStorage.setItem(historyKey, JSON.stringify(historyRecords));
+      } catch (e) {}
       resetModal.classList.add('hidden');
       updateValuesInPlace();
       showToast('Дані успішно скинуто!');
@@ -2111,36 +2250,58 @@
 
       historyRecords.forEach(entry => {
         const card = document.createElement('div');
-        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 space-y-2 shadow-xs';
+        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 shadow-xs transition-colors';
         
         let itemsHtml = entry.items.map(it => `
-          <div class="flex justify-between items-center text-xs py-1 border-b border-gray-100 dark:border-slate-700/50">
+          <div class="flex justify-between items-center text-xs py-1 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
             <span class="text-gray-700 dark:text-gray-300">• ${it.name}</span>
             <span class="font-semibold text-gray-900 dark:text-white">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
           </div>
         `).join('');
 
         card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
-              <span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                ${entry.goal}
-              </span>
+          <div class="history-card-header cursor-pointer select-none space-y-1.5">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
+                <span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                  ${entry.goal}
+                </span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="text-right">
+                  <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.totalCalories}</span>
+                  <span class="text-[10px] text-gray-400"> / ${entry.targetCalories} ккал</span>
+                </div>
+                <svg class="history-chevron w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.totalCalories}</span>
-              <span class="text-[10px] text-gray-400"> / ${entry.targetCalories} ккал</span>
+            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
+                <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
+              </div>
+              <span class="history-toggle-hint text-[11px] text-blue-600 dark:text-blue-400 font-medium">Розгорнути</span>
             </div>
           </div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2">
-            <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
-            <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
-          </div>
-          <div class="pt-1 space-y-0.5">
+          <div class="history-items-container hidden pt-2 mt-2 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5">
             ${itemsHtml}
           </div>
         `;
+
+        const headerEl = card.querySelector('.history-card-header');
+        const itemsContainer = card.querySelector('.history-items-container');
+        const chevronEl = card.querySelector('.history-chevron');
+        const hintEl = card.querySelector('.history-toggle-hint');
+
+        headerEl.addEventListener('click', () => {
+          const isHidden = itemsContainer.classList.toggle('hidden');
+          chevronEl.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+          hintEl.textContent = isHidden ? 'Розгорнути' : 'Згорнути';
+        });
+
         list.appendChild(card);
       });
     }
@@ -2350,6 +2511,7 @@
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.textContent = msg;
       toast.classList.remove('opacity-0');
       toast.classList.add('opacity-100');
@@ -2358,6 +2520,21 @@
         toast.classList.add('opacity-0');
       }, 2000);
     }
+
+    // Автоматична перевірка переходу через 03:00 ранку, якщо додаток залишився відкритим
+    setInterval(() => {
+      const nowDietDay = getDietDayKey();
+      if (activeDietDay && activeDietDay !== nowDietDay) {
+        activeDietDay = nowDietDay;
+        MASTER_CATEGORIES.forEach(cat => {
+          cat.items.forEach(it => {
+            consumed[it.id] = 0;
+          });
+        });
+        updateValuesInPlace();
+        showToast('Розпочато новий день раціону (після 03:00)!');
+      }
+    }, 30000);
 
     // Init App with safe bootstrap sequence
     async function initApp() {
