@@ -132,7 +132,7 @@
       display: none !important;
     }
     body.keyboard-open {
-      padding-bottom: 52vh !important;
+      padding-bottom: 44vh !important;
     }
   </style>
 </head>
@@ -257,7 +257,7 @@
           <div class="flex items-center justify-between gap-2">
             <div>
               <h2 class="text-sm font-bold text-gray-900 dark:text-white">Композиція та заміри тіла</h2>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">Натисніть на показник для детального графіка</p>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Натисніть на індекс для норм або на картку для графіка</p>
             </div>
             <div class="flex items-center space-x-1.5 shrink-0">
               <span id="weekly-reminder-banner" class="hidden px-2 py-1 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 animate-pulse">
@@ -882,6 +882,25 @@
       </div>
     </div>
 
+    <!-- Interactive Body Index Norms Modal (WHtR & V-Taper) -->
+    <div id="index-info-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3.5 border border-gray-100 dark:border-slate-700 my-auto max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center space-x-1.5 bg-gray-100 dark:bg-slate-900 p-1 rounded-xl">
+            <button type="button" id="idx-tab-whtr" class="px-3 py-1.5 rounded-lg text-xs font-bold transition">Талія / Зріст</button>
+            <button type="button" id="idx-tab-vtaper" class="px-3 py-1.5 rounded-lg text-xs font-bold transition">V-Taper</button>
+          </div>
+          <button id="close-index-modal-btn" type="button" class="p-1.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-500 hover:text-gray-800 dark:text-gray-300">✕</button>
+        </div>
+
+        <div id="index-modal-content" class="space-y-3 text-xs"></div>
+
+        <button id="index-modal-ok-btn" type="button" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-xs">
+          Зрозуміло
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -1266,7 +1285,11 @@
     document.getElementById("user-name-display").textContent = userName;
     applyTelegramTheme();
     applySafeAreaInsets();
-    window.addEventListener("resize", applySafeAreaInsets);
+    window.addEventListener("resize", () => {
+      if (!document.body.classList.contains("keyboard-open")) {
+        applySafeAreaInsets();
+      }
+    });
     setTimeout(applySafeAreaInsets, 150);
     setTimeout(applySafeAreaInsets, 600);
 
@@ -2301,13 +2324,44 @@
 
     (function setupMobileKeyboardUX() {
       let blurTimer = null;
+      let activeInput = null;
 
-      function scrollFocusedInputIntoView(inp) {
+      function ensureInputVisible(inp) {
         if (!inp || document.activeElement !== inp) return;
+
+        const stickyShell = document.getElementById("top-sticky-shell");
+        const stickyRect = stickyShell ? stickyShell.getBoundingClientRect() : null;
+        const stickyBottom = (stickyRect && stickyRect.height > 0 && stickyRect.bottom > 0) ? stickyRect.bottom : 0;
+
+        const vvHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const vvOffsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
+
+        const safeTop = stickyBottom + 12;
+        const safeBottom = vvOffsetTop + vvHeight - 14;
+
         const targetBlock = inp.closest(".product-card") || inp.closest("form > div") || inp;
-        try {
-          targetBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-        } catch (err) {}
+        const rect = targetBlock.getBoundingClientRect();
+
+        if (rect.top < safeTop) {
+          window.scrollBy({ top: rect.top - safeTop, behavior: "smooth" });
+        } else if (rect.bottom > safeBottom) {
+          const availableSpace = safeBottom - safeTop;
+          if (rect.height <= availableSpace) {
+            const desiredTop = safeTop + Math.min(20, Math.max(0, (availableSpace - rect.height) / 2));
+            window.scrollBy({ top: rect.top - desiredTop, behavior: "smooth" });
+          } else {
+            const inpRect = inp.getBoundingClientRect();
+            window.scrollBy({ top: inpRect.top - (safeTop + 8), behavior: "smooth" });
+          }
+        }
+      }
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", () => {
+          if (activeInput && document.activeElement === activeInput) {
+            ensureInputVisible(activeInput);
+          }
+        });
       }
 
       document.addEventListener("focusin", (e) => {
@@ -2316,14 +2370,15 @@
         if (["range", "radio", "checkbox", "file", "date"].includes(inp.type)) return;
 
         clearTimeout(blurTimer);
+        activeInput = inp;
         document.body.classList.add("keyboard-open");
 
         if (inp.value === "0" || inp.value === "0.0") {
           inp.value = "";
         }
 
-        setTimeout(() => scrollFocusedInputIntoView(inp), 220);
-        setTimeout(() => scrollFocusedInputIntoView(inp), 480);
+        setTimeout(() => ensureInputVisible(inp), 180);
+        setTimeout(() => ensureInputVisible(inp), 420);
       });
 
       document.addEventListener("keydown", (e) => {
@@ -2358,6 +2413,7 @@
         blurTimer = setTimeout(() => {
           const active = document.activeElement;
           if (!active || active.tagName !== "INPUT" || ["range", "radio", "checkbox", "file", "date"].includes(active.type)) {
+            activeInput = null;
             document.body.classList.remove("keyboard-open");
           }
         }, 160);
@@ -2756,8 +2812,7 @@
       const height = Number(userProfile.height) || 183;
       const waistNow = getLatestMetricVal("waist", 84.0);
       const chestNow = getLatestMetricVal("chest", 106.0);
-      const waistStart = getStartMetricVal("waist", waistNow);
-      const chestStart = getStartMetricVal("chest", chestNow);
+      const isFemale = userProfile.gender === "female";
 
       const whtr = Math.round((waistNow / height) * 100) / 100;
       let whtrZone = "Норма";
@@ -2783,43 +2838,336 @@
       const whtrBarPct = Math.max(8, Math.min(96, Math.round(((whtr - 0.36) / (0.62 - 0.36)) * 100)));
 
       const vtaperNow = waistNow > 0 ? Math.round((chestNow / waistNow) * 100) / 100 : 0;
-      const vtaperStart = waistStart > 0 ? Math.round((chestStart / waistStart) * 100) / 100 : vtaperNow;
-      const vtaperDiff = Math.round((vtaperNow - vtaperStart) * 100) / 100;
-      const vtaperDiffStr = vtaperDiff > 0 ? `+${vtaperDiff}` : `${vtaperDiff}`;
-      const vtaperBadgeClass = vtaperDiff >= 0
-        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50"
-        : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50";
+      const vtThresholds = isFemale ? [1.05, 1.15, 1.25] : [1.15, 1.25, 1.35];
+      let vtZone = "Базовий";
+      let vtColor = "text-blue-600 dark:text-blue-400";
+      let vtBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
+      if (vtaperNow < vtThresholds[0]) {
+        vtZone = "Прямий";
+        vtColor = "text-amber-600 dark:text-amber-400";
+        vtBadgeBg = "bg-amber-50 dark:bg-amber-950/50";
+      } else if (vtaperNow < vtThresholds[1]) {
+        vtZone = isFemale ? "Гармонійний" : "Базовий";
+        vtColor = "text-blue-600 dark:text-blue-400";
+        vtBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
+      } else if (vtaperNow < vtThresholds[2]) {
+        vtZone = isFemale ? "Виражена талія" : "Атлетичний";
+        vtColor = "text-emerald-600 dark:text-emerald-400";
+        vtBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
+      } else {
+        vtZone = "Топ V-силует";
+        vtColor = "text-purple-600 dark:text-purple-400";
+        vtBadgeBg = "bg-purple-50 dark:bg-purple-950/50";
+      }
+      const vtMinScale = isFemale ? 0.95 : 1.05;
+      const vtMaxScale = isFemale ? 1.35 : 1.45;
+      const vtBarPct = Math.max(8, Math.min(96, Math.round(((vtaperNow - vtMinScale) / (vtMaxScale - vtMinScale)) * 100)));
 
       grid.innerHTML = `
-        <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Талія / Зріст</span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${whtrColor} ${whtrBadgeBg}">${whtrZone}</span>
+        <button type="button" id="open-whtr-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <span>Талія / Зріст</span>
+              <span class="text-[10px] text-blue-500 font-bold">ⓘ</span>
+            </span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${whtrColor} ${whtrBadgeBg} shrink-0">${whtrZone}</span>
           </div>
           <div class="flex items-baseline space-x-1.5">
             <span class="text-xl font-extrabold text-gray-900 dark:text-white">${whtr.toFixed(2)}</span>
-            <span class="text-[10px] text-gray-400">ціль 0.43–0.49</span>
+            <span class="text-[10px] text-gray-400">норма 0.43–0.49</span>
           </div>
           <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400">
             <span class="absolute -top-1 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-xs" style="left: calc(${whtrBarPct}% - 6px);"></span>
           </div>
-        </div>
+        </button>
 
-        <div class="bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">V-Taper (Груди/Талія)</span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${vtaperBadgeClass}">${vtaperDiffStr}</span>
+        <button type="button" id="open-vtaper-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <span>V-Taper</span>
+              <span class="text-[10px] text-blue-500 font-bold">ⓘ</span>
+            </span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${vtColor} ${vtBadgeBg} shrink-0">${vtZone}</span>
           </div>
           <div class="flex items-baseline space-x-1.5">
             <span class="text-xl font-extrabold text-gray-900 dark:text-white">${vtaperNow.toFixed(2)}</span>
-            <span class="text-[10px] text-gray-400">${chestNow} / ${waistNow} см</span>
+            <span class="text-[10px] text-gray-400">силует торсу</span>
           </div>
-          <div class="text-[10px] text-gray-400 dark:text-gray-500 truncate">
-            ${vtaperDiff >= 0 ? "Пропорції плечового поясу покращуються" : "Контролюйте обхват талії"}
+          <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-amber-400 via-blue-400 to-emerald-500">
+            <span class="absolute -top-1 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-xs" style="left: calc(${vtBarPct}% - 6px);"></span>
           </div>
-        </div>
+        </button>
       `;
+
+      document.getElementById("open-whtr-info-btn").addEventListener("click", () => openIndexInfoModal("whtr"));
+      document.getElementById("open-vtaper-info-btn").addEventListener("click", () => openIndexInfoModal("vtaper"));
     }
+
+    function openIndexInfoModal(mode = "whtr") {
+      const modal = document.getElementById("index-info-modal");
+      const contentEl = document.getElementById("index-modal-content");
+      const tabWhtr = document.getElementById("idx-tab-whtr");
+      const tabVtaper = document.getElementById("idx-tab-vtaper");
+
+      tabWhtr.className = mode === "whtr"
+        ? "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
+        : "px-3 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
+      tabVtaper.className = mode === "vtaper"
+        ? "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
+        : "px-3 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
+
+      const height = Number(userProfile.height) || 183;
+      const waistNow = getLatestMetricVal("waist", 84.0);
+      const chestNow = getLatestMetricVal("chest", 106.0);
+      const isFemale = userProfile.gender === "female";
+
+      if (mode === "whtr") {
+        const whtr = Math.round((waistNow / height) * 100) / 100;
+        const barPct = Math.max(4, Math.min(96, Math.round(((whtr - 0.36) / (0.62 - 0.36)) * 100)));
+
+        const zones = [
+          {
+            title: "Сухий рельєф",
+            range: "< 0.43",
+            active: whtr < 0.43,
+            dotColor: "bg-blue-500",
+            desc: "Мінімальний відсоток підшкірного та вісцерального жиру, виражений м'язовий рельєф.",
+            gapText: whtr < 0.43
+              ? "Ти зараз у цій зоні"
+              : `Талія має бути < ${(0.429 * height).toFixed(1)} см (ще -${Math.max(0.1, waistNow - 0.429 * height).toFixed(1)} см)`
+          },
+          {
+            title: "Атлетична норма (Оптимум)",
+            range: "0.43 – 0.49",
+            active: whtr >= 0.43 && whtr <= 0.49,
+            dotColor: "bg-emerald-500",
+            desc: "Найкраще співвідношення здоров'я, гормонального балансу та спортивної форми.",
+            gapText: (whtr >= 0.43 && whtr <= 0.49)
+              ? "Ти зараз у цій зоні"
+              : (whtr > 0.49
+                ? `Талія ≤ ${(0.49 * height).toFixed(1)} см (ще -${(waistNow - 0.49 * height).toFixed(1)} см)`
+                : `Талія ≥ ${(0.43 * height).toFixed(1)} см (+${(0.43 * height - waistNow).toFixed(1)} см)`)
+          },
+          {
+            title: "Помірний запас",
+            range: "0.50 – 0.54",
+            active: whtr >= 0.50 && whtr <= 0.54,
+            dotColor: "bg-amber-500",
+            desc: "Початкове накопичення жиру в ділянці живота (типово на фазі набору маси).",
+            gapText: (whtr >= 0.50 && whtr <= 0.54)
+              ? "Ти зараз у цій зоні"
+              : `Діапазон талії: ${(0.50 * height).toFixed(1)} – ${(0.54 * height).toFixed(1)} см`
+          },
+          {
+            title: "Підвищений ризик",
+            range: "≥ 0.55",
+            active: whtr >= 0.55,
+            dotColor: "bg-rose-500",
+            desc: "Надлишок вісцерального жиру. Рекомендований м'який дефіцит калорій.",
+            gapText: whtr >= 0.55
+              ? "Ти зараз у цій зоні"
+              : `Починається від талії ${(0.55 * height).toFixed(1)} см`
+          }
+        ];
+
+        contentEl.innerHTML = `
+          <div class="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-sm text-gray-900 dark:text-white">Індекс Талія / Зріст (WHtR)</span>
+              <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-extrabold text-xs">${whtr.toFixed(2)}</span>
+            </div>
+            <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
+              Показує кількість жиру в ділянці живота відносно вашого зросту. На відміну від ваги, не плутає м'язи із зайвим жиром.
+            </p>
+            <div class="text-[11px] font-semibold text-blue-700 dark:text-blue-300 pt-0.5">
+              Твій розрахунок: ${waistNow} см (талія) ÷ ${height} см (зріст) = <strong>${whtr.toFixed(2)}</strong>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1">
+            <div class="flex justify-between text-[10px] font-bold text-gray-400 px-1">
+              <span>0.38 Сухий</span>
+              <span>0.46 Норма</span>
+              <span>0.52 Запас</span>
+              <span>0.58+</span>
+            </div>
+            <div class="relative w-full h-2.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 via-amber-400 to-rose-500">
+              <span class="absolute -top-1 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-md" style="left: calc(${barPct}% - 8px);"></span>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Шкала норм для зросту ${height} см:</div>
+            ${zones.map(z => `
+              <div class="p-2.5 rounded-xl border ${z.active ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30" : "border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/40"} space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full ${z.dotColor}"></span>
+                    <span>${z.title}</span>
+                  </span>
+                  <span class="font-extrabold text-[11px] ${z.active ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}">${z.range}</span>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">${z.desc}</p>
+                <div class="text-[11px] font-semibold ${z.active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}">
+                  ${z.active ? "✓ " : "→ "}${z.gapText}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      } else {
+        const vtaperNow = waistNow > 0 ? Math.round((chestNow / waistNow) * 100) / 100 : 0;
+        const vtMinScale = isFemale ? 0.95 : 1.05;
+        const vtMaxScale = isFemale ? 1.35 : 1.45;
+        const barPct = Math.max(4, Math.min(96, Math.round(((vtaperNow - vtMinScale) / (vtMaxScale - vtMinScale)) * 100)));
+
+        const vtZones = isFemale ? [
+          {
+            title: "Прямий силует",
+            range: "< 1.05",
+            active: vtaperNow < 1.05,
+            dotColor: "bg-amber-500",
+            desc: "Обхват грудей та талії близькі за значенням.",
+            gapText: vtaperNow < 1.05 ? "Ти зараз у цій зоні" : `При талії ${waistNow} см це < ${(1.05 * waistNow).toFixed(1)} см у грудях`
+          },
+          {
+            title: "Гармонійний силует",
+            range: "1.05 – 1.14",
+            active: vtaperNow >= 1.05 && vtaperNow < 1.15,
+            dotColor: "bg-blue-500",
+            desc: "Природна спортивна пропорція та здоровий тонус верхньої частини тіла.",
+            gapText: (vtaperNow >= 1.05 && vtaperNow < 1.15)
+              ? "Ти зараз у цій зоні"
+              : (vtaperNow < 1.05
+                ? `Потрібно груди ${(1.05 * waistNow).toFixed(1)} см (+${(1.05 * waistNow - chestNow).toFixed(1)} см) або талія ${(chestNow / 1.05).toFixed(1)} см`
+                : "Діапазон досягнуто та перевершено")
+          },
+          {
+            title: "Виражена талія (Пісочний годинник)",
+            range: "1.15 – 1.24",
+            active: vtaperNow >= 1.15 && vtaperNow < 1.25,
+            dotColor: "bg-emerald-500",
+            desc: "Чіткий акцент на вузьку талію та підтягнутий плечовий пояс.",
+            gapText: (vtaperNow >= 1.15 && vtaperNow < 1.25)
+              ? "Ти зараз у цій зоні"
+              : (vtaperNow < 1.15
+                ? `До цієї зони: груди +${Math.max(0.1, 1.15 * waistNow - chestNow).toFixed(1)} см або талія -${Math.max(0.1, waistNow - chestNow / 1.15).toFixed(1)} см`
+                : `Вище базової норми (+${(vtaperNow - 1.15).toFixed(2)})`)
+          },
+          {
+            title: "Атлетичний V-силует",
+            range: "≥ 1.25",
+            active: vtaperNow >= 1.25,
+            dotColor: "bg-purple-500",
+            desc: "Виражений спортивний силует із розвиненими м'язами спини та плечей.",
+            gapText: vtaperNow >= 1.25
+              ? "Ти зараз у цій зоні"
+              : `До цієї зони: груди +${Math.max(0.1, 1.25 * waistNow - chestNow).toFixed(1)} см або талія -${Math.max(0.1, waistNow - chestNow / 1.25).toFixed(1)} см`
+          }
+        ] : [
+          {
+            title: "Прямий силует",
+            range: "< 1.15",
+            active: vtaperNow < 1.15,
+            dotColor: "bg-amber-500",
+            desc: "Плечовий пояс і грудна клітка майже не виділяються на фоні талії.",
+            gapText: vtaperNow < 1.15 ? "Ти зараз у цій зоні" : `Відповідає грудям < ${(1.15 * waistNow).toFixed(1)} см при талії ${waistNow} см`
+          },
+          {
+            title: "Базовий спортивний тонус",
+            range: "1.15 – 1.24",
+            active: vtaperNow >= 1.15 && vtaperNow < 1.25,
+            dotColor: "bg-blue-500",
+            desc: "Акуратна фігура людини, яка регулярно тренується та тримає вагу під контролем.",
+            gapText: (vtaperNow >= 1.15 && vtaperNow < 1.25)
+              ? "Ти зараз у цій зоні"
+              : (vtaperNow < 1.15
+                ? `До цієї зони: груди +${Math.max(0.1, 1.15 * waistNow - chestNow).toFixed(1)} см або талія -${Math.max(0.1, waistNow - chestNow / 1.15).toFixed(1)} см`
+                : `Ти вище цього рівня (+${(vtaperNow - 1.24).toFixed(2)})`)
+          },
+          {
+            title: "Атлетичний V-силует",
+            range: "1.25 – 1.34",
+            active: vtaperNow >= 1.25 && vtaperNow < 1.35,
+            dotColor: "bg-emerald-500",
+            desc: "Помітний V-подібний контур торсу: широка спина та груди у поєднанні з підтягнутою талією.",
+            gapText: (vtaperNow >= 1.25 && vtaperNow < 1.35)
+              ? "Ти зараз у цій зоні"
+              : (vtaperNow < 1.25
+                ? `До цієї зони: груди +${Math.max(0.1, 1.25 * waistNow - chestNow).toFixed(1)} см або талія -${Math.max(0.1, waistNow - chestNow / 1.25).toFixed(1)} см`
+                : `Ти вище цього рівня (+${(vtaperNow - 1.34).toFixed(2)})`)
+          },
+          {
+            title: "Топ V-Taper (Фітнес-естетика)",
+            range: "≥ 1.35",
+            active: vtaperNow >= 1.35,
+            dotColor: "bg-purple-500",
+            desc: "Максимально виражений V-подібний силует, характерний для силового тренінгу та низького відсотка жиру.",
+            gapText: vtaperNow >= 1.35
+              ? "Ти зараз у цій зоні"
+              : `До цієї зони: груди +${Math.max(0.1, 1.35 * waistNow - chestNow).toFixed(1)} см або талія -${Math.max(0.1, waistNow - chestNow / 1.35).toFixed(1)} см`
+          }
+        ];
+
+        contentEl.innerHTML = `
+          <div class="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-sm text-gray-900 dark:text-white">Індекс V-Taper (Силует торсу)</span>
+              <span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold text-xs">${vtaperNow.toFixed(2)}</span>
+            </div>
+            <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
+              <strong>V-Taper</strong> — це співвідношення обхвату грудей до обхвату талії. Індекс показує візуальну V-подібність фігури: чим ширший верх і вужча талія, тим вищий показник.
+            </p>
+            <div class="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 pt-0.5">
+              Твій розрахунок: ${chestNow} см (груди) ÷ ${waistNow} см (талія) = <strong>${vtaperNow.toFixed(2)}</strong>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1">
+            <div class="flex justify-between text-[10px] font-bold text-gray-400 px-1">
+              <span>${isFemale ? "0.95 Прямий" : "1.05 Прямий"}</span>
+              <span>${isFemale ? "1.10 Гармонія" : "1.20 Тонус"}</span>
+              <span>${isFemale ? "1.20 Талія" : "1.30 Атлет"}</span>
+              <span>${isFemale ? "1.30+" : "1.40+"}</span>
+            </div>
+            <div class="relative w-full h-2.5 rounded-full bg-gradient-to-r from-amber-400 via-blue-400 via-emerald-400 to-purple-500">
+              <span class="absolute -top-1 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-md" style="left: calc(${barPct}% - 8px);"></span>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Шкала норм (${isFemale ? "жіноча" : "чоловіча"}):</div>
+            ${vtZones.map(z => `
+              <div class="p-2.5 rounded-xl border ${z.active ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30" : "border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/40"} space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full ${z.dotColor}"></span>
+                    <span>${z.title}</span>
+                  </span>
+                  <span class="font-extrabold text-[11px] ${z.active ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}">${z.range}</span>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">${z.desc}</p>
+                <div class="text-[11px] font-semibold ${z.active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}">
+                  ${z.active ? "✓ " : "→ "}${z.gapText}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      modal.classList.remove("hidden");
+    }
+
+    document.getElementById("idx-tab-whtr").addEventListener("click", () => openIndexInfoModal("whtr"));
+    document.getElementById("idx-tab-vtaper").addEventListener("click", () => openIndexInfoModal("vtaper"));
+    document.getElementById("close-index-modal-btn").addEventListener("click", () => document.getElementById("index-info-modal").classList.add("hidden"));
+    document.getElementById("index-modal-ok-btn").addEventListener("click", () => document.getElementById("index-info-modal").classList.add("hidden"));
+    document.getElementById("index-info-modal").addEventListener("click", (e) => {
+      if (e.target.id === "index-info-modal") {
+        document.getElementById("index-info-modal").classList.add("hidden");
+      }
+    });
 
     function buildRadarChartSVG() {
       const axes = [
@@ -3268,7 +3616,7 @@
       }
 
       renderTargetWeightWidget(history);
-      renderSVGLineChart(history, metric);
+      renderSVGLineChart(history);
       renderMetricRecordsList(history, metric);
     }
 
@@ -4059,7 +4407,7 @@
             saveMeasurementsToStorage();
           }
           if (Array.isArray(parsed.historyRecords)) {
-            historyRecords = parsed.historyRecords;
+            historyRecords = normalizeHistoryRecords(parsed.historyRecords);
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
           }
           updateGoalHeaderUI();
