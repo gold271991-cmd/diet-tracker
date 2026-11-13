@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Раціон та Заміри</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -951,16 +951,15 @@
         const sysTop = (tg.safeAreaInset && Number(tg.safeAreaInset.top)) || 0;
         const contentTop = (tg.contentSafeAreaInset && Number(tg.contentSafeAreaInset.top)) || 0;
         totalTopInset = sysTop + contentTop;
-
-        if (tg.isFullscreen && totalTopInset < 84) {
-          totalTopInset = 84;
-        }
       }
 
       if (totalTopInset > 0) {
         header.style.paddingTop = `calc(${totalTopInset}px + 0.5rem)`;
       } else {
-        header.style.paddingTop = `max(0.75rem, env(safe-area-inset-top, 0px))`;
+        // Fallback using Telegram's injected CSS variables + Android fullscreen floor (~88px)
+        const isMobileTg = Boolean(tg && tg.platform && ['android', 'ios'].includes(tg.platform));
+        const minMobileFloor = (isMobileTg && (!tg.isExpanded || tg.isFullscreen || window.innerHeight > window.screen.height - 90)) ? '88px' : '0px';
+        header.style.paddingTop = `calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px), ${minMobileFloor}) + 0.65rem)`;
       }
     }
 
