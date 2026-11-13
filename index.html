@@ -117,7 +117,7 @@
   <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors relative">
     
     <!-- Top Header -->
-    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 py-2.5 transition-colors">
+    <header id="app-header" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 pt-3 transition-colors">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center space-x-2 min-w-0">
           <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Назад">
@@ -933,8 +933,41 @@
         }
         applyTelegramTheme();
         tg.onEvent('themeChanged', applyTelegramTheme);
+        if (tg.onEvent) {
+          tg.onEvent('safeAreaChanged', applySafeAreaTopPadding);
+          tg.onEvent('contentSafeAreaChanged', applySafeAreaTopPadding);
+          tg.onEvent('fullscreenChanged', applySafeAreaTopPadding);
+          tg.onEvent('viewportChanged', applySafeAreaTopPadding);
+        }
       } catch (e) {}
     }
+
+    function applySafeAreaTopPadding() {
+      const header = document.getElementById('app-header');
+      if (!header) return;
+
+      let totalTopInset = 0;
+      if (tg) {
+        const sysTop = (tg.safeAreaInset && Number(tg.safeAreaInset.top)) || 0;
+        const contentTop = (tg.contentSafeAreaInset && Number(tg.contentSafeAreaInset.top)) || 0;
+        totalTopInset = sysTop + contentTop;
+
+        if (tg.isFullscreen && totalTopInset < 84) {
+          totalTopInset = 84;
+        }
+      }
+
+      if (totalTopInset > 0) {
+        header.style.paddingTop = `calc(${totalTopInset}px + 0.5rem)`;
+      } else {
+        header.style.paddingTop = `max(0.75rem, env(safe-area-inset-top, 0px))`;
+      }
+    }
+
+    applySafeAreaTopPadding();
+    window.addEventListener('resize', applySafeAreaTopPadding);
+    setTimeout(applySafeAreaTopPadding, 150);
+    setTimeout(applySafeAreaTopPadding, 500);
 
     if (userId !== 'default_user') {
       try { localStorage.setItem('diet_last_tg_id', userId); } catch (e) {}
@@ -988,7 +1021,14 @@
 
       const userTDEE = Math.round(bmr * 1.62);
       const scaleRatio = userTDEE / 2822.0;
-      const proteinNorm = Math.round(userProfile.weight * 1.8);
+
+      const proteinMultipliers = {
+        deficit: 2.1,
+        maintenance: 1.7,
+        surplus: 1.9
+      };
+      const activeMult = proteinMultipliers[currentGoalKey] || 1.8;
+      const proteinNorm = Math.round(userProfile.weight * activeMult);
 
       return {
         age,
@@ -997,9 +1037,9 @@
         scaleRatio,
         proteinNorm,
         goals: {
-          deficit: { name: "Схуднення", icon: "🔥", targetKcal: Math.round(2208 * scaleRatio) },
-          maintenance: { name: "Підтримка", icon: "⚖️", targetKcal: Math.round(2822 * scaleRatio) },
-          surplus: { name: "Набір м'язів", icon: "💪", targetKcal: Math.round(3200 * scaleRatio) }
+          deficit: { name: "Схуднення", icon: "🔥", targetKcal: Math.round(2208 * scaleRatio), proteinNorm: Math.round(userProfile.weight * proteinMultipliers.deficit) },
+          maintenance: { name: "Підтримка", icon: "⚖️", targetKcal: Math.round(2822 * scaleRatio), proteinNorm: Math.round(userProfile.weight * proteinMultipliers.maintenance) },
+          surplus: { name: "Набір м'язів", icon: "💪", targetKcal: Math.round(3200 * scaleRatio), proteinNorm: Math.round(userProfile.weight * proteinMultipliers.surplus) }
         }
       };
     }
@@ -1894,8 +1934,9 @@
       });
 
       document.getElementById('pe-target-weight-wrap').classList.toggle('hidden', tempProfileGoal === 'maintenance');
+      const profProtMult = tempProfileGoal === 'deficit' ? 2.1 : (tempProfileGoal === 'surplus' ? 1.9 : 1.7);
       document.getElementById('pe-live-kcal').textContent = `${kcals[tempProfileGoal].toLocaleString('uk-UA')} ккал`;
-      document.getElementById('pe-live-protein').textContent = `${Math.round(wVal * 1.8)} г / день`;
+      document.getElementById('pe-live-protein').textContent = `${Math.round(wVal * profProtMult)} г / день`;
     }
 
     document.querySelectorAll('.prof-goal-btn').forEach(btn => {
@@ -2065,10 +2106,10 @@
       const bmr = gender === 'female' ? 10 * w + 6.25 * h - 5 * age - 161 : 10 * w + 6.25 * h - 5 * age + 5;
       const ratio = (bmr * 1.62) / 2822.0;
       const mult = obGoal === 'deficit' ? 2208 : (obGoal === 'surplus' ? 3200 : 2822);
+      const obProtMult = obGoal === 'deficit' ? 2.1 : (obGoal === 'surplus' ? 1.9 : 1.7);
 
       document.getElementById('ob-preview-kcal').textContent = `${Math.round(mult * ratio).toLocaleString('uk-UA')} ккал`;
-      document.getElementById('ob-preview-protein').textContent = `${Math.round(w * 1.8)} г / день`;
-
+      document.getElementById('ob-preview-protein').textContent = `${Math.round(w * obProtMult)} г / день`;
       const timelineRow = document.getElementById('ob-preview-timeline-row');
       if (obGoal !== 'maintenance' && tw > 30 && Math.abs(tw - w) >= 0.5) {
         const rate = obGoal === 'surplus' ? 0.35 : 0.5;
