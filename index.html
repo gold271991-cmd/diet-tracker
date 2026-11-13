@@ -946,39 +946,39 @@
       const header = document.getElementById('app-header');
       if (!header) return;
 
-      let totalTopInset = 0;
+      let sysTop = 0;
+      let contentTop = 0;
+
       if (tg) {
-        const sysTop = (tg.safeAreaInset && Number(tg.safeAreaInset.top)) || 0;
-        const contentTop = (tg.contentSafeAreaInset && Number(tg.contentSafeAreaInset.top)) || 0;
-        totalTopInset = sysTop + contentTop;
+        sysTop = (tg.safeAreaInset && Number(tg.safeAreaInset.top)) || 0;
+        contentTop = (tg.contentSafeAreaInset && Number(tg.contentSafeAreaInset.top)) || 0;
+      }
+
+      // Also read Telegram's CSS custom properties directly if JS properties are 0
+      const rootStyles = getComputedStyle(document.documentElement);
+      const cssSysTop = parseFloat(rootStyles.getPropertyValue('--tg-safe-area-inset-top')) || 0;
+      const cssContentTop = parseFloat(rootStyles.getPropertyValue('--tg-content-safe-area-inset-top')) || 0;
+
+      let totalTopInset = Math.max(sysTop + contentTop, cssSysTop + cssContentTop);
+
+      // On mobile Telegram (Android/iOS) fullscreen mode, status bar + floating "✕ Закрити" bar take ~84px
+      const isMobileTg = Boolean(tg && tg.platform && ['android', 'ios'].includes(tg.platform));
+      if (isMobileTg && totalTopInset < 84) {
+        totalTopInset = 84;
       }
 
       if (totalTopInset > 0) {
-        header.style.paddingTop = `calc(${totalTopInset}px + 0.5rem)`;
+        header.style.paddingTop = `${totalTopInset + 4}px`;
       } else {
-        // Fallback using Telegram's injected CSS variables + Android fullscreen floor (~88px)
-        const isMobileTg = Boolean(tg && tg.platform && ['android', 'ios'].includes(tg.platform));
-        const minMobileFloor = (isMobileTg && (!tg.isExpanded || tg.isFullscreen || window.innerHeight > window.screen.height - 90)) ? '88px' : '0px';
-        header.style.paddingTop = `calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px), ${minMobileFloor}) + 0.65rem)`;
+        header.style.paddingTop = '12px';
       }
     }
 
     applySafeAreaTopPadding();
     window.addEventListener('resize', applySafeAreaTopPadding);
-    setTimeout(applySafeAreaTopPadding, 150);
-    setTimeout(applySafeAreaTopPadding, 500);
-
-    if (userId !== 'default_user') {
-      try { localStorage.setItem('diet_last_tg_id', userId); } catch (e) {}
-    } else {
-      try {
-        const savedId = localStorage.getItem('diet_last_tg_id');
-        if (savedId) userId = savedId;
-      } catch (e) {}
-    }
-
-    document.getElementById('user-name-display').textContent = userName;
-
+    setTimeout(applySafeAreaTopPadding, 100);
+    setTimeout(applySafeAreaTopPadding, 350);
+    setTimeout(applySafeAreaTopPadding, 800);
     function getAuthHeaders() {
       const headers = { 'Content-Type': 'application/json' };
       if (tg && typeof tg.initData === 'string' && tg.initData.length > 0) {
