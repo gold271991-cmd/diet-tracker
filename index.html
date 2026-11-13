@@ -915,6 +915,59 @@
       return d.toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
     }
 
+    const UKR_MONTHS_MAP = {
+      "січня": "01", "лютого": "02", "березня": "03", "квітня": "04",
+      "травня": "05", "червня": "06", "липня": "07", "серпня": "08",
+      "вересня": "09", "жовтня": "10", "листопада": "11", "грудня": "12"
+    };
+
+    function resolveRecordDayKey(rec) {
+      if (!rec) return null;
+      if (rec.dietDayKey && /^\d{4}-\d{2}-\d{2}$/.test(String(rec.dietDayKey).trim())) {
+        return String(rec.dietDayKey).trim();
+      }
+      const rawDate = String(rec.shortDate || rec.date || "").trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+        return rawDate;
+      }
+      const dotMatch = rawDate.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (dotMatch) {
+        return `${dotMatch[3]}-${dotMatch[2]}-${dotMatch[1]}`;
+      }
+      const ukrMatch = rawDate.match(/(\d{1,2})\s+([а-яіїєґ']+)\s+(\d{4})/i);
+      if (ukrMatch) {
+        const day = String(ukrMatch[1]).padStart(2, "0");
+        const monthName = ukrMatch[2].toLowerCase();
+        const year = ukrMatch[3];
+        if (UKR_MONTHS_MAP[monthName]) {
+          return `${year}-${UKR_MONTHS_MAP[monthName]}-${day}`;
+        }
+      }
+      if (rec.id && Number(rec.id) > 1600000000000 && Number(rec.id) < 2500000000000) {
+        return getDietDayKey(new Date(Number(rec.id)));
+      }
+      return null;
+    }
+
+    function normalizeHistoryRecords(records) {
+      if (!Array.isArray(records)) return [];
+      const byDay = new Map();
+      records.forEach(r => {
+        if (!r || typeof r !== "object") return;
+        const key = resolveRecordDayKey(r);
+        if (key) r.dietDayKey = key;
+        const mapKey = key || r.shortDate || r.date || String(r.id || Math.random());
+        if (!byDay.has(mapKey)) {
+          byDay.set(mapKey, r);
+        }
+      });
+      return Array.from(byDay.values()).sort((a, b) => {
+        const ka = a.dietDayKey || "";
+        const kb = b.dietDayKey || "";
+        return kb.localeCompare(ka);
+      });
+    }
+
     let activeDietDay = getDietDayKey();
 
     function getSyncUserId() {
@@ -1333,7 +1386,9 @@
     let historyRecords = [];
     try {
       const savedHist = localStorage.getItem(historyKey);
-      if (savedHist) historyRecords = JSON.parse(savedHist);
+      if (savedHist) {
+        historyRecords = normalizeHistoryRecords(JSON.parse(savedHist));
+      }
     } catch (e) {}
 
     let measurementsData = {
@@ -1456,7 +1511,7 @@
             saveMeasurementsToStorage();
           }
           if (Array.isArray(remote.historyRecords)) {
-            historyRecords = remote.historyRecords;
+            historyRecords = normalizeHistoryRecords([...remote.historyRecords, ...historyRecords]);
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
           }
           if (remote.currentGoal || remote.currentGoalKey) {
@@ -1870,21 +1925,7 @@
           catProg.style.backgroundColor = isExceeded ? "#EA580C" : cat.badgeBg;
         }
 
-        const listDiv = document.getElementById("cat-list-" + cat.id);
         const expandBtn = document.getElementById("cat-expand-btn-" + cat.id);
-        if (listDiv) {
-          const sortedItems = [...cat.items].sort((a, b) => {
-            const aUsed = (consumed[a.id] || 0) > 0 ? 1 : 0;
-            const bUsed = (consumed[b.id] || 0) > 0 ? 1 : 0;
-            return bUsed - aUsed;
-          });
-          sortedItems.forEach(it => {
-            const cardEl = document.getElementById("card-" + it.id);
-            if (cardEl) listDiv.appendChild(cardEl);
-          });
-          if (expandBtn) listDiv.appendChild(expandBtn);
-        }
-
         let hiddenZeroCount = 0;
 
         cat.items.forEach(it => {
@@ -1923,11 +1964,12 @@
           const baseLabel = document.getElementById("base-label-" + it.id);
           const slider = document.getElementById("slider-" + it.id);
           const numInput = document.getElementById("input-" + it.id);
+          const isEditingThisItem = (currentlyExpandedId === it.id || activeItemId === it.id);
 
           if (card) {
             if (isUserHidden) {
               card.classList.add("hidden");
-            } else if (!isNoQuota && isCompleted && !isConsumed && !expandedCompletedCats[cat.id]) {
+            } else if (!isNoQuota && isCompleted && !isConsumed && !isEditingThisItem && !expandedCompletedCats[cat.id]) {
               card.classList.add("hidden");
               hiddenZeroCount++;
             } else {
@@ -2088,7 +2130,7 @@
       const todayDate = getDietDayFormatted();
 
       if (consumedList.length === 0) {
-        const emptyIdx = historyRecords.findIndex(r => r.dietDayKey === currentDayKey || r.shortDate === todayDate);
+        const emptyIdx = historyRecords.findIndex(r => resolveRecordDayKey(r) === currentDayKey || r.shortDate === todayDate);
         if (emptyIdx !== -1) {
           historyRecords.splice(emptyIdx, 1);
           try { localStorage.setItem(historyKey, JSON.stringify(historyRecords)); } catch (e) {}
@@ -2097,7 +2139,7 @@
       }
 
       const meta = calculateUserMetabolism();
-      let todayEntry = historyRecords.find(r => r.dietDayKey === currentDayKey || r.shortDate === todayDate);
+      let todayEntry = historyRecords.find(r => resolveRecordDayKey(r) === currentDayKey || r.shortDate === todayDate);
       if (!todayEntry) {
         todayEntry = {
           id: Date.now(),
@@ -2883,7 +2925,7 @@
         const meta = calculateUserMetabolism();
         const fallbackKcal = meta.goals[currentGoalKey].targetKcal;
         secVals = points.map(wp => {
-          const rec = historyRecords.find(r => r.dietDayKey === wp.date);
+          const rec = historyRecords.find(r => resolveRecordDayKey(r) === wp.date);
           return rec ? Number(rec.totalCalories) : fallbackKcal;
         });
       }
@@ -3530,9 +3572,10 @@
       const defaultTarget = meta.goals[currentGoalKey].targetKcal;
       const bodyW = Number(userProfile.weight) || 76.6;
 
+      historyRecords = normalizeHistoryRecords(historyRecords);
       const recByDay = {};
       historyRecords.forEach(r => {
-        const k = r.dietDayKey || r.shortDate;
+        const k = resolveRecordDayKey(r);
         if (k) recByDay[k] = r;
       });
 
@@ -3542,10 +3585,12 @@
         const key = getDietDayKey(d);
         const shifted = getShiftedDietDate(d);
         const dayShort = shifted.toLocaleDateString("uk-UA", { weekday: "short" });
+        const dayDateLabel = `${String(shifted.getDate()).padStart(2, "0")}.${String(shifted.getMonth() + 1).padStart(2, "0")}`;
         const rec = recByDay[key] || null;
         last7.push({
           key,
           dayShort: dayShort.charAt(0).toUpperCase() + dayShort.slice(1),
+          dayDateLabel,
           kcal: rec ? Number(rec.totalCalories) : 0,
           protein: rec ? Number(rec.totalProtein) : 0,
           target: rec ? Number(rec.targetCalories) : defaultTarget
@@ -3640,10 +3685,10 @@
           <span class="text-xs font-bold text-gray-900 dark:text-white">Калорійність за 7 днів</span>
           <span class="text-[10px] text-gray-400">Пунктир: норма ${defaultTarget} ккал</span>
         </div>
-        <div class="relative h-28 pt-3 flex items-end justify-between gap-2">
-          <div class="absolute left-0 right-0 border-t border-dashed border-blue-500/70 pointer-events-none" style="bottom: calc(${targetLineBottomPct}% * 0.8 + 16px);"></div>
+        <div class="relative h-32 pt-3 flex items-end justify-between gap-2">
+          <div class="absolute left-0 right-0 border-t border-dashed border-blue-500/70 pointer-events-none" style="bottom: calc(${targetLineBottomPct}% * 0.72 + 26px);"></div>
           ${last7.map(d => {
-            const hPct = d.kcal > 0 ? Math.max(8, Math.min(100, Math.round((d.kcal / maxBarVal) * 100))) : 4;
+            const hPct = d.kcal > 0 ? Math.max(10, Math.min(100, Math.round((d.kcal / maxBarVal) * 100))) : 6;
             const ratio = d.kcal / (d.target || defaultTarget);
             let barCls = "bg-gray-200 dark:bg-slate-700";
             if (d.kcal > 0) {
@@ -3651,9 +3696,10 @@
             }
             return `
               <div class="flex-1 flex flex-col items-center h-full justify-end">
-                <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 mb-0.5">${d.kcal > 0 ? d.kcal : ""}</span>
-                <div class="w-full max-w-[26px] rounded-t-md transition-all ${barCls}" style="height: ${Math.round(hPct * 0.78)}%;"></div>
-                <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mt-1">${d.dayShort}</span>
+                <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 mb-0.5">${d.kcal > 0 ? d.kcal : "—"}</span>
+                <div class="w-full max-w-[26px] rounded-t-md transition-all ${barCls}" style="height: ${Math.round(hPct * 0.72)}%;"></div>
+                <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-300 mt-1 leading-none">${d.dayShort}</span>
+                <span class="text-[9px] text-gray-400 leading-tight">${d.dayDateLabel}</span>
               </div>
             `;
           }).join("")}
