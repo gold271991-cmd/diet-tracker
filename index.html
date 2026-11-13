@@ -34,6 +34,9 @@
       --text-secondary: #94a3b8;
       --border-color: #334155;
     }
+    html, body {
+      overflow-x: clip;
+    }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg-color);
@@ -116,141 +119,243 @@
 
   <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 min-h-screen shadow-xl flex flex-col transition-colors relative">
     
-    <!-- Top Header -->
-    <header id="app-header" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 pb-2.5 pt-3 transition-colors">
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center space-x-2 min-w-0">
-          <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Назад">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </button>
+    <!-- STICKY TOP SHELL (Header + Ration Dashboard) -->
+    <div id="top-sticky-shell" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 transition-colors">
+      
+      <!-- Top Header -->
+      <header id="app-header" class="px-4 py-2.5">
+        <div class="flex items-center justify-between gap-2">
           <div class="flex items-center space-x-2 min-w-0">
-            <h1 id="top-title-text" class="text-base font-extrabold text-gray-900 dark:text-white tracking-tight leading-none shrink-0">Раціон</h1>
-            <button id="user-name-btn" type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition truncate" title="Відкрити налаштування профілю">
-              <span id="user-name-display" class="truncate">Користувач</span>
-              <span class="text-[10px] opacity-80">✎</span>
+            <button id="header-back-btn" type="button" class="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800" title="Назад">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"></path>
+              </svg>
             </button>
-            <button id="header-goal-badge" type="button" class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800 text-[11px] font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition shrink-0" title="Змінити ціль у профілі">
-              🔥 Схуднення
+            <div class="flex items-center space-x-2 min-w-0">
+              <h1 id="top-title-text" class="text-base font-extrabold text-gray-900 dark:text-white tracking-tight leading-none shrink-0">Раціон</h1>
+              <button id="user-name-btn" type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition truncate" title="Відкрити налаштування профілю">
+                <span id="user-name-display" class="truncate">Користувач</span>
+                <span class="text-[10px] opacity-80">✎</span>
+              </button>
+              <button id="header-goal-badge" type="button" class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800 text-[11px] font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition shrink-0" title="Змінити ціль у профілі">
+                🔥 Схуднення
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button id="autosave-badge" type="button" title="Натисніть для синхронізації" class="flex items-center space-x-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full transition-opacity duration-300">
+              <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span id="autosave-badge-text" class="hidden xs:inline">Збережено</span>
+            </button>
+
+            <button id="theme-toggle-btn" type="button" class="p-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition" title="Змінити тему">
+              <svg id="theme-icon-sun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+              <svg id="theme-icon-moon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+              </svg>
+            </button>
+
+            <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <span>Скинути</span>
             </button>
           </div>
         </div>
+      </header>
 
-        <div class="flex items-center space-x-1.5 shrink-0">
-          <button id="autosave-badge" type="button" title="Натисніть для синхронізації" class="flex items-center space-x-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full transition-opacity duration-300">
-            <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span id="autosave-badge-text" class="hidden xs:inline">Збережено</span>
-          </button>
+      <!-- Sticky Ration Dashboard (only visible on Ration tab) -->
+      <div id="top-nutrition-summary" class="px-3.5 pb-2.5 space-y-2">
+        <!-- Calories & Protein Cards Side-by-Side -->
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Calories Box -->
+          <div class="bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-2 border border-gray-100 dark:border-slate-700/60">
+            <div class="flex items-center justify-between text-xs mb-0.5">
+              <span class="font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                <span>🔥</span><span>Калорії</span>
+              </span>
+              <span id="top-calories-percent" class="font-bold text-blue-600 dark:text-blue-400">0%</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <strong id="top-calories-value" class="text-base font-black text-gray-900 dark:text-white leading-none">0</strong>
+              <span id="top-target-label" class="text-[11px] text-gray-400 dark:text-gray-500">/ 2 208 ккал</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden mt-1.5">
+              <div id="top-calories-bar" class="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div id="top-calories-remaining" class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Залишок: 2 208 ккал</div>
+          </div>
 
-          <button id="theme-toggle-btn" type="button" class="p-1.5 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition" title="Змінити тему">
-            <svg id="theme-icon-sun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-            </svg>
-            <svg id="theme-icon-moon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-            </svg>
-          </button>
+          <!-- Protein Box -->
+          <div class="bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-2 border border-gray-100 dark:border-slate-700/60">
+            <div class="flex items-center justify-between text-xs mb-0.5">
+              <span class="font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                <span>🥩</span><span>Білок</span>
+              </span>
+              <span id="top-protein-percent" class="font-bold text-emerald-600 dark:text-emerald-400">0%</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <strong id="top-protein-value" class="text-base font-black text-gray-900 dark:text-white leading-none">0 г</strong>
+              <span id="top-protein-target" class="text-[11px] text-gray-400 dark:text-gray-500">/ 161 г</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden mt-1.5">
+              <div id="top-protein-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div id="top-protein-sub" class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">0% від норми (2.1 г/кг)</div>
+          </div>
+        </div>
 
-          <button id="reset-day-btn" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 px-2.5 py-1 rounded-full transition flex items-center space-x-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            <span>Скинути</span>
-          </button>
+        <!-- Compact 3x3 Category Filter Grid (without title row) -->
+        <div>
+          <div id="mini-radar-grid" class="grid grid-cols-3 gap-1.5"></div>
+          <div id="mini-radar-filter-bar" class="hidden mt-1 flex justify-end">
+            <button id="mini-radar-reset-filter" type="button" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">Показати всі категорії ✕</button>
+          </div>
         </div>
       </div>
-    </header>
 
-    <!-- Main Content -->
+    </div>
+
+    <!-- MAIN CONTENT -->
     <main class="flex-1 px-3.5 py-3 space-y-3.5">
 
-      <!-- 1. Ration Calculator View -->
+      <!-- 1. TAB: РАЦІОН -->
       <div id="view-calculator" class="space-y-3">
-        <!-- Structured Top Summary Card -->
-        <div id="top-nutrition-summary" class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3 shadow-xs space-y-3">
-          <!-- Calories & Protein Cards Side-by-Side -->
-          <div class="grid grid-cols-2 gap-2.5">
-            <!-- Calories Box -->
-            <div class="bg-gray-50/80 dark:bg-slate-900/60 rounded-xl p-2.5 border border-gray-100 dark:border-slate-700/60">
-              <div class="flex items-center justify-between text-xs mb-1">
-                <span class="font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                  <span>🔥</span><span>Калорії</span>
-                </span>
-                <span id="top-calories-percent" class="font-bold text-blue-600 dark:text-blue-400">0%</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <strong id="top-calories-value" class="text-lg font-black text-gray-900 dark:text-white leading-none">0</strong>
-                <span id="top-target-label" class="text-[11px] text-gray-400 dark:text-gray-500">/ 2 208 ккал</span>
-              </div>
-              <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden mt-2">
-                <div id="top-calories-bar" class="bg-blue-600 dark:bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
-              </div>
-              <div id="top-calories-remaining" class="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">Залишок: 2 208 ккал</div>
-            </div>
-
-            <!-- Protein Box -->
-            <div class="bg-gray-50/80 dark:bg-slate-900/60 rounded-xl p-2.5 border border-gray-100 dark:border-slate-700/60">
-              <div class="flex items-center justify-between text-xs mb-1">
-                <span class="font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                  <span>🥩</span><span>Білок</span>
-                </span>
-                <span id="top-protein-percent" class="font-bold text-emerald-600 dark:text-emerald-400">0%</span>
-              </div>
-              <div class="flex items-baseline gap-1">
-                <strong id="top-protein-value" class="text-lg font-black text-gray-900 dark:text-white leading-none">0 г</strong>
-                <span id="top-protein-target" class="text-[11px] text-gray-400 dark:text-gray-500">/ 138 г</span>
-              </div>
-              <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden mt-2">
-                <div id="top-protein-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
-              </div>
-              <div id="top-protein-sub" class="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">0% від норми (138 г)</div>
-            </div>
-          </div>
-
-          <!-- Mini-Radar of Categories -->
-          <div class="pt-2 border-t border-gray-100 dark:border-slate-700/60">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Міні-радар категорій</span>
-              <button id="mini-radar-reset-filter" type="button" class="hidden text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">Показати всі ✕</button>
-              <span id="mini-radar-hint" class="text-[10px] text-gray-400 dark:text-gray-500">Натисніть для фільтру</span>
-            </div>
-            <div id="mini-radar-grid" class="grid grid-cols-3 gap-1.5"></div>
-          </div>
-        </div>
-
-        <!-- Product Categories List -->
         <div id="categories-container" class="space-y-3"></div>
       </div>
 
-      <!-- 2. Measurements View -->
+      <!-- 2. TAB: ЗАМІРИ (BODY COMPOSITION DASHBOARD) -->
       <div id="view-measurements" class="space-y-3 hidden">
         <div id="measurements-list-screen" class="space-y-3">
-          <div class="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-800 flex items-center justify-between">
+          
+          <!-- Top Header + Unified Weekly Check-In CTA -->
+          <div class="px-3.5 py-3 bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 flex items-center justify-between gap-2 shadow-xs">
             <div>
-              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Контроль параметрів тіла</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Щотижнева динаміка ваги та обхватів</p>
+              <h2 class="text-sm font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
+                <span>🧬 Композиція тіла</span>
+                <span id="weekly-reminder-banner" class="hidden inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 animate-pulse">Чекін!</span>
+              </h2>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Пропорції, індекси та динаміка</p>
             </div>
-            <div id="weekly-reminder-banner" class="hidden">
-              <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 animate-pulse">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>День замірів!</span>
-              </span>
+            <button id="open-weekly-checkin-btn" type="button" class="shrink-0 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-xs transition flex items-center gap-1">
+              <span>+ Тижневий чекін</span>
+            </button>
+          </div>
+
+          <!-- Weight Goal & Progress Strip -->
+          <div class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3 shadow-xs space-y-2">
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-gray-50 dark:bg-slate-900/50 rounded-xl p-2">
+                <span class="text-[10px] text-gray-400 block">Старт</span>
+                <strong id="meas-summary-start" class="text-sm font-extrabold text-gray-900 dark:text-white">76.6 кг</strong>
+              </div>
+              <div class="bg-blue-50/70 dark:bg-blue-950/30 rounded-xl p-2 border border-blue-100 dark:border-blue-900/40">
+                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block">Зараз</span>
+                <strong id="meas-summary-current" class="text-sm font-extrabold text-blue-700 dark:text-blue-300">76.6 кг</strong>
+              </div>
+              <div id="meas-summary-target-box" class="bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl p-2 border border-emerald-100 dark:border-emerald-900/40 cursor-pointer hover:border-emerald-400 transition">
+                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">Ціль ✎</span>
+                <strong id="meas-summary-target" class="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">82.0 кг</strong>
+              </div>
+            </div>
+            <div id="meas-weight-progress-wrap" class="space-y-1 pt-0.5">
+              <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div id="meas-weight-progress-bar" class="bg-gradient-to-r from-blue-600 to-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                <span id="meas-weight-progress-pct" class="font-bold text-blue-600 dark:text-blue-400">0% до мети</span>
+                <span id="meas-weight-progress-rem">Залишилось: —</span>
+              </div>
             </div>
           </div>
 
-          <div id="measurements-container" class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 divide-y divide-gray-100 dark:divide-slate-700/60 shadow-xs overflow-hidden"></div>
+          <!-- Body Composition Indices: WHtR & V-Taper -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <!-- WHtR Card -->
+            <div class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3 shadow-xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">WHtR (Талія/Зріст)</span>
+                <span id="whtr-badge" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Норма</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <strong id="whtr-value" class="text-xl font-black text-gray-900 dark:text-white">0.46</strong>
+                <span class="text-[10px] text-gray-400">ідеал 0.43–0.49</span>
+              </div>
+              <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div id="whtr-bar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 46%"></div>
+              </div>
+            </div>
+
+            <!-- V-Taper Card -->
+            <div class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3 shadow-xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">V-Taper (Груди/Талія)</span>
+                <span id="vtaper-badge" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">Атлет</span>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <strong id="vtaper-value" class="text-xl font-black text-gray-900 dark:text-white">1.26</strong>
+                <span class="text-[10px] text-gray-400">ціль ≥ 1.30</span>
+              </div>
+              <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                <div id="vtaper-bar" class="bg-blue-600 h-full rounded-full transition-all" style="width: 75%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radar / Petal Chart: Старт vs Зараз -->
+          <div class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3.5 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-extrabold text-gray-900 dark:text-white">Пелюсткова діаграма пропорцій</h3>
+                <p class="text-[10px] text-gray-400">Порівняння контуру тіла «Старт vs Зараз»</p>
+              </div>
+              <div class="flex items-center gap-2.5 text-[10px] font-bold">
+                <span class="inline-flex items-center gap-1 text-slate-400"><span class="w-2 h-2 rounded-full bg-slate-400"></span>Старт</span>
+                <span class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-600"></span>Зараз</span>
+              </div>
+            </div>
+            <div id="radar-petal-container" class="w-full flex items-center justify-center py-1"></div>
+          </div>
+
+          <!-- Weight vs Waist Correlation Chart -->
+          <div class="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3.5 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-extrabold text-gray-900 dark:text-white">Кореляція: Вага vs Талія</h3>
+                <p class="text-[10px] text-gray-400">Контроль якості набору / схуднення</p>
+              </div>
+              <div class="flex items-center gap-2.5 text-[10px] font-bold">
+                <span class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-600"></span>Вага (кг)</span>
+                <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Талія (см)</span>
+              </div>
+            </div>
+            <div id="correlation-chart-container" class="w-full flex items-center justify-center"></div>
+          </div>
+
+          <!-- 2x3 Metric Cards Grid with Sparklines -->
+          <div>
+            <div class="flex items-center justify-between mb-2 px-0.5">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Усі параметри (натисніть для деталей)</span>
+            </div>
+            <div id="measurements-grid-2x3" class="grid grid-cols-2 gap-2.5"></div>
+          </div>
+
         </div>
 
+        <!-- Detail Screen for Single Metric -->
         <div id="measurement-detail-screen" class="space-y-3.5 hidden">
           <div class="flex items-center justify-between pt-0.5">
             <button id="detail-back-to-list-btn" type="button" class="flex items-center space-x-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
               </svg>
-              <span>Всі заміри</span>
+              <span>До дашборду замірів</span>
             </button>
 
             <button id="edit-history-toggle-btn" type="button" class="text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-slate-700 transition">
@@ -331,37 +436,122 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
               </svg>
-              <span>Внести дані</span>
+              <span>Внести один замір</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- 3. History View -->
+      <!-- 3. TAB: ІСТОРІЯ (28-DAY HEATMAP, 7-DAY BAR CHART & COLLAPSIBLE DAY CARDS) -->
       <div id="view-history" class="space-y-3 hidden">
         <div class="flex items-center justify-between">
-          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Історія збережених днів</h2>
-          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-medium">Очистити історію</button>
+          <div>
+            <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">Дисципліна та історія</h2>
+            <p class="text-[11px] text-gray-400">Натисніть на день, щоб переглянути склад раціону</p>
+          </div>
+          <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-semibold">Очистити</button>
         </div>
-        <div id="history-list" class="space-y-2.5"></div>
+
+        <!-- 28-Day Discipline Heatmap -->
+        <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3.5 space-y-2.5 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-gray-900 dark:text-white">🗓 28-денна карта дисципліни</span>
+            <span id="hist-streak-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Серія: 0 дн.</span>
+          </div>
+          <div id="history-heatmap-grid" class="grid grid-cols-7 gap-1.5"></div>
+          <div class="flex items-center justify-between text-[10px] text-gray-400 pt-1">
+            <span>28 днів тому</span>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-gray-100 dark:bg-slate-700"></span>Пусто</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-blue-400"></span>Частково</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>В цілі</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>Понад</span>
+            </div>
+            <span>Сьогодні</span>
+          </div>
+        </div>
+
+        <!-- 7-Day Calorie Bar Chart + Summary KPIs -->
+        <div id="history-analytics-card" class="hidden bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3.5 space-y-3 shadow-xs">
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
+              <span class="text-[10px] text-gray-400 block">Днів у журналі</span>
+              <strong id="hist-stat-days" class="text-sm font-extrabold text-gray-900 dark:text-white">0</strong>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
+              <span class="text-[10px] text-gray-400 block">Середні ккал</span>
+              <strong id="hist-stat-kcal" class="text-sm font-extrabold text-blue-600 dark:text-blue-400">0</strong>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
+              <span class="text-[10px] text-gray-400 block">Середній білок</span>
+              <strong id="hist-stat-protein" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">0 г</strong>
+            </div>
+          </div>
+          <div id="history-weekly-bars" class="pt-1"></div>
+        </div>
+
+        <!-- Collapsible Day Cards List (no copy-day button) -->
+        <div id="history-list" class="space-y-2"></div>
       </div>
 
-      <!-- 4. Base Settings & Profile View -->
+      <!-- 4. TAB: МОЇ НОРМИ (METABOLISM CHAIN + ACCORDION WITH LIVE RECALC & VISIBILITY EYE + CLOUD SYNC) -->
       <div id="view-settings" class="space-y-3.5 hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
+        
+        <!-- Metabolism Energy Chain: BMR -> Норма -> Ціль -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3 shadow-xs">
           <div class="flex items-center justify-between">
-            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Мій профіль та ціль</h2>
-            <button id="open-profile-modal-from-settings" type="button" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">✏️ Змінити параметри</button>
+            <div>
+              <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">Ланцюжок енергообміну</h2>
+              <p id="settings-profile-subtitle" class="text-[11px] text-gray-400 mt-0.5">Чоловік, 35 р., 183 см • 76.6 кг</p>
+            </div>
+            <button id="open-profile-modal-from-settings" type="button" class="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition">
+              ✏️ Профіль
+            </button>
           </div>
-          <div id="profile-details-grid" class="grid grid-cols-2 gap-2 text-xs"></div>
+
+          <!-- Visual Flow: BMR -> TDEE -> Target -->
+          <div class="grid grid-cols-3 gap-1.5 items-stretch">
+            <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-100 dark:border-slate-700/70 rounded-xl p-2.5 text-center relative">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">1. BMR</span>
+              <strong id="chain-bmr-val" class="text-sm font-black text-gray-900 dark:text-white block mt-0.5">1 740</strong>
+              <span class="text-[10px] text-gray-400">база спокою</span>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-100 dark:border-slate-700/70 rounded-xl p-2.5 text-center relative">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-500 block">2. Норма →</span>
+              <strong id="chain-tdee-val" class="text-sm font-black text-blue-600 dark:text-blue-400 block mt-0.5">2 819</strong>
+              <span class="text-[10px] text-gray-400">підтримка (TDEE)</span>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl p-2.5 text-center shadow-xs">
+              <span id="chain-goal-label" class="text-[10px] font-bold uppercase tracking-wider text-blue-100 block">3. Ціль →</span>
+              <strong id="chain-target-val" class="text-sm font-black block mt-0.5">2 208</strong>
+              <span id="chain-protein-val" class="text-[10px] text-blue-100 font-semibold">161 г білка</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Cloud Sync & Local Backup Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
-          <div class="flex items-center justify-between gap-2">
+        <!-- Category Accordion with Live Kcal/Protein Recalculation & Product Visibility Toggle (👁) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between px-1">
             <div>
-              <h2 class="text-sm font-bold text-gray-900 dark:text-white">Хмарний бекап та резервна копія</h2>
-              <p id="cloud-sync-status" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Автоматична прив'язка до Telegram ID</p>
+              <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">Норми продуктів та видимість</h2>
+              <p class="text-[11px] text-gray-400">Змінюйте грамовку або приховуйте зайві продукти (👁)</p>
+            </div>
+            <button id="reset-defaults-btn" type="button" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">
+              Скинути норми
+            </button>
+          </div>
+
+          <div id="settings-categories-container" class="space-y-2"></div>
+        </div>
+
+        <!-- Cloud Backup & Local JSON Export/Import -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4 space-y-3 shadow-xs">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <h2 class="text-sm font-extrabold text-gray-900 dark:text-white">Хмарний бекап та Telegram ID</h2>
+              <p id="cloud-sync-status" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">Автоматична прив'язка до Telegram ID</p>
             </div>
             <button id="sync-now-btn" type="button" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shrink-0">
               Синхронізувати
@@ -378,26 +568,11 @@
           </div>
         </div>
 
-        <div class="bg-gray-50 dark:bg-slate-800/60 p-3 rounded-xl border border-gray-200 dark:border-slate-700">
-          <h2 class="text-sm font-bold text-gray-900 dark:text-white">Персональні базові норми продуктів</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Стандартна порція для кожного продукту (автоматично округлюється до 5 г). Для категорії «Протеїн» норма не обмежується.</p>
-        </div>
-
-        <div id="settings-categories-container" class="space-y-3"></div>
-
-        <div class="pt-1 flex space-x-2">
-          <button id="save-settings-btn" type="button" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition shadow-sm">
-            Зберегти норми
-          </button>
-          <button id="reset-defaults-btn" type="button" class="px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-xs hover:bg-gray-200 transition">
-            Скинути до вихідних
-          </button>
-        </div>
       </div>
 
     </main>
 
-    <!-- Bottom Navigation -->
+    <!-- BOTTOM NAVIGATION -->
     <nav class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 px-4 py-2.5 flex items-center justify-around text-xs font-semibold z-40 transition-colors shadow-lg">
       <button type="button" class="tab-btn flex flex-col items-center space-y-0.5 text-blue-600 dark:text-blue-400 font-bold" data-view="calculator">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,6 +604,58 @@
         <span>Мої норми</span>
       </button>
     </nav>
+
+    <!-- UNIFIED WEEKLY CHECK-IN MODAL (+ Тижневий чекін) -->
+    <div id="weekly-checkin-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-black text-gray-900 dark:text-white">📏 Тижневий чекін</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Оновіть усі параметри тіла за один раз</p>
+          </div>
+          <button id="close-weekly-checkin-btn" type="button" class="p-1.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-500 hover:text-gray-800">✕</button>
+        </div>
+
+        <form id="weekly-checkin-form" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Дата заміру:</label>
+            <input type="date" id="wc-date" required class="w-full py-2 px-3 text-xs font-bold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">⚖️ Вага (кг):</label>
+              <input type="number" step="0.1" id="wc-weight" placeholder="76.6" class="w-full py-2 px-2.5 text-sm font-extrabold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">📐 Талія (см):</label>
+              <input type="number" step="0.5" id="wc-waist" placeholder="84.0" class="w-full py-2 px-2.5 text-sm font-extrabold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">🫁 Груди (см):</label>
+              <input type="number" step="0.5" id="wc-chest" placeholder="106.0" class="w-full py-2 px-2.5 text-sm font-extrabold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">💪 Плече (см):</label>
+              <input type="number" step="0.5" id="wc-bicep" placeholder="38.0" class="w-full py-2 px-2.5 text-sm font-extrabold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">🩳 Стегна (см):</label>
+              <input type="number" step="0.5" id="wc-hips" placeholder="100.0" class="w-full py-2 px-2.5 text-sm font-extrabold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">🦵 Стегно (см):</label>
+              <input type="number" step="0.5" id="wc-thigh" placeholder="60.0" class="w-full py-2 px-2.5 text-sm font-extrabold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white">
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button type="button" id="wc-cancel-btn" class="flex-1 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl">Скасувати</button>
+            <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md">Зберегти чекін</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- COMPACT PROFILE EDIT MODAL (Opened on Name Click) -->
     <div id="profile-edit-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
@@ -503,7 +730,7 @@
             </div>
             <div class="text-right">
               <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">Норма білка</span>
-              <strong id="pe-live-protein" class="text-base font-black text-gray-900 dark:text-white">138 г / день</strong>
+              <strong id="pe-live-protein" class="text-base font-black text-gray-900 dark:text-white">161 г / день</strong>
             </div>
           </div>
 
@@ -538,7 +765,7 @@
               <span class="text-2xl">🔥</span>
               <div>
                 <div class="text-sm font-extrabold text-gray-900 dark:text-white">Схуднення та рельєф</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">М'який дефіцит калорій із високим білком без голоду</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">М'який дефіцит калорій із високим білком (2.1 г/кг)</div>
               </div>
             </button>
 
@@ -546,7 +773,7 @@
               <span class="text-2xl">⚖️</span>
               <div>
                 <div class="text-sm font-extrabold text-gray-900 dark:text-white">Підтримка форми</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Стабільна вага, висока енергія та збалансований раціон</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Стабільна вага, висока енергія та збалансований білок (1.7 г/кг)</div>
               </div>
             </button>
 
@@ -554,7 +781,7 @@
               <span class="text-2xl">💪</span>
               <div>
                 <div class="text-sm font-extrabold text-gray-900 dark:text-white">Набір м'язової маси</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Чистий профіцит енергії зі складних вуглеводів і білка</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Чистий профіцит енергії зі складних вуглеводів і білка (1.9 г/кг)</div>
               </div>
             </button>
           </div>
@@ -672,7 +899,7 @@
       </div>
     </div>
 
-    <!-- Modal for Adding/Editing Measurement -->
+    <!-- Modal for Adding/Editing Single Measurement -->
     <div id="add-measurement-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
       <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-gray-100 dark:border-slate-700">
         <div class="flex items-center justify-between">
@@ -877,12 +1104,12 @@
     ];
 
     const MEASUREMENTS_CONFIG = [
-      { id: "weight", name: "Вага", unit: "кг", step: "0.1" },
-      { id: "bicep", name: "Обхват плеча", unit: "см", step: "0.5" },
-      { id: "chest", name: "Обхват грудей", unit: "см", step: "0.5" },
-      { id: "waist", name: "Обхват талії", unit: "см", step: "0.5" },
-      { id: "hips", name: "Обхват стегон", unit: "см", step: "0.5" },
-      { id: "thigh", name: "Обхват стегна", unit: "см", step: "0.5" }
+      { id: "weight", name: "Вага", shortName: "Вага", unit: "кг", step: "0.1" },
+      { id: "waist", name: "Обхват талії", shortName: "Талія", unit: "см", step: "0.5" },
+      { id: "chest", name: "Обхват грудей", shortName: "Груди", unit: "см", step: "0.5" },
+      { id: "bicep", name: "Обхват плеча", shortName: "Плече", unit: "см", step: "0.5" },
+      { id: "hips", name: "Обхват стегон", shortName: "Стегна", unit: "см", step: "0.5" },
+      { id: "thigh", name: "Обхват стегна", shortName: "Стегно", unit: "см", step: "0.5" }
     ];
 
     function roundToFiveGrams(val) {
@@ -915,6 +1142,7 @@
     let editingRecordOriginalDate = null;
     let currentlyExpandedId = null;
     let expandedCompletedCats = {};
+    let expandedSettingsCats = { A: true, B: true, P: true };
 
     const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
     const urlParams = new URLSearchParams(window.location.search);
@@ -942,6 +1170,17 @@
       } catch (e) {}
     }
 
+    if (userId !== 'default_user') {
+      try { localStorage.setItem('diet_last_tg_id', userId); } catch (e) {}
+    } else {
+      try {
+        const savedId = localStorage.getItem('diet_last_tg_id');
+        if (savedId) userId = savedId;
+      } catch (e) {}
+    }
+
+    document.getElementById('user-name-display').textContent = userName;
+
     function applySafeAreaTopPadding() {
       const header = document.getElementById('app-header');
       if (!header) return;
@@ -954,14 +1193,12 @@
         contentTop = (tg.contentSafeAreaInset && Number(tg.contentSafeAreaInset.top)) || 0;
       }
 
-      // Also read Telegram's CSS custom properties directly if JS properties are 0
       const rootStyles = getComputedStyle(document.documentElement);
       const cssSysTop = parseFloat(rootStyles.getPropertyValue('--tg-safe-area-inset-top')) || 0;
       const cssContentTop = parseFloat(rootStyles.getPropertyValue('--tg-content-safe-area-inset-top')) || 0;
 
       let totalTopInset = Math.max(sysTop + contentTop, cssSysTop + cssContentTop);
 
-      // On mobile Telegram (Android/iOS) fullscreen mode, status bar + floating "✕ Закрити" bar take ~84px
       const isMobileTg = Boolean(tg && tg.platform && ['android', 'ios'].includes(tg.platform));
       if (isMobileTg && totalTopInset < 84) {
         totalTopInset = 84;
@@ -970,7 +1207,7 @@
       if (totalTopInset > 0) {
         header.style.paddingTop = `${totalTopInset + 4}px`;
       } else {
-        header.style.paddingTop = '12px';
+        header.style.paddingTop = '10px';
       }
     }
 
@@ -979,6 +1216,7 @@
     setTimeout(applySafeAreaTopPadding, 100);
     setTimeout(applySafeAreaTopPadding, 350);
     setTimeout(applySafeAreaTopPadding, 800);
+
     function getAuthHeaders() {
       const headers = { 'Content-Type': 'application/json' };
       if (tg && typeof tg.initData === 'string' && tg.initData.length > 0) {
@@ -1026,8 +1264,8 @@
         maintenance: 1.7,
         surplus: 1.9
       };
-      const activeMult = proteinMultipliers[currentGoalKey] || 1.8;
-      const proteinNorm = Math.round(userProfile.weight * activeMult);
+      const proteinMult = proteinMultipliers[currentGoalKey] || 1.7;
+      const proteinNorm = Math.round(userProfile.weight * proteinMult);
 
       return {
         age,
@@ -1035,10 +1273,11 @@
         tdee: userTDEE,
         scaleRatio,
         proteinNorm,
+        proteinMult,
         goals: {
-          deficit: { name: "Схуднення", icon: "🔥", targetKcal: Math.round(2208 * scaleRatio), proteinNorm: Math.round(userProfile.weight * proteinMultipliers.deficit) },
-          maintenance: { name: "Підтримка", icon: "⚖️", targetKcal: Math.round(2822 * scaleRatio), proteinNorm: Math.round(userProfile.weight * proteinMultipliers.maintenance) },
-          surplus: { name: "Набір м'язів", icon: "💪", targetKcal: Math.round(3200 * scaleRatio), proteinNorm: Math.round(userProfile.weight * proteinMultipliers.surplus) }
+          deficit: { name: "Схуднення", icon: "🔥", targetKcal: Math.round(2208 * scaleRatio), proteinNorm: Math.round(userProfile.weight * 2.1) },
+          maintenance: { name: "Підтримка", icon: "⚖️", targetKcal: Math.round(2822 * scaleRatio), proteinNorm: Math.round(userProfile.weight * 1.7) },
+          surplus: { name: "Набір м'язів", icon: "💪", targetKcal: Math.round(3200 * scaleRatio), proteinNorm: Math.round(userProfile.weight * 1.9) }
         }
       };
     }
@@ -1054,6 +1293,19 @@
       const savedBases = localStorage.getItem(userBaseKey);
       if (savedBases) customBaseMap = JSON.parse(savedBases);
     } catch (e) {}
+
+    // Hidden products visibility map: { itemId: true }
+    const hiddenItemsKey = 'diet_hidden_items_' + userId;
+    let hiddenItemsMap = {};
+    try {
+      const savedHidden = localStorage.getItem(hiddenItemsKey);
+      if (savedHidden) hiddenItemsMap = JSON.parse(savedHidden);
+    } catch (e) {}
+
+    function saveHiddenItemsMap() {
+      try { localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap)); } catch (e) {}
+      scheduleCloudSyncSave();
+    }
 
     let consumed = {};
     MASTER_CATEGORIES.forEach(cat => cat.items.forEach(it => { consumed[it.id] = 0; }));
@@ -1112,8 +1364,8 @@
       if (statusEl) {
         statusEl.textContent = text;
         statusEl.className = isError
-          ? 'text-xs text-amber-600 dark:text-amber-400 mt-0.5'
-          : 'text-xs text-gray-500 dark:text-gray-400 mt-0.5';
+          ? 'text-xs text-amber-600 dark:text-amber-400 mt-0.5 truncate'
+          : 'text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate';
       }
       if (badgeText) {
         badgeText.textContent = isError ? 'Локально' : 'Збережено';
@@ -1141,6 +1393,7 @@
         dayKey: activeDayKey,
         consumed,
         customBaseMap,
+        hiddenItemsMap,
         historyRecords,
         measurementsData,
         updatedAt: new Date().toISOString()
@@ -1154,7 +1407,7 @@
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const timeStr = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-        updateSyncStatusUI(`Синхронізовано з хмарою о ${timeStr}`, false);
+        updateSyncStatusUI(`ID ${userId} • синхронізовано о ${timeStr}`, false);
         if (showNotification) showToast("Дані синхронізовано з хмарою!");
       } catch (err) {
         updateSyncStatusUI("Збережено локально (офлайн або сервер недоступний)", true);
@@ -1187,10 +1440,14 @@
             customBaseMap = remote.customBaseMap;
             localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
           }
+          if (remote.hiddenItemsMap) {
+            hiddenItemsMap = remote.hiddenItemsMap;
+            localStorage.setItem(hiddenItemsKey, JSON.stringify(hiddenItemsMap));
+          }
           if (Array.isArray(remote.historyRecords) && remote.historyRecords.length > 0) {
             const mergedMap = new Map();
-            historyRecords.forEach(r => mergedMap.set(r.shortDate || r.date, r));
-            remote.historyRecords.forEach(r => mergedMap.set(r.shortDate || r.date, r));
+            historyRecords.forEach(r => mergedMap.set(r.dayKey || r.shortDate || r.date, r));
+            remote.historyRecords.forEach(r => mergedMap.set(r.dayKey || r.shortDate || r.date, r));
             historyRecords = Array.from(mergedMap.values()).slice(0, 90);
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
           }
@@ -1210,16 +1467,13 @@
           updateGoalHeaderUI();
           buildCalculatorDOM();
           updateValuesInPlace();
-          renderMeasurementsList();
+          renderMeasurementsDashboard();
           if (currentView === 'history') renderHistory();
-          if (currentView === 'settings') {
-            renderProfileDetails();
-            renderSettings();
-          }
+          if (currentView === 'settings') renderSettingsView();
         }
 
         const timeStr = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-        updateSyncStatusUI(`Підключено • оновлено о ${timeStr}`, false);
+        updateSyncStatusUI(`ID ${userId} • оновлено о ${timeStr}`, false);
         if (showNotification) showToast("Дані оновлено з хмари!");
       } catch (err) {
         updateSyncStatusUI("Працює локально (сервер недоступний)", true);
@@ -1443,15 +1697,14 @@
       let grandTotalCalories = 0;
       let grandTotalProtein = 0;
 
-      const resetFilterBtn = document.getElementById('mini-radar-reset-filter');
-      const radarHint = document.getElementById('mini-radar-hint');
-      if (resetFilterBtn && radarHint) {
-        resetFilterBtn.classList.toggle('hidden', currentFilter === 'all');
-        radarHint.classList.toggle('hidden', currentFilter !== 'all');
+      const filterBar = document.getElementById('mini-radar-filter-bar');
+      if (filterBar) {
+        filterBar.classList.toggle('hidden', currentFilter === 'all');
       }
 
       MASTER_CATEGORIES.forEach(cat => {
-        const isVisible = (currentFilter === 'all' || currentFilter === cat.id);
+        const visibleItemsCount = cat.items.filter(it => !hiddenItemsMap[it.id] || (consumed[it.id] || 0) > 0).length;
+        const isVisible = (currentFilter === 'all' || currentFilter === cat.id) && visibleItemsCount > 0;
         const section = document.getElementById('category-' + cat.id);
         if (section) section.style.display = isVisible ? 'block' : 'none';
 
@@ -1560,6 +1813,7 @@
           const baseKcal = getItemEffectiveKcal(it);
           const baseProtein = getItemEffectiveProtein(it);
           const itemWeight = consumed[it.id] || 0;
+          const isUserHidden = Boolean(hiddenItemsMap[it.id]) && itemWeight === 0;
 
           const otherFractions = isNoQuota ? 0 : cat.items.reduce((acc, cur) => {
             if (cur.id === it.id) return acc;
@@ -1591,7 +1845,9 @@
           const numInput = document.getElementById('input-' + it.id);
 
           if (card) {
-            if (!isNoQuota && isCompleted && !isConsumed && !expandedCompletedCats[cat.id]) {
+            if (isUserHidden) {
+              card.classList.add('hidden');
+            } else if (!isNoQuota && isCompleted && !isConsumed && !expandedCompletedCats[cat.id]) {
               card.classList.add('hidden');
               hiddenZeroCount++;
             } else {
@@ -1686,7 +1942,7 @@
       document.getElementById('top-protein-target').textContent = `/ ${targetProtein} г`;
       document.getElementById('top-protein-percent').textContent = `${proteinPct}%`;
       document.getElementById('top-protein-bar').style.width = `${Math.min(100, proteinPct)}%`;
-      document.getElementById('top-protein-sub').textContent = `${proteinPct}% від норми (${targetProtein} г)`;
+      document.getElementById('top-protein-sub').textContent = `${proteinPct}% від норми (${meta.proteinMult} г/кг)`;
 
       triggerAutoSave(topCalories, topProtein);
     }
@@ -1712,10 +1968,12 @@
 
     function updateDailyHistoryAuto(totalKcal, totalProtein) {
       const consumedList = [];
+      const usedCatsSet = new Set();
       MASTER_CATEGORIES.forEach(cat => {
         cat.items.forEach(it => {
           const w = consumed[it.id] || 0;
           if (w > 0) {
+            usedCatsSet.add(cat.id);
             const specs = getItemSpecs(it);
             const baseW = getItemEffectiveBase(it);
             const f = baseW > 0 ? (w / baseW) : 0;
@@ -1736,25 +1994,31 @@
       const todayDate = new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
       const meta = calculateUserMetabolism();
 
-      let todayEntry = historyRecords.find(r => r.shortDate === todayDate);
+      let todayEntry = historyRecords.find(r => r.dayKey === activeDayKey || r.shortDate === todayDate);
       if (!todayEntry) {
         todayEntry = {
           id: Date.now(),
+          dayKey: activeDayKey,
           shortDate: todayDate,
           date: todayDate,
           goal: meta.goals[currentGoalKey].name,
           targetCalories: meta.goals[currentGoalKey].targetKcal,
+          targetProtein: meta.proteinNorm,
           totalCalories: totalKcal,
           totalProtein,
+          categories: Array.from(usedCatsSet),
           itemsCount: consumedList.length,
           items: consumedList
         };
         historyRecords.unshift(todayEntry);
       } else {
+        todayEntry.dayKey = activeDayKey;
         todayEntry.goal = meta.goals[currentGoalKey].name;
         todayEntry.targetCalories = meta.goals[currentGoalKey].targetKcal;
+        todayEntry.targetProtein = meta.proteinNorm;
         todayEntry.totalCalories = totalKcal;
         todayEntry.totalProtein = totalProtein;
+        todayEntry.categories = Array.from(usedCatsSet);
         todayEntry.itemsCount = consumedList.length;
         todayEntry.items = consumedList;
       }
@@ -1969,10 +2233,8 @@
       document.getElementById('profile-edit-modal').classList.add('hidden');
       updateGoalHeaderUI();
       updateValuesInPlace();
-      if (currentView === 'settings') {
-        renderProfileDetails();
-        renderSettings();
-      }
+      if (currentView === 'settings') renderSettingsView();
+      if (currentView === 'measurements') renderMeasurementsDashboard();
       showToast('Профіль оновлено!');
     });
 
@@ -1986,6 +2248,7 @@
         dayKey: activeDayKey,
         consumed,
         customBaseMap,
+        hiddenItemsMap,
         historyRecords,
         measurementsData
       };
@@ -2015,6 +2278,10 @@
             customBaseMap = data.customBaseMap;
             localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap));
           }
+          if (data.hiddenItemsMap) {
+            hiddenItemsMap = data.hiddenItemsMap;
+            saveHiddenItemsMap();
+          }
           if (Array.isArray(data.historyRecords)) {
             historyRecords = data.historyRecords;
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
@@ -2031,9 +2298,8 @@
           updateGoalHeaderUI();
           buildCalculatorDOM();
           updateValuesInPlace();
-          renderMeasurementsList();
-          renderProfileDetails();
-          renderSettings();
+          renderMeasurementsDashboard();
+          renderSettingsView();
           showToast('Дані з JSON успішно відновлено!');
         } catch (err) {
           showToast('Помилка читання JSON файлу');
@@ -2109,6 +2375,7 @@
 
       document.getElementById('ob-preview-kcal').textContent = `${Math.round(mult * ratio).toLocaleString('uk-UA')} ккал`;
       document.getElementById('ob-preview-protein').textContent = `${Math.round(w * obProtMult)} г / день`;
+
       const timelineRow = document.getElementById('ob-preview-timeline-row');
       if (obGoal !== 'maintenance' && tw > 30 && Math.abs(tw - w) >= 0.5) {
         const rate = obGoal === 'surplus' ? 0.35 : 0.5;
@@ -2194,7 +2461,7 @@
       updateGoalHeaderUI();
       buildCalculatorDOM();
       updateValuesInPlace();
-      renderMeasurementsList();
+      renderMeasurementsDashboard();
       showToast('Раціон сформовано під ваші параметри!');
     });
 
@@ -2210,51 +2477,341 @@
       showToast('Дані успішно скинуто!');
     });
 
-    // Measurements Module
-    function renderMeasurementsList() {
-      const container = document.getElementById('measurements-container');
-      container.innerHTML = '';
+    // =========================================================================
+    // TAB 2: BODY COMPOSITION DASHBOARD (ЗАМІРИ)
+    // =========================================================================
+    function buildSparklineSVG(history, strokeColor = "#2563EB") {
+      if (!history || history.length < 2) {
+        return `<div class="h-5 flex items-center text-[10px] text-gray-300 dark:text-slate-600">—</div>`;
+      }
+      const pts = history.slice(-8);
+      const vals = pts.map(p => p.val);
+      const minV = Math.min(...vals);
+      const maxV = Math.max(...vals);
+      const span = (maxV - minV) || 1;
+      const w = 64, h = 22;
+      const coords = pts.map((p, i) => {
+        const x = 2 + (i / (pts.length - 1)) * (w - 4);
+        const y = h - 3 - ((p.val - minV) / span) * (h - 6);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      const last = coords[coords.length - 1].split(',');
+      return `
+        <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="shrink-0 overflow-visible">
+          <polyline fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${coords.join(' ')}" />
+          <circle cx="${last[0]}" cy="${last[1]}" r="2.5" fill="${strokeColor}" />
+        </svg>
+      `;
+    }
 
+    function renderRadarPetalChart() {
+      const container = document.getElementById('radar-petal-container');
+      if (!container) return;
+
+      const axes = MEASUREMENTS_CONFIG.map(m => {
+        const hist = measurementsData[m.id] || [];
+        const startVal = hist.length > 0 ? hist[0].val : 1;
+        const curVal = hist.length > 0 ? hist[hist.length - 1].val : startVal;
+        return {
+          label: m.shortName,
+          startVal,
+          curVal,
+          unit: m.unit
+        };
+      });
+
+      const size = 250;
+      const cx = size / 2;
+      const cy = size / 2;
+      const maxR = 76;
+      const baseR = 54; // Start ring radius
+
+      const n = axes.length;
+      const angleStep = (Math.PI * 2) / n;
+
+      // Grid rings (80%, 100% start, 120%)
+      let ringsHtml = '';
+      [0.5, 0.72, 1.0].forEach((scale, idx) => {
+        const r = maxR * scale;
+        const ringPts = axes.map((_, i) => {
+          const ang = -Math.PI / 2 + i * angleStep;
+          return `${(cx + r * Math.cos(ang)).toFixed(1)},${(cy + r * Math.sin(ang)).toFixed(1)}`;
+        }).join(' ');
+        ringsHtml += `<polygon points="${ringPts}" fill="none" stroke="#CBD5E1" stroke-opacity="0.45" stroke-width="1" stroke-dasharray="${idx === 1 ? '0' : '2,2'}" />`;
+      });
+
+      let axesLines = '';
+      let labelsHtml = '';
+      const startPoly = [];
+      const curPoly = [];
+
+      axes.forEach((ax, i) => {
+        const ang = -Math.PI / 2 + i * angleStep;
+        const xEnd = cx + maxR * Math.cos(ang);
+        const yEnd = cy + maxR * Math.sin(ang);
+        axesLines += `<line x1="${cx}" y1="${cy}" x2="${xEnd.toFixed(1)}" y2="${yEnd.toFixed(1)}" stroke="#CBD5E1" stroke-opacity="0.4" stroke-width="1" />`;
+
+        // Start point at baseR
+        startPoly.push(`${(cx + baseR * Math.cos(ang)).toFixed(1)},${(cy + baseR * Math.sin(ang)).toFixed(1)}`);
+
+        // Current point scaled relative to startVal (amplified 2.5x for visual clarity of ±5% body changes)
+        const relDiff = ax.startVal > 0 ? ((ax.curVal - ax.startVal) / ax.startVal) : 0;
+        const curR = Math.max(20, Math.min(maxR, baseR * (1 + relDiff * 2.5)));
+        curPoly.push(`${(cx + curR * Math.cos(ang)).toFixed(1)},${(cy + curR * Math.sin(ang)).toFixed(1)}`);
+
+        const lx = cx + (maxR + 22) * Math.cos(ang);
+        const ly = cy + (maxR + 16) * Math.sin(ang);
+        labelsHtml += `
+          <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#64748B">${ax.label}</text>
+          <text x="${lx.toFixed(1)}" y="${(ly + 11).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="800" fill="#2563EB">${ax.curVal}</text>
+        `;
+      });
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${size} ${size}" class="w-60 h-60 overflow-visible">
+          ${ringsHtml}
+          ${axesLines}
+          <polygon points="${startPoly.join(' ')}" fill="#94A3B8" fill-opacity="0.18" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2" />
+          <polygon points="${curPoly.join(' ')}" fill="#2563EB" fill-opacity="0.22" stroke="#2563EB" stroke-width="2.2" />
+          ${labelsHtml}
+        </svg>
+      `;
+    }
+
+    function renderCorrelationChart() {
+      const container = document.getElementById('correlation-chart-container');
+      if (!container) return;
+
+      const wHist = [...(measurementsData.weight || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const waistHist = [...(measurementsData.waist || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (wHist.length < 2 || waistHist.length < 2) {
+        container.innerHTML = `<div class="text-center text-gray-400 dark:text-gray-500 text-xs py-6">Зробіть ще один тижневий чекін, щоб побачити графік кореляції Ваги та Талії.</div>`;
+        return;
+      }
+
+      const count = Math.min(8, Math.max(wHist.length, waistHist.length));
+      const wSlice = wHist.slice(-count);
+      const waistSlice = waistHist.slice(-count);
+
+      const width = 330, height = 135, pL = 28, pR = 28, pT = 18, pB = 22;
+      const plotW = width - pL - pR;
+      const plotH = height - pT - pB;
+
+      const wVals = wSlice.map(d => d.val);
+      const wMin = Math.min(...wVals) - 0.5;
+      const wMax = Math.max(...wVals) + 0.5;
+      const wSpan = (wMax - wMin) || 1;
+
+      const tVals = waistSlice.map(d => d.val);
+      const tMin = Math.min(...tVals) - 1;
+      const tMax = Math.max(...tVals) + 1;
+      const tSpan = (tMax - tMin) || 1;
+
+      const wPts = wSlice.map((d, i) => ({
+        x: pL + (wSlice.length > 1 ? (i / (wSlice.length - 1)) * plotW : plotW / 2),
+        y: pT + plotH - ((d.val - wMin) / wSpan) * plotH,
+        val: d.val,
+        date: d.date
+      }));
+
+      const tPts = waistSlice.map((d, i) => ({
+        x: pL + (waistSlice.length > 1 ? (i / (waistSlice.length - 1)) * plotW : plotW / 2),
+        y: pT + plotH - ((d.val - tMin) / tSpan) * plotH,
+        val: d.val
+      }));
+
+      const wPath = wPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+      const tPath = tPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" class="w-full h-36 overflow-visible">
+          <line x1="${pL}" y1="${pT + plotH}" x2="${width - pR}" y2="${pT + plotH}" stroke="#CBD5E1" stroke-opacity="0.5" />
+          <path d="${wPath}" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="${tPath}" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-dasharray="4,2" stroke-linecap="round" stroke-linejoin="round" />
+          ${wPts.map(p => `
+            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#2563EB" stroke="#fff" stroke-width="1.5" />
+            <text x="${p.x.toFixed(1)}" y="${(p.y - 6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="bold" fill="#2563EB">${p.val}</text>
+            <text x="${p.x.toFixed(1)}" y="${height - 5}" text-anchor="middle" font-size="8.5" fill="#94A3B8">${p.date.slice(5)}</text>
+          `).join('')}
+          ${tPts.map(p => `
+            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#F59E0B" stroke="#fff" stroke-width="1.5" />
+            <text x="${p.x.toFixed(1)}" y="${(p.y + 12).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="bold" fill="#D97706">${p.val}</text>
+          `).join('')}
+        </svg>
+      `;
+    }
+
+    function renderMeasurementsDashboard() {
+      const grid = document.getElementById('measurements-grid-2x3');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const weightHist = measurementsData.weight || [];
+      const waistHist = measurementsData.waist || [];
+      const chestHist = measurementsData.chest || [];
+
+      const startW = userProfile.startWeight || (weightHist.length ? weightHist[0].val : userProfile.weight);
+      const curW = weightHist.length ? weightHist[weightHist.length - 1].val : userProfile.weight;
+      const curWaist = waistHist.length ? waistHist[waistHist.length - 1].val : 84;
+      const curChest = chestHist.length ? chestHist[chestHist.length - 1].val : 106;
+
+      document.getElementById('meas-summary-start').textContent = `${startW} кг`;
+      document.getElementById('meas-summary-current').textContent = `${curW} кг`;
+      document.getElementById('meas-summary-target').textContent = userProfile.targetWeight ? `${userProfile.targetWeight} кг` : 'Не задана';
+
+      // Progress bar for weight
+      const progWrap = document.getElementById('meas-weight-progress-wrap');
+      if (userProfile.targetWeight && userProfile.targetWeight > 0) {
+        progWrap.classList.remove('hidden');
+        const tw = Number(userProfile.targetWeight);
+        const isLosing = tw < startW;
+        const totalD = Math.abs(tw - startW);
+        const remD = Math.round(Math.abs(tw - curW) * 10) / 10;
+        let pct = totalD > 0 ? Math.round(((isLosing ? (startW - curW) : (curW - startW)) / totalD) * 100) : 100;
+        pct = Math.max(0, Math.min(100, pct));
+        document.getElementById('meas-weight-progress-bar').style.width = `${pct}%`;
+        document.getElementById('meas-weight-progress-pct').textContent = `${pct}% до мети`;
+        document.getElementById('meas-weight-progress-rem').textContent = remD < 0.1 ? '🎉 Ціль досягнуто!' : `Залишилось: ${remD} кг`;
+      } else {
+        progWrap.classList.add('hidden');
+      }
+
+      // WHtR Index (Waist / Height)
+      const hCm = Number(userProfile.height) || 183;
+      const whtr = Math.round((curWaist / hCm) * 100) / 100;
+      document.getElementById('whtr-value').textContent = whtr.toFixed(2);
+      const whtrBadge = document.getElementById('whtr-badge');
+      const whtrBar = document.getElementById('whtr-bar');
+      if (whtr < 0.43) {
+        whtrBadge.textContent = 'Сухий рельєф';
+        whtrBadge.className = 'px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300';
+        whtrBar.className = 'bg-blue-500 h-full rounded-full transition-all';
+      } else if (whtr <= 0.49) {
+        whtrBadge.textContent = 'Здорова норма';
+        whtrBadge.className = 'px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300';
+        whtrBar.className = 'bg-emerald-500 h-full rounded-full transition-all';
+      } else {
+        whtrBadge.textContent = 'Зона уваги';
+        whtrBadge.className = 'px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300';
+        whtrBar.className = 'bg-amber-500 h-full rounded-full transition-all';
+      }
+      whtrBar.style.width = `${Math.min(100, Math.round(whtr * 130))}%`;
+
+      // V-Taper Index (Chest / Waist)
+      const vtaper = curWaist > 0 ? Math.round((curChest / curWaist) * 100) / 100 : 1.25;
+      document.getElementById('vtaper-value').textContent = vtaper.toFixed(2);
+      const vtBadge = document.getElementById('vtaper-badge');
+      const vtBar = document.getElementById('vtaper-bar');
+      if (vtaper >= 1.32) {
+        vtBadge.textContent = 'Топ V-силует';
+        vtBadge.className = 'px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300';
+      } else if (vtaper >= 1.22) {
+        vtBadge.textContent = 'Атлетичний';
+        vtBadge.className = 'px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300';
+      } else {
+        vtBadge.textContent = 'Базовий';
+        vtBadge.className = 'px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300';
+      }
+      vtBar.style.width = `${Math.min(100, Math.max(20, Math.round(((vtaper - 1.0) / 0.45) * 100)))}%`;
+
+      renderRadarPetalChart();
+      renderCorrelationChart();
+
+      // 2x3 Metric Cards Grid with Sparklines
       MEASUREMENTS_CONFIG.forEach(metric => {
         const history = measurementsData[metric.id] || [];
         const latest = history.length > 0 ? history[history.length - 1] : null;
         const currentVal = latest ? latest.val : '--';
 
-        let changeText = 'Немає даних';
-        let changeClass = 'text-gray-400';
-
+        let deltaBadge = `<span class="text-[10px] text-gray-400">Старт</span>`;
         if (history.length >= 2) {
           const diff = Math.round((history[history.length - 1].val - history[0].val) * 10) / 10;
           if (diff > 0) {
-            changeText = `+${diff} ${metric.unit} від початку`;
-            changeClass = 'text-emerald-600 dark:text-emerald-400 font-semibold';
+            deltaBadge = `<span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">+${diff} ${metric.unit}</span>`;
           } else if (diff < 0) {
-            changeText = `${diff} ${metric.unit} від початку`;
-            changeClass = 'text-blue-600 dark:text-blue-400 font-semibold';
+            deltaBadge = `<span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">${diff} ${metric.unit}</span>`;
           } else {
-            changeText = `0 ${metric.unit} без змін`;
-            changeClass = 'text-gray-500 font-medium';
+            deltaBadge = `<span class="text-[10px] font-semibold text-gray-400">0 ${metric.unit}</span>`;
           }
-        } else if (history.length === 1) {
-          changeText = '1 замір внесено';
         }
 
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between p-3.5 hover:bg-gray-50 dark:hover:bg-slate-750 transition cursor-pointer';
-        row.innerHTML = `
-          <div>
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-tight">${metric.name}</h4>
-            <p class="text-xs ${changeClass} mt-0.5 leading-none">${changeText}</p>
+        const sparkHtml = buildSparklineSVG(history, metric.id === 'waist' ? '#F59E0B' : '#2563EB');
+
+        const card = document.createElement('div');
+        card.className = 'bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700/80 p-3 shadow-xs hover:border-blue-400 transition cursor-pointer flex flex-col justify-between space-y-2 active:scale-98';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-700 dark:text-gray-200">${metric.shortName}</span>
+            ${deltaBadge}
           </div>
-          <div class="flex items-center space-x-2.5 shrink-0">
-            <span class="text-sm font-bold text-gray-900 dark:text-white">${currentVal} <span class="text-xs text-gray-400 font-normal">${metric.unit}</span></span>
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"></path></svg>
+          <div class="flex items-end justify-between gap-1">
+            <div>
+              <strong class="text-lg font-black text-gray-900 dark:text-white leading-none">${currentVal}</strong>
+              <span class="text-[11px] text-gray-400 font-medium">${metric.unit}</span>
+            </div>
+            ${sparkHtml}
           </div>
         `;
-        row.addEventListener('click', () => openMetricDetail(metric.id));
-        container.appendChild(row);
+        card.addEventListener('click', () => openMetricDetail(metric.id));
+        grid.appendChild(card);
       });
     }
+
+    // Unified Weekly Check-In Modal Logic
+    const weeklyModal = document.getElementById('weekly-checkin-modal');
+    document.getElementById('open-weekly-checkin-btn').addEventListener('click', () => {
+      document.getElementById('wc-date').value = new Date().toISOString().split('T')[0];
+      MEASUREMENTS_CONFIG.forEach(m => {
+        const hist = measurementsData[m.id] || [];
+        const lastVal = hist.length > 0 ? hist[hist.length - 1].val : '';
+        const input = document.getElementById(`wc-${m.id}`);
+        if (input) input.value = lastVal;
+      });
+      weeklyModal.classList.remove('hidden');
+    });
+    document.getElementById('close-weekly-checkin-btn').addEventListener('click', () => weeklyModal.classList.add('hidden'));
+    document.getElementById('wc-cancel-btn').addEventListener('click', () => weeklyModal.classList.add('hidden'));
+
+    document.getElementById('weekly-checkin-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const dateStr = document.getElementById('wc-date').value || new Date().toISOString().split('T')[0];
+      let savedCount = 0;
+
+      MEASUREMENTS_CONFIG.forEach(m => {
+        const input = document.getElementById(`wc-${m.id}`);
+        const val = input ? Number(input.value) : 0;
+        if (val > 0) {
+          if (!measurementsData[m.id]) measurementsData[m.id] = [];
+          const existingIdx = measurementsData[m.id].findIndex(x => x.date === dateStr);
+          if (existingIdx !== -1) measurementsData[m.id][existingIdx].val = val;
+          else measurementsData[m.id].push({ date: dateStr, val });
+          measurementsData[m.id].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          if (m.id === 'weight') {
+            userProfile.weight = val;
+            saveUserProfile();
+          }
+          savedCount++;
+        }
+      });
+
+      if (savedCount > 0) {
+        saveMeasurementsToStorage();
+        weeklyModal.classList.add('hidden');
+        updateGoalHeaderUI();
+        updateValuesInPlace();
+        renderMeasurementsDashboard();
+        showToast(`Тижневий чекін збережено (${savedCount} показн.)!`);
+      } else {
+        showToast('Введіть хоча б одне значення');
+      }
+    });
+
+    document.getElementById('meas-summary-target-box').addEventListener('click', () => {
+      document.getElementById('tw-modal-input').value = userProfile.targetWeight || '';
+      twModal.classList.remove('hidden');
+    });
 
     function openMetricDetail(metricId) {
       selectedMetricId = metricId;
@@ -2424,7 +2981,7 @@
             measurementsData[selectedMetricId].splice(idx, 1);
             saveMeasurementsToStorage();
             renderMetricDetailView();
-            renderMeasurementsList();
+            renderMeasurementsDashboard();
             showToast('Запис видалено');
           }
         });
@@ -2434,7 +2991,7 @@
     document.getElementById('detail-back-to-list-btn').addEventListener('click', () => {
       document.getElementById('measurement-detail-screen').classList.add('hidden');
       document.getElementById('measurements-list-screen').classList.remove('hidden');
-      renderMeasurementsList();
+      renderMeasurementsDashboard();
     });
 
     document.getElementById('edit-history-toggle-btn').addEventListener('click', () => {
@@ -2458,11 +3015,13 @@
       saveUserProfile();
       twModal.classList.add('hidden');
       renderMetricDetailView();
+      renderMeasurementsDashboard();
     });
     document.getElementById('delete-target-weight-btn').addEventListener('click', () => {
       userProfile.targetWeight = null;
       saveUserProfile();
       renderMetricDetailView();
+      renderMeasurementsDashboard();
     });
     document.getElementById('tw-modal-save-btn').addEventListener('click', () => {
       const val = Number(document.getElementById('tw-modal-input').value);
@@ -2471,6 +3030,7 @@
         saveUserProfile();
         twModal.classList.add('hidden');
         renderMetricDetailView();
+        renderMeasurementsDashboard();
         showToast('Цільову вагу оновлено!');
       }
     });
@@ -2507,11 +3067,13 @@
       saveMeasurementsToStorage();
       addModal.classList.add('hidden');
       renderMetricDetailView();
-      renderMeasurementsList();
+      renderMeasurementsDashboard();
       showToast('Замір збережено!');
     });
 
-    // Tabs
+    // =========================================================================
+    // TAB NAVIGATION
+    // =========================================================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => switchView(btn.getAttribute('data-view')));
     });
@@ -2522,6 +3084,11 @@
       document.getElementById('view-measurements').classList.toggle('hidden', viewName !== 'measurements');
       document.getElementById('view-history').classList.toggle('hidden', viewName !== 'history');
       document.getElementById('view-settings').classList.toggle('hidden', viewName !== 'settings');
+
+      const topSummary = document.getElementById('top-nutrition-summary');
+      if (topSummary) {
+        topSummary.classList.toggle('hidden', viewName !== 'calculator');
+      }
 
       const titleEl = document.getElementById('top-title-text');
       if (viewName === 'calculator') titleEl.textContent = 'Раціон';
@@ -2539,48 +3106,179 @@
       if (viewName === 'measurements') {
         document.getElementById('measurement-detail-screen').classList.add('hidden');
         document.getElementById('measurements-list-screen').classList.remove('hidden');
-        renderMeasurementsList();
+        renderMeasurementsDashboard();
       } else if (viewName === 'history') {
         renderHistory();
       } else if (viewName === 'settings') {
-        renderProfileDetails();
-        renderSettings();
+        renderSettingsView();
       }
     }
 
+    // =========================================================================
+    // TAB 3: HISTORY (28-DAY HEATMAP, 7-DAY BAR CHART & COLLAPSIBLE CARDS)
+    // =========================================================================
     function renderHistory() {
       const list = document.getElementById('history-list');
+      const heatmapGrid = document.getElementById('history-heatmap-grid');
+      const analyticsCard = document.getElementById('history-analytics-card');
+      const barsContainer = document.getElementById('history-weekly-bars');
+      const streakBadge = document.getElementById('hist-streak-badge');
+
+      // Build lookup by YYYY-MM-DD dayKey or localized date string
+      const byDayKey = new Map();
+      historyRecords.forEach(r => {
+        if (r.dayKey) byDayKey.set(r.dayKey, r);
+        if (r.shortDate) byDayKey.set(r.shortDate, r);
+      });
+
+      // 28-Day Discipline Heatmap (4x7)
+      heatmapGrid.innerHTML = '';
+      let streak = 0;
+      let streakBroken = false;
+      const now = Date.now();
+
+      for (let offset = 27; offset >= 0; offset--) {
+        const ts = now - offset * 24 * 60 * 60 * 1000;
+        const dKey = getDietDayKey(ts);
+        const locDate = new Date(ts).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+        const dayNum = new Date(ts).getDate();
+        const rec = byDayKey.get(dKey) || byDayKey.get(locDate);
+
+        let cellClass = 'bg-gray-100 dark:bg-slate-700/60 text-gray-400 dark:text-gray-500';
+        if (rec && rec.totalCalories > 0) {
+          const ratio = rec.targetCalories > 0 ? (rec.totalCalories / rec.targetCalories) : 1;
+          if (ratio > 1.08) {
+            cellClass = 'bg-amber-500 text-white font-bold';
+          } else if (ratio >= 0.80) {
+            cellClass = 'bg-emerald-500 text-white font-bold';
+          } else {
+            cellClass = 'bg-blue-400 text-white font-bold';
+          }
+        }
+
+        const cell = document.createElement('div');
+        cell.className = `h-7 rounded-lg flex items-center justify-center text-[10px] ${cellClass} transition`;
+        cell.textContent = dayNum;
+        cell.title = rec ? `${dKey}: ${rec.totalCalories} ккал` : `${dKey}: немає записів`;
+        heatmapGrid.appendChild(cell);
+      }
+
+      // Compute current consecutive streak from today backwards
+      for (let offset = 0; offset < 90; offset++) {
+        const ts = now - offset * 24 * 60 * 60 * 1000;
+        const dKey = getDietDayKey(ts);
+        const locDate = new Date(ts).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+        const rec = byDayKey.get(dKey) || byDayKey.get(locDate);
+        if (rec && rec.totalCalories > 0) {
+          streak++;
+        } else if (offset > 0) {
+          break;
+        }
+      }
+      if (streakBadge) streakBadge.textContent = `Серія: ${streak} дн.`;
+
       list.innerHTML = '';
       if (historyRecords.length === 0) {
+        if (analyticsCard) analyticsCard.classList.add('hidden');
         list.innerHTML = '<div class="text-center py-10 text-gray-400 dark:text-gray-500 text-xs">Історія поки що порожня.<br>Коли ви вносите продукти, вони автоматично зберігаються за поточний день.</div>';
         return;
       }
-      historyRecords.forEach(entry => {
+
+      if (analyticsCard) {
+        analyticsCard.classList.remove('hidden');
+        const totalDays = historyRecords.length;
+        const avgKcal = Math.round(historyRecords.reduce((s, r) => s + (r.totalCalories || 0), 0) / totalDays);
+        const avgProt = Math.round(historyRecords.reduce((s, r) => s + (r.totalProtein || 0), 0) / totalDays);
+        document.getElementById('hist-stat-days').textContent = totalDays;
+        document.getElementById('hist-stat-kcal').textContent = `${avgKcal.toLocaleString('uk-UA')} ккал`;
+        document.getElementById('hist-stat-protein').textContent = `${avgProt} г`;
+
+        const last7 = [...historyRecords].slice(0, 7).reverse();
+        const maxBarKcal = Math.max(...last7.map(r => Math.max(r.totalCalories || 0, r.targetCalories || 2000)), 1);
+        barsContainer.innerHTML = `
+          <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">7-денна діаграма калорійності</div>
+          <div class="grid gap-1.5 items-end h-20 pt-2" style="grid-template-columns: repeat(${last7.length}, minmax(0, 1fr));">
+            ${last7.map(r => {
+              const hPct = Math.max(8, Math.round(((r.totalCalories || 0) / maxBarKcal) * 100));
+              const isOver = (r.totalCalories || 0) > (r.targetCalories || 99999) * 1.05;
+              const barColor = isOver ? 'bg-amber-500' : 'bg-blue-600 dark:bg-blue-500';
+              const shortLabel = (r.shortDate || r.date || '').split(' ').slice(0, 2).join(' ');
+              return `
+                <div class="flex flex-col items-center h-full justify-end">
+                  <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 mb-0.5">${r.totalCalories}</span>
+                  <div class="w-full max-w-[28px] bg-gray-100 dark:bg-slate-700/60 rounded-t-md h-12 flex items-end overflow-hidden">
+                    <div class="w-full ${barColor} rounded-t-md transition-all" style="height: ${hPct}%"></div>
+                  </div>
+                  <span class="text-[9px] text-gray-400 mt-1 truncate max-w-full">${shortLabel}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      // Collapsible Day Cards (without any copy-day button)
+      historyRecords.forEach((entry, idx) => {
         const card = document.createElement('div');
-        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 space-y-2 shadow-xs';
-        const itemsHtml = entry.items.map(it => `
-          <div class="flex justify-between items-center text-xs py-1 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-            <span class="text-gray-700 dark:text-gray-300">• ${it.name}</span>
-            <span class="font-semibold text-gray-900 dark:text-white">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
+        card.className = 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3 shadow-xs transition';
+        const pct = entry.targetCalories > 0 ? Math.min(100, Math.round((entry.totalCalories / entry.targetCalories) * 100)) : 0;
+
+        const usedCatIds = entry.categories || Array.from(new Set((entry.items || []).map(x => x.category)));
+        const catBadgesHtml = usedCatIds.map(cId => {
+          const catObj = MASTER_CATEGORIES.find(c => c.id === cId);
+          return catObj ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-slate-700/80 text-[10px]" title="${catObj.name}">${catObj.icon}</span>` : '';
+        }).join('');
+
+        const itemsHtml = (entry.items || []).map(it => `
+          <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
+            <span class="text-gray-700 dark:text-gray-300 truncate pr-2">• ${it.name}</span>
+            <span class="font-semibold text-gray-900 dark:text-white shrink-0">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
           </div>
         `).join('');
+
+        const isInitiallyOpen = idx === 0;
+
         card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
-              <span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">${entry.goal}</span>
+          <div class="hist-card-header cursor-pointer space-y-2">
+            <div class="flex justify-between items-start gap-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-xs font-extrabold text-gray-900 dark:text-white">${entry.date}</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">${entry.goal}</span>
+                </div>
+                <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+                  ${catBadgesHtml}
+                  <span class="text-[11px] text-gray-500 dark:text-gray-400 ml-1">🥩 <strong>${entry.totalProtein} г</strong></span>
+                </div>
+              </div>
+              <div class="text-right shrink-0 flex items-center gap-2">
+                <div>
+                  <span class="text-xs font-extrabold text-gray-900 dark:text-white">${entry.totalCalories}</span>
+                  <span class="text-[10px] text-gray-400 block">/ ${entry.targetCalories} ккал</span>
+                </div>
+                <svg class="hist-chevron w-4 h-4 text-gray-400 transition-transform duration-200 ${isInitiallyOpen ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.totalCalories}</span>
-              <span class="text-[10px] text-gray-400"> / ${entry.targetCalories} ккал</span>
+            <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-blue-600 dark:bg-blue-500 h-full rounded-full" style="width: ${pct}%"></div>
             </div>
           </div>
-          <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2">
-            <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
-            <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
+
+          <div class="hist-card-body ${isInitiallyOpen ? '' : 'hidden'} pt-2 mt-2 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5">
+            ${itemsHtml}
           </div>
-          <div class="pt-1 space-y-0.5">${itemsHtml}</div>
         `;
+
+        const headerEl = card.querySelector('.hist-card-header');
+        const bodyEl = card.querySelector('.hist-card-body');
+        const chevEl = card.querySelector('.hist-chevron');
+        headerEl.addEventListener('click', () => {
+          const isHidden = bodyEl.classList.toggle('hidden');
+          chevEl.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
         list.appendChild(card);
       });
     }
@@ -2593,79 +3291,140 @@
       showToast('Історію очищено');
     });
 
-    function renderProfileDetails() {
-      const grid = document.getElementById('profile-details-grid');
+    // =========================================================================
+    // TAB 4: МОЇ НОРМИ (ENERGY CHAIN + ACCORDION + LIVE RECALC + VISIBILITY 👁)
+    // =========================================================================
+    function renderSettingsView() {
       const meta = calculateUserMetabolism();
       const genderStr = userProfile.gender === 'female' ? 'Жінка' : 'Чоловік';
       const goalInfo = meta.goals[currentGoalKey];
-      grid.innerHTML = `
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Режим</span>
-          <strong class="text-blue-600 dark:text-blue-400 font-bold">${goalInfo.icon} ${goalInfo.name}</strong>
-        </div>
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Стать та вік</span>
-          <strong class="text-gray-900 dark:text-white font-bold">${genderStr}, ${meta.age} р.</strong>
-        </div>
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Зріст / Вага</span>
-          <strong class="text-gray-900 dark:text-white font-bold">${userProfile.height} см / ${userProfile.weight} кг</strong>
-        </div>
-        <div class="bg-gray-50 dark:bg-slate-700/50 p-2 rounded-xl">
-          <span class="text-gray-400 block text-[10px]">Цільова вага</span>
-          <strong class="text-gray-900 dark:text-white font-bold">${userProfile.targetWeight ? userProfile.targetWeight + ' кг' : 'Не вказана'}</strong>
-        </div>
-      `;
-    }
 
-    function renderSettings() {
+      document.getElementById('settings-profile-subtitle').textContent = `${genderStr}, ${meta.age} р., ${userProfile.height} см • ${userProfile.weight} кг`;
+      document.getElementById('chain-bmr-val').textContent = `${meta.bmr.toLocaleString('uk-UA')} ккал`;
+      document.getElementById('chain-tdee-val').textContent = `${meta.tdee.toLocaleString('uk-UA')} ккал`;
+      document.getElementById('chain-goal-label').textContent = `3. ${goalInfo.name}`;
+      document.getElementById('chain-target-val').textContent = `${goalInfo.targetKcal.toLocaleString('uk-UA')} ккал`;
+      document.getElementById('chain-protein-val').textContent = `${meta.proteinNorm} г білка (${meta.proteinMult} г/кг)`;
+
       const container = document.getElementById('settings-categories-container');
       container.innerHTML = '';
+
       MASTER_CATEGORIES.forEach(cat => {
+        const isExpanded = Boolean(expandedSettingsCats[cat.id]);
+        const activeCount = cat.items.filter(it => !hiddenItemsMap[it.id]).length;
+
         const catBox = document.createElement('div');
-        catBox.className = 'border border-gray-200 dark:border-slate-700 rounded-xl p-3 bg-white dark:bg-slate-800 space-y-2';
+        catBox.className = 'border border-gray-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 overflow-hidden shadow-xs';
+
         const rowsHtml = cat.items.map(it => {
           const specs = getItemSpecs(it);
           const currentBase = getItemEffectiveBase(it);
+          const effKcal = getItemEffectiveKcal(it);
+          const effProt = getItemEffectiveProtein(it);
+          const isHidden = Boolean(hiddenItemsMap[it.id]);
+
           return `
-            <div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-              <span class="text-gray-800 dark:text-gray-200 text-xs font-medium">${specs.name}</span>
-              <div class="flex items-center space-x-1.5">
-                <input type="number" data-base-item-id="${it.id}" value="${currentBase}" class="w-16 py-1 px-1.5 text-center text-xs font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg">
-                <span class="text-gray-400 text-xs">${it.unit}</span>
+            <div class="flex items-center justify-between gap-2 py-2 px-3 border-b border-gray-100 dark:border-slate-700/50 last:border-0 ${isHidden ? 'opacity-50 bg-gray-50/50 dark:bg-slate-900/30' : ''}">
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate ${isHidden ? 'line-through' : ''}">${specs.name}</div>
+                <div id="settings-live-macros-${it.id}" class="text-[10px] text-gray-400 mt-0.5">${effKcal} ккал • ${effProt} г білка</div>
+              </div>
+
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <input type="number" data-base-item-id="${it.id}" value="${currentBase}" class="w-14 py-1 px-1 text-center text-xs font-extrabold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                <span class="text-[11px] text-gray-400 w-4">${it.unit}</span>
+                <button type="button" data-eye-item-id="${it.id}" title="${isHidden ? 'Показати у раціоні' : 'Приховати з раціону'}" class="eye-toggle-btn p-1.5 rounded-lg transition ${isHidden ? 'bg-gray-200 dark:bg-slate-700 text-gray-400' : 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'}">
+                  👁
+                </button>
               </div>
             </div>
           `;
         }).join('');
+
         catBox.innerHTML = `
-          <div class="flex items-center space-x-2 mb-1.5">
-            <span class="text-sm">${cat.icon}</span>
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white">${cat.name}</h3>
+          <button type="button" class="settings-cat-toggle w-full flex items-center justify-between p-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700/40 transition">
+            <div class="flex items-center space-x-2 min-w-0">
+              <span class="text-base">${cat.icon}</span>
+              <div class="min-w-0">
+                <h3 class="text-xs font-extrabold text-gray-900 dark:text-white truncate">${cat.name}</h3>
+                <span class="text-[10px] text-gray-400">Активно: ${activeCount} з ${cat.items.length}</span>
+              </div>
+            </div>
+            <svg class="settings-cat-chevron w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <div class="settings-cat-body ${isExpanded ? '' : 'hidden'} border-t border-gray-100 dark:border-slate-700/60">
+            ${rowsHtml}
           </div>
-          <div class="space-y-0.5">${rowsHtml}</div>
         `;
+
+        const toggleBtn = catBox.querySelector('.settings-cat-toggle');
+        const bodyEl = catBox.querySelector('.settings-cat-body');
+        const chevEl = catBox.querySelector('.settings-cat-chevron');
+        toggleBtn.addEventListener('click', () => {
+          const nowHidden = bodyEl.classList.toggle('hidden');
+          expandedSettingsCats[cat.id] = !nowHidden;
+          chevEl.style.transform = nowHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
         container.appendChild(catBox);
+      });
+
+      // Live recalculation of kcal & protein on portion input change
+      container.querySelectorAll('input[data-base-item-id]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const id = e.target.getAttribute('data-base-item-id');
+          const val = Number(e.target.value) || 0;
+          if (val > 0) {
+            customBaseMap[`${id}_${currentGoalKey}`] = val;
+            try { localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap)); } catch (err) {}
+            scheduleCloudSyncSave();
+
+            let targetItem = null;
+            for (const c of MASTER_CATEGORIES) {
+              targetItem = c.items.find(x => x.id === id);
+              if (targetItem) break;
+            }
+            if (targetItem) {
+              const macroLabel = document.getElementById(`settings-live-macros-${id}`);
+              if (macroLabel) {
+                macroLabel.textContent = `${getItemEffectiveKcal(targetItem)} ккал • ${getItemEffectiveProtein(targetItem)} г білка`;
+              }
+            }
+            updateValuesInPlace();
+          }
+        });
+      });
+
+      // Product visibility toggle (👁)
+      container.querySelectorAll('.eye-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-eye-item-id');
+          if (hiddenItemsMap[id]) {
+            delete hiddenItemsMap[id];
+            showToast('Продукт повернуто в раціон');
+          } else {
+            hiddenItemsMap[id] = true;
+            showToast('Продукт приховано з раціону');
+          }
+          saveHiddenItemsMap();
+          updateValuesInPlace();
+          renderSettingsView();
+        });
       });
     }
 
-    document.getElementById('save-settings-btn').addEventListener('click', () => {
-      document.querySelectorAll('input[data-base-item-id]').forEach(input => {
-        const id = input.getAttribute('data-base-item-id');
-        const val = Number(input.value) || 0;
-        if (val > 0) customBaseMap[`${id}_${currentGoalKey}`] = val;
-      });
-      try { localStorage.setItem(userBaseKey, JSON.stringify(customBaseMap)); } catch (e) {}
-      scheduleCloudSyncSave();
-      updateValuesInPlace();
-      showToast('Норми збережено!');
-      switchView('calculator');
-    });
-
     document.getElementById('reset-defaults-btn').addEventListener('click', () => {
       customBaseMap = {};
-      try { localStorage.removeItem(userBaseKey); } catch (e) {}
+      hiddenItemsMap = {};
+      try {
+        localStorage.removeItem(userBaseKey);
+        localStorage.removeItem(hiddenItemsKey);
+      } catch (e) {}
       scheduleCloudSyncSave();
-      renderSettings();
+      renderSettingsView();
       updateValuesInPlace();
       showToast('Скинуто до розрахункових значень');
     });
@@ -2674,7 +3433,7 @@
       if (currentView === 'measurements' && !document.getElementById('measurement-detail-screen').classList.contains('hidden')) {
         document.getElementById('measurement-detail-screen').classList.add('hidden');
         document.getElementById('measurements-list-screen').classList.remove('hidden');
-        renderMeasurementsList();
+        renderMeasurementsDashboard();
       } else if (currentView !== 'calculator') {
         switchView('calculator');
       } else if (tg && typeof tg.close === 'function') {
@@ -2697,7 +3456,7 @@
     updateGoalHeaderUI();
     buildCalculatorDOM();
     updateValuesInPlace();
-    renderMeasurementsList();
+    renderMeasurementsDashboard();
     if (!userProfile.hasCompletedOnboarding) {
       document.getElementById('onboarding-modal').classList.remove('hidden');
     }
