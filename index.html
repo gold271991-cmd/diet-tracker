@@ -270,7 +270,7 @@
           </div>
 
           <div id="measurements-overview-target" class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/80 border border-blue-200/80 dark:border-slate-700 rounded-2xl p-3.5 shadow-xs space-y-2"></div>
-          <div id="measurements-indices-grid" class="grid grid-cols-2 gap-2.5"></div>
+          <div id="measurements-indices-grid" class="grid grid-cols-3 gap-2"></div>
           <div id="measurements-analytics-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2.5"></div>
           <div id="measurements-container" class="grid grid-cols-2 gap-2.5"></div>
         </div>
@@ -369,27 +369,20 @@
 
       </div>
 
-      <!-- 3. History View -->
+      <!-- 3. History View (Monthly Calendar + Selected Day Details + 7-Day Bar Chart) -->
       <div id="view-history" class="space-y-3 hidden">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Аналітика та історія днів</h2>
-            <p class="text-[11px] text-gray-400 dark:text-gray-500">Доба рахується з 03:00 до 02:59 • Натисніть на день для деталей</p>
+            <h2 class="text-sm font-bold text-gray-900 dark:text-white">Аналітика та календар раціону</h2>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">Доба рахується з 03:00 до 02:59 • Натисніть на день у календарі</p>
           </div>
           <button id="clear-history-btn" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-semibold px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 transition shrink-0">Очистити</button>
         </div>
 
         <div id="history-bento-summary" class="grid grid-cols-2 gap-2.5"></div>
-        <div id="history-heatmap-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2.5"></div>
+        <div id="history-calendar-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2.5"></div>
+        <div id="history-selected-day-detail"></div>
         <div id="history-bar-chart-card" class="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2"></div>
-
-        <div class="space-y-1.5 pt-0.5">
-          <div class="flex items-center justify-between px-1">
-            <span class="text-xs font-bold text-gray-900 dark:text-white">Журнал по днях</span>
-            <span class="text-[11px] text-gray-400 dark:text-gray-500">Категорії та склад дня</span>
-          </div>
-          <div id="history-list" class="space-y-2.5"></div>
-        </div>
       </div>
 
       <!-- 4. Base Settings View & Profile Configuration -->
@@ -882,13 +875,14 @@
       </div>
     </div>
 
-    <!-- Interactive Body Index Norms Modal (WHtR & V-Taper) -->
+    <!-- Interactive Body Index Norms Modal (BMI, WHtR & V-Taper) -->
     <div id="index-info-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
       <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3.5 border border-gray-100 dark:border-slate-700 my-auto max-h-[90vh] overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center space-x-1.5 bg-gray-100 dark:bg-slate-900 p-1 rounded-xl">
-            <button type="button" id="idx-tab-whtr" class="px-3 py-1.5 rounded-lg text-xs font-bold transition">Талія / Зріст</button>
-            <button type="button" id="idx-tab-vtaper" class="px-3 py-1.5 rounded-lg text-xs font-bold transition">V-Taper</button>
+          <div class="flex items-center space-x-1 bg-gray-100 dark:bg-slate-900 p-1 rounded-xl">
+            <button type="button" id="idx-tab-bmi" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">ІМТ</button>
+            <button type="button" id="idx-tab-whtr" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Талія / Зріст</button>
+            <button type="button" id="idx-tab-vtaper" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">V-Taper</button>
           </div>
           <button id="close-index-modal-btn" type="button" class="p-1.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-500 hover:text-gray-800 dark:text-gray-300">✕</button>
         </div>
@@ -940,6 +934,18 @@
       "вересня": "09", "жовтня": "10", "листопада": "11", "грудня": "12"
     };
 
+    const UKR_MONTH_NAMES_NOM = [
+      "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+      "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+    ];
+
+    function formatDayKeyToUkrainian(dayKey) {
+      if (!dayKey || !/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return dayKey;
+      const [y, m, d] = dayKey.split("-").map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      return dateObj.toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
+    }
+
     function resolveRecordDayKey(rec) {
       if (!rec) return null;
       if (rec.dietDayKey && /^\d{4}-\d{2}-\d{2}$/.test(String(rec.dietDayKey).trim())) {
@@ -988,6 +994,10 @@
     }
 
     let activeDietDay = getDietDayKey();
+    const initialShifted = getShiftedDietDate();
+    let calendarYear = initialShifted.getFullYear();
+    let calendarMonth = initialShifted.getMonth();
+    let selectedHistoryDateKey = activeDietDay;
 
     function getSyncUserId() {
       try {
@@ -1685,7 +1695,7 @@
     }
 
     // ==========================================
-    // RATION TAB DOM & UPDATES (9 CATEGORIES + ICONS + STICKY TOP)
+    // RATION TAB DOM & UPDATES (9 CATEGORIES + ICONS + 50% BUTTON)
     // ==========================================
     function buildMiniRadarDOM() {
       const grid = document.getElementById("mini-radar-grid");
@@ -1804,21 +1814,22 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between mt-1.5 pt-1.5 text-xs">
-                <div class="flex items-center space-x-1.5">
+              <div class="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 text-xs">
+                <div class="flex items-center space-x-1 flex-wrap gap-y-1">
                   ${cat.noQuota ? `
                     <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="reset" data-item-id="${it.id}">0</button>
                     <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="scoop1" data-item-id="${it.id}">1 порція</button>
                     <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="scoop2" data-item-id="${it.id}">2 порції</button>
                     <button type="button" class="quick-btn px-2 py-0.5 bg-sky-100 dark:bg-sky-900/50 hover:bg-sky-200 text-sky-700 dark:text-sky-300 rounded transition font-bold" data-action="fill_protein" data-item-id="${it.id}">Добити білок</button>
                   ` : `
-                    <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="reset" data-item-id="${it.id}">0</button>
-                    <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="quarter" data-item-id="${it.id}">25%</button>
-                    <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="three_quarters" data-item-id="${it.id}">75%</button>
-                    <button type="button" class="quick-btn px-2 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="max" data-item-id="${it.id}">Макс</button>
+                    <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="reset" data-item-id="${it.id}">0</button>
+                    <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="quarter" data-item-id="${it.id}">25%</button>
+                    <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="half" data-item-id="${it.id}">50%</button>
+                    <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="three_quarters" data-item-id="${it.id}">75%</button>
+                    <button type="button" class="quick-btn px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 rounded transition font-medium" data-action="max" data-item-id="${it.id}">Макс</button>
                   `}
                 </div>
-                <div class="text-xs text-gray-400 dark:text-gray-500">
+                <div class="text-[11px] text-gray-400 dark:text-gray-500 shrink-0">
                   Порція: <span id="base-label-${it.id}" class="font-medium text-gray-600 dark:text-gray-300">0 ${it.unit}</span>
                 </div>
               </div>
@@ -2191,7 +2202,7 @@
         todayEntry.items = consumedList;
       }
 
-      if (historyRecords.length > 30) historyRecords.length = 30;
+      if (historyRecords.length > 90) historyRecords.length = 90;
       try { localStorage.setItem(historyKey, JSON.stringify(historyRecords)); } catch (e) {}
     }
 
@@ -2286,6 +2297,7 @@
 
           if (action === "reset") consumed[id] = 0;
           else if (action === "quarter") consumed[id] = Math.round(maxAllowed * 0.25);
+          else if (action === "half") consumed[id] = Math.round(maxAllowed * 0.5);
           else if (action === "three_quarters") consumed[id] = Math.round(maxAllowed * 0.75);
           else if (action === "max") consumed[id] = maxAllowed;
 
@@ -2688,7 +2700,7 @@
     });
 
     // ==========================================
-    // BODY MEASUREMENTS (ЗАМІРИ)
+    // BODY MEASUREMENTS (ЗАМІРИ) + BMI (ІМТ)
     // ==========================================
     function getSortedMetricHistory(metricId) {
       const arr = measurementsData[metricId] || [];
@@ -2810,36 +2822,64 @@
       if (!grid) return;
 
       const height = Number(userProfile.height) || 183;
+      const heightM = height / 100;
+      const weightNow = getLatestMetricVal("weight", Number(userProfile.weight) || 76.6);
       const waistNow = getLatestMetricVal("waist", 84.0);
       const chestNow = getLatestMetricVal("chest", 106.0);
       const isFemale = userProfile.gender === "female";
 
+      // 1. ІМТ (BMI)
+      const bmi = heightM > 0 ? Math.round((weightNow / (heightM * heightM)) * 10) / 10 : 0;
+      let bmiZone = "Норма";
+      let bmiColor = "text-emerald-600 dark:text-emerald-400";
+      let bmiBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
+      if (bmi < 18.5) {
+        bmiZone = "Дефіцит";
+        bmiColor = "text-blue-600 dark:text-blue-400";
+        bmiBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
+      } else if (bmi < 25.0) {
+        bmiZone = "Норма";
+        bmiColor = "text-emerald-600 dark:text-emerald-400";
+        bmiBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
+      } else if (bmi < 30.0) {
+        bmiZone = "Надлишок";
+        bmiColor = "text-amber-600 dark:text-amber-400";
+        bmiBadgeBg = "bg-amber-50 dark:bg-amber-950/50";
+      } else {
+        bmiZone = "Ожиріння";
+        bmiColor = "text-rose-600 dark:text-rose-400";
+        bmiBadgeBg = "bg-rose-50 dark:bg-rose-950/50";
+      }
+      const bmiBarPct = Math.max(8, Math.min(96, Math.round(((bmi - 16) / (34 - 16)) * 100)));
+
+      // 2. Талія / Зріст (WHtR)
       const whtr = Math.round((waistNow / height) * 100) / 100;
       let whtrZone = "Норма";
       let whtrColor = "text-emerald-600 dark:text-emerald-400";
       let whtrBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
       if (whtr < 0.43) {
-        whtrZone = "Сухий рельєф";
+        whtrZone = "Сухий";
         whtrColor = "text-blue-600 dark:text-blue-400";
         whtrBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
       } else if (whtr <= 0.49) {
-        whtrZone = "Атлетична зона";
+        whtrZone = "Норма";
         whtrColor = "text-emerald-600 dark:text-emerald-400";
         whtrBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
       } else if (whtr <= 0.54) {
-        whtrZone = "Помірний запас";
+        whtrZone = "Запас";
         whtrColor = "text-amber-600 dark:text-amber-400";
         whtrBadgeBg = "bg-amber-50 dark:bg-amber-950/50";
       } else {
-        whtrZone = "Підвищений";
+        whtrZone = "Високий";
         whtrColor = "text-rose-600 dark:text-rose-400";
         whtrBadgeBg = "bg-rose-50 dark:bg-rose-950/50";
       }
       const whtrBarPct = Math.max(8, Math.min(96, Math.round(((whtr - 0.36) / (0.62 - 0.36)) * 100)));
 
+      // 3. V-Taper
       const vtaperNow = waistNow > 0 ? Math.round((chestNow / waistNow) * 100) / 100 : 0;
       const vtThresholds = isFemale ? [1.05, 1.15, 1.25] : [1.15, 1.25, 1.35];
-      let vtZone = "Базовий";
+      let vtZone = "Тонус";
       let vtColor = "text-blue-600 dark:text-blue-400";
       let vtBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
       if (vtaperNow < vtThresholds[0]) {
@@ -2847,15 +2887,15 @@
         vtColor = "text-amber-600 dark:text-amber-400";
         vtBadgeBg = "bg-amber-50 dark:bg-amber-950/50";
       } else if (vtaperNow < vtThresholds[1]) {
-        vtZone = isFemale ? "Гармонійний" : "Базовий";
+        vtZone = isFemale ? "Гармонія" : "Тонус";
         vtColor = "text-blue-600 dark:text-blue-400";
         vtBadgeBg = "bg-blue-50 dark:bg-blue-950/50";
       } else if (vtaperNow < vtThresholds[2]) {
-        vtZone = isFemale ? "Виражена талія" : "Атлетичний";
+        vtZone = isFemale ? "Талія" : "Атлет";
         vtColor = "text-emerald-600 dark:text-emerald-400";
         vtBadgeBg = "bg-emerald-50 dark:bg-emerald-950/50";
       } else {
-        vtZone = "Топ V-силует";
+        vtZone = "Топ V";
         vtColor = "text-purple-600 dark:text-purple-400";
         vtBadgeBg = "bg-purple-50 dark:bg-purple-950/50";
       }
@@ -2864,34 +2904,51 @@
       const vtBarPct = Math.max(8, Math.min(96, Math.round(((vtaperNow - vtMinScale) / (vtMaxScale - vtMinScale)) * 100)));
 
       grid.innerHTML = `
-        <button type="button" id="open-whtr-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
+        <button type="button" id="open-bmi-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-2.5 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1">
-              <span>Талія / Зріст</span>
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-0.5 truncate">
+              <span>ІМТ</span>
               <span class="text-[10px] text-blue-500 font-bold">ⓘ</span>
             </span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${whtrColor} ${whtrBadgeBg} shrink-0">${whtrZone}</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${bmiColor} ${bmiBadgeBg} shrink-0">${bmiZone}</span>
           </div>
-          <div class="flex items-baseline space-x-1.5">
-            <span class="text-xl font-extrabold text-gray-900 dark:text-white">${whtr.toFixed(2)}</span>
-            <span class="text-[10px] text-gray-400">норма 0.43–0.49</span>
+          <div>
+            <div class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">${bmi.toFixed(1)}</div>
+            <div class="text-[9px] text-gray-400 truncate">18.5–24.9</div>
+          </div>
+          <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 via-amber-400 to-rose-500">
+            <span class="absolute -top-1 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-xs" style="left: calc(${bmiBarPct}% - 6px);"></span>
+          </div>
+        </button>
+
+        <button type="button" id="open-whtr-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-2.5 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-0.5 truncate">
+              <span>Талія/Зріст</span>
+              <span class="text-[10px] text-blue-500 font-bold">ⓘ</span>
+            </span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${whtrColor} ${whtrBadgeBg} shrink-0">${whtrZone}</span>
+          </div>
+          <div>
+            <div class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">${whtr.toFixed(2)}</div>
+            <div class="text-[9px] text-gray-400 truncate">0.43–0.49</div>
           </div>
           <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400">
             <span class="absolute -top-1 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-xs" style="left: calc(${whtrBarPct}% - 6px);"></span>
           </div>
         </button>
 
-        <button type="button" id="open-vtaper-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
+        <button type="button" id="open-vtaper-info-btn" class="text-left bg-white dark:bg-slate-800/90 rounded-2xl p-2.5 border border-gray-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.98] transition shadow-xs space-y-1.5">
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-0.5 truncate">
               <span>V-Taper</span>
               <span class="text-[10px] text-blue-500 font-bold">ⓘ</span>
             </span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${vtColor} ${vtBadgeBg} shrink-0">${vtZone}</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${vtColor} ${vtBadgeBg} shrink-0">${vtZone}</span>
           </div>
-          <div class="flex items-baseline space-x-1.5">
-            <span class="text-xl font-extrabold text-gray-900 dark:text-white">${vtaperNow.toFixed(2)}</span>
-            <span class="text-[10px] text-gray-400">силует торсу</span>
+          <div>
+            <div class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">${vtaperNow.toFixed(2)}</div>
+            <div class="text-[9px] text-gray-400 truncate">силует торсу</div>
           </div>
           <div class="relative w-full h-1.5 rounded-full bg-gradient-to-r from-amber-400 via-blue-400 to-emerald-500">
             <span class="absolute -top-1 w-3 h-3 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-xs" style="left: calc(${vtBarPct}% - 6px);"></span>
@@ -2899,29 +2956,134 @@
         </button>
       `;
 
+      document.getElementById("open-bmi-info-btn").addEventListener("click", () => openIndexInfoModal("bmi"));
       document.getElementById("open-whtr-info-btn").addEventListener("click", () => openIndexInfoModal("whtr"));
       document.getElementById("open-vtaper-info-btn").addEventListener("click", () => openIndexInfoModal("vtaper"));
     }
 
-    function openIndexInfoModal(mode = "whtr") {
+    function openIndexInfoModal(mode = "bmi") {
       const modal = document.getElementById("index-info-modal");
       const contentEl = document.getElementById("index-modal-content");
+      const tabBmi = document.getElementById("idx-tab-bmi");
       const tabWhtr = document.getElementById("idx-tab-whtr");
       const tabVtaper = document.getElementById("idx-tab-vtaper");
 
+      tabBmi.className = mode === "bmi"
+        ? "px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
+        : "px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
       tabWhtr.className = mode === "whtr"
-        ? "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
-        : "px-3 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
+        ? "px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
+        : "px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
       tabVtaper.className = mode === "vtaper"
-        ? "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
-        : "px-3 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
+        ? "px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
+        : "px-2.5 py-1.5 rounded-lg text-xs font-semibold transition text-gray-500 dark:text-gray-400";
 
       const height = Number(userProfile.height) || 183;
+      const heightM = height / 100;
+      const weightNow = getLatestMetricVal("weight", Number(userProfile.weight) || 76.6);
       const waistNow = getLatestMetricVal("waist", 84.0);
       const chestNow = getLatestMetricVal("chest", 106.0);
       const isFemale = userProfile.gender === "female";
 
-      if (mode === "whtr") {
+      if (mode === "bmi") {
+        const bmi = heightM > 0 ? Math.round((weightNow / (heightM * heightM)) * 10) / 10 : 0;
+        const barPct = Math.max(4, Math.min(96, Math.round(((bmi - 16) / (34 - 16)) * 100)));
+        const minNormW = (18.5 * heightM * heightM).toFixed(1);
+        const maxNormW = (24.9 * heightM * heightM).toFixed(1);
+        const maxOverW = (29.9 * heightM * heightM).toFixed(1);
+        const obesStartW = (30.0 * heightM * heightM).toFixed(1);
+
+        const bmiZones = [
+          {
+            title: "Дефіцит маси тіла",
+            range: "< 18.5",
+            active: bmi < 18.5,
+            dotColor: "bg-blue-500",
+            desc: "Недостатня вага відносно зросту. Рекомендований режим набору м'язової маси.",
+            gapText: bmi < 18.5
+              ? "Ти зараз у цій зоні"
+              : `Починається при вазі < ${minNormW} кг`
+          },
+          {
+            title: "Нормальна вага (Здоровий діапазон)",
+            range: "18.5 – 24.9",
+            active: bmi >= 18.5 && bmi < 25.0,
+            dotColor: "bg-emerald-500",
+            desc: "Оптимальна маса тіла для загального здоров'я та витривалості за стандартом ВООЗ.",
+            gapText: (bmi >= 18.5 && bmi < 25.0)
+              ? `Ти зараз у цій зоні (діапазон ${minNormW}–${maxNormW} кг)`
+              : (bmi >= 25.0
+                ? `До норми ≤ ${maxNormW} кг (ще -${(weightNow - Number(maxNormW)).toFixed(1)} кг)`
+                : `До норми ≥ ${minNormW} кг (ще +${(Number(minNormW) - weightNow).toFixed(1)} кг)`)
+          },
+          {
+            title: "Надмірна вага (або розвинені м'язи)",
+            range: "25.0 – 29.9",
+            active: bmi >= 25.0 && bmi < 30.0,
+            dotColor: "bg-amber-500",
+            desc: "Підвищена маса тіла. Для людей із силовим тренінгом може бути нормою за рахунок м'язів (перевіряйте індекс Талія/Зріст).",
+            gapText: (bmi >= 25.0 && bmi < 30.0)
+              ? `Ти зараз у цій зоні (${minNormW}–${maxOverW} кг)`
+              : `Діапазон ваги: ${(25.0 * heightM * heightM).toFixed(1)} – ${maxOverW} кг`
+          },
+          {
+            title: "Ожиріння",
+            range: "≥ 30.0",
+            active: bmi >= 30.0,
+            dotColor: "bg-rose-500",
+            desc: "Високе навантаження на серцево-судинну систему та суглоби. Рекомендований дефіцит калорій.",
+            gapText: bmi >= 30.0
+              ? `Ти зараз у цій зоні (до зони нижче: -${(weightNow - Number(maxOverW)).toFixed(1)} кг)`
+              : `Починається від ваги ${obesStartW} кг`
+          }
+        ];
+
+        contentEl.innerHTML = `
+          <div class="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-sm text-gray-900 dark:text-white">Індекс маси тіла (ІМТ / BMI)</span>
+              <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-extrabold text-xs">${bmi.toFixed(1)}</span>
+            </div>
+            <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
+              Базовий медичний показник співвідношення ваги та зросту. Для найкращої оцінки форми поєднуйте його з індексом <strong>Талія / Зріст</strong>.
+            </p>
+            <div class="text-[11px] font-semibold text-blue-700 dark:text-blue-300 pt-0.5">
+              Твій розрахунок: ${weightNow} кг ÷ (${heightM.toFixed(2)} м)² = <strong>${bmi.toFixed(1)}</strong>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1">
+            <div class="flex justify-between text-[10px] font-bold text-gray-400 px-1">
+              <span>16.0</span>
+              <span>18.5 Норма</span>
+              <span>25.0 Надлишок</span>
+              <span>30.0+</span>
+            </div>
+            <div class="relative w-full h-2.5 rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 via-amber-400 to-rose-500">
+              <span class="absolute -top-1 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-gray-900 dark:border-white shadow-md" style="left: calc(${barPct}% - 8px);"></span>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Шкала норм для зросту ${height} см:</div>
+            ${bmiZones.map(z => `
+              <div class="p-2.5 rounded-xl border ${z.active ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30" : "border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/40"} space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full ${z.dotColor}"></span>
+                    <span>${z.title}</span>
+                  </span>
+                  <span class="font-extrabold text-[11px] ${z.active ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}">${z.range}</span>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">${z.desc}</p>
+                <div class="text-[11px] font-semibold ${z.active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}">
+                  ${z.active ? "✓ " : "→ "}${z.gapText}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      } else if (mode === "whtr") {
         const whtr = Math.round((waistNow / height) * 100) / 100;
         const barPct = Math.max(4, Math.min(96, Math.round(((whtr - 0.36) / (0.62 - 0.36)) * 100)));
 
@@ -3159,6 +3321,7 @@
       modal.classList.remove("hidden");
     }
 
+    document.getElementById("idx-tab-bmi").addEventListener("click", () => openIndexInfoModal("bmi"));
     document.getElementById("idx-tab-whtr").addEventListener("click", () => openIndexInfoModal("whtr"));
     document.getElementById("idx-tab-vtaper").addEventListener("click", () => openIndexInfoModal("vtaper"));
     document.getElementById("close-index-modal-btn").addEventListener("click", () => document.getElementById("index-info-modal").classList.add("hidden"));
@@ -3898,6 +4061,10 @@
         document.getElementById("measurements-list-screen").classList.remove("hidden");
         renderMeasurementsList();
       } else if (viewName === "history") {
+        const curShifted = getShiftedDietDate();
+        calendarYear = curShifted.getFullYear();
+        calendarMonth = curShifted.getMonth();
+        selectedHistoryDateKey = getDietDayKey();
         renderHistory();
       } else if (viewName === "settings") {
         renderProfileDetails();
@@ -3908,13 +4075,93 @@
     }
 
     // ==========================================
-    // HISTORY VIEW (28-DAY HEATMAP + 7-DAY BAR CHART + COLLAPSIBLE CARDS)
+    // HISTORY VIEW (INTERACTIVE MONTHLY CALENDAR + SELECTED DAY DETAILS + 7-DAY BAR CHART)
     // ==========================================
-    function renderHistoryAnalytics() {
+    function renderSelectedDayDetailCard(recByDay) {
+      const detailEl = document.getElementById("history-selected-day-detail");
+      if (!detailEl) return;
+
+      const dayKey = selectedHistoryDateKey || getDietDayKey();
+      const entry = recByDay[dayKey] || null;
+      const formattedDate = (entry && entry.date) ? entry.date : formatDayKeyToUkrainian(dayKey);
+      const isToday = dayKey === getDietDayKey();
+
+      if (!entry || !Array.isArray(entry.items) || entry.items.length === 0) {
+        detailEl.innerHTML = `
+          <div class="bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs text-center space-y-1">
+            <div class="text-xs font-bold text-gray-900 dark:text-white">
+              ${formattedDate} ${isToday ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px]">Сьогодні</span>' : ""}
+            </div>
+            <p class="text-xs text-gray-400 dark:text-gray-500">За цей день записів раціону немає</p>
+          </div>
+        `;
+        return;
+      }
+
+      const catColorMap = {};
+      const catIconMap = {};
+      MASTER_CATEGORIES.forEach(c => {
+        catColorMap[c.id] = c.badgeBg;
+        catIconMap[c.id] = c.icon;
+      });
+
+      const shares = entry.categoryShares || {};
+      if (Object.keys(shares).length === 0 && Array.isArray(entry.items)) {
+        entry.items.forEach(it => {
+          if (it.category) shares[it.category] = (shares[it.category] || 0) + 1;
+        });
+      }
+      const catBadgesHtml = Object.keys(shares).map(catId => {
+        const bg = catColorMap[catId] || "#475569";
+        const ico = catIconMap[catId] || catId;
+        const valLabel = entry.categoryShares ? (catId === "P" ? "протеїн" : `${shares[catId]}%`) : `${shares[catId]}шт`;
+        return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: ${bg};">${ico} ${valLabel}</span>`;
+      }).join("");
+
+      const pct = entry.targetCalories > 0 ? Math.min(100, Math.round((entry.totalCalories / entry.targetCalories) * 100)) : 0;
+      const itemsHtml = entry.items.map(it => `
+        <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
+          <span class="text-gray-700 dark:text-gray-300 pr-2">• ${it.name}</span>
+          <span class="font-semibold text-gray-900 dark:text-white shrink-0">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
+        </div>
+      `).join("");
+
+      detailEl.innerHTML = `
+        <div class="bg-white dark:bg-slate-800 border-2 border-blue-500/40 dark:border-blue-500/30 rounded-2xl p-3.5 shadow-xs space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center flex-wrap gap-1.5">
+                <span class="text-xs font-extrabold text-gray-900 dark:text-white">${formattedDate}</span>
+                ${isToday ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Сьогодні</span>' : ""}
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                  ${entry.goal}
+                </span>
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                <span>🔥 <strong class="text-gray-800 dark:text-gray-200">${entry.totalCalories}</strong> / ${entry.targetCalories} ккал (${pct}%)</span>
+                <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-blue-600 dark:bg-blue-500 h-full rounded-full" style="width: ${pct}%"></div>
+          </div>
+
+          ${catBadgesHtml ? `<div class="flex items-center flex-wrap gap-1">${catBadgesHtml}</div>` : ""}
+
+          <div class="pt-1.5 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5">
+            ${itemsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderHistory() {
       const bentoEl = document.getElementById("history-bento-summary");
-      const heatmapEl = document.getElementById("history-heatmap-card");
+      const calendarEl = document.getElementById("history-calendar-card");
       const barChartEl = document.getElementById("history-bar-chart-card");
-      if (!bentoEl || !heatmapEl || !barChartEl) return;
+      if (!bentoEl || !calendarEl || !barChartEl) return;
 
       const meta = calculateUserMetabolism();
       const defaultTarget = meta.goals[currentGoalKey].targetKcal;
@@ -3973,57 +4220,122 @@
         </div>
       `;
 
-      const cells28 = [];
-      for (let i = 27; i >= 0; i--) {
+      // Compute active streak
+      let streak = 0;
+      for (let i = 0; i < 90; i++) {
         const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-        const key = getDietDayKey(d);
-        const shifted = getShiftedDietDate(d);
-        const dayNum = shifted.getDate();
-        const rec = recByDay[key] || null;
-        let status = "empty";
-        let colorCls = "bg-gray-100 dark:bg-slate-700/60 text-gray-400 dark:text-gray-500";
+        const k = getDietDayKey(d);
+        const rec = recByDay[k];
+        if (rec && rec.totalCalories > 0) {
+          streak++;
+        } else if (i > 0) {
+          break;
+        }
+      }
+
+      // Build Real Monthly Calendar
+      const todayKey = getDietDayKey();
+      const firstOfMonth = new Date(calendarYear, calendarMonth, 1);
+      // Monday = 0, Sunday = 6
+      const startWeekday = (firstOfMonth.getDay() + 6) % 7;
+      const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+      const monthTitle = `${UKR_MONTH_NAMES_NOM[calendarMonth]} ${calendarYear}`;
+
+      const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+      let calendarCellsHtml = "";
+
+      for (let empty = 0; empty < startWeekday; empty++) {
+        calendarCellsHtml += `<div class="h-8"></div>`;
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const mm = String(calendarMonth + 1).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        const cellKey = `${calendarYear}-${mm}-${dd}`;
+        const rec = recByDay[cellKey] || null;
+        const isToday = cellKey === todayKey;
+        const isSelected = cellKey === selectedHistoryDateKey;
+
+        let colorCls = "bg-gray-100/80 dark:bg-slate-700/50 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700";
         if (rec && rec.totalCalories > 0) {
           const ratio = rec.totalCalories / (rec.targetCalories || defaultTarget);
           if (ratio >= 0.88 && ratio <= 1.12) {
-            status = "in_zone";
             colorCls = "bg-emerald-500 text-white font-bold";
           } else if (ratio < 0.88) {
-            status = "under";
-            colorCls = "bg-blue-500/80 text-white font-bold";
+            colorCls = "bg-blue-500/85 text-white font-bold";
           } else {
-            status = "over";
             colorCls = "bg-amber-500 text-white font-bold";
           }
         }
-        cells28.push({ key, dayNum, status, colorCls });
+
+        const ringCls = isSelected
+          ? "ring-2 ring-offset-1 ring-gray-900 dark:ring-white dark:ring-offset-slate-800 scale-105"
+          : (isToday ? "ring-2 ring-blue-500" : "");
+
+        calendarCellsHtml += `
+          <button type="button" data-cal-date="${cellKey}" class="cal-day-btn h-8 rounded-lg flex items-center justify-center text-xs transition ${colorCls} ${ringCls}">
+            ${day}
+          </button>
+        `;
       }
 
-      let streak = 0;
-      for (let i = cells28.length - 1; i >= 0; i--) {
-        if (cells28[i].status !== "empty") streak++;
-        else if (i < cells28.length - 1) break;
-      }
-
-      heatmapEl.innerHTML = `
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-gray-900 dark:text-white">Дисципліна за 28 днів</span>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+      calendarEl.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center space-x-1">
+            <button type="button" id="cal-prev-month-btn" class="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 transition" title="Попередній місяць">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <span class="text-xs font-extrabold text-gray-900 dark:text-white min-w-[112px] text-center">${monthTitle}</span>
+            <button type="button" id="cal-next-month-btn" class="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 transition" title="Наступний місяць">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shrink-0">
             🔥 Серія: ${streak} дн.
           </span>
         </div>
-        <div class="grid grid-cols-7 gap-1.5">
-          ${cells28.map(c => `
-            <div class="h-7 rounded-lg flex items-center justify-center text-[10px] ${c.colorCls}" title="${c.key}">
-              ${c.dayNum}
-            </div>
-          `).join("")}
+
+        <div class="grid grid-cols-7 gap-1.5 text-center text-[10px] font-bold text-gray-400 dark:text-gray-500 pt-0.5">
+          ${weekdays.map(w => `<div>${w}</div>`).join("")}
         </div>
-        <div class="flex items-center justify-between text-[10px] text-gray-400 pt-0.5">
-          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500 inline-block"></span><span>В коридорі ±12%</span></span>
-          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-blue-500/80 inline-block"></span><span>Недобір</span></span>
+
+        <div class="grid grid-cols-7 gap-1.5">
+          ${calendarCellsHtml}
+        </div>
+
+        <div class="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-100 dark:border-slate-700/60">
+          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500 inline-block"></span><span>Норма ±12%</span></span>
+          <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-blue-500/85 inline-block"></span><span>Недобір</span></span>
           <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-xs bg-amber-500 inline-block"></span><span>Профіцит</span></span>
         </div>
       `;
+
+      document.getElementById("cal-prev-month-btn").addEventListener("click", () => {
+        calendarMonth--;
+        if (calendarMonth < 0) {
+          calendarMonth = 11;
+          calendarYear--;
+        }
+        renderHistory();
+      });
+
+      document.getElementById("cal-next-month-btn").addEventListener("click", () => {
+        calendarMonth++;
+        if (calendarMonth > 11) {
+          calendarMonth = 0;
+          calendarYear++;
+        }
+        renderHistory();
+      });
+
+      calendarEl.querySelectorAll(".cal-day-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedHistoryDateKey = btn.getAttribute("data-cal-date");
+          renderHistory();
+        });
+      });
+
+      renderSelectedDayDetailCard(recByDay);
 
       const maxBarVal = Math.max(defaultTarget * 1.15, ...last7.map(d => d.kcal), 1);
       const targetLineBottomPct = Math.min(95, Math.round((defaultTarget / maxBarVal) * 100));
@@ -4053,93 +4365,6 @@
           }).join("")}
         </div>
       `;
-    }
-
-    function renderHistory() {
-      renderHistoryAnalytics();
-
-      const list = document.getElementById("history-list");
-      list.innerHTML = "";
-
-      if (historyRecords.length === 0) {
-        list.innerHTML = `
-          <div class="text-center py-8 text-gray-400 dark:text-gray-500 text-xs bg-white dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-slate-800">
-            Історія поки що порожня.<br>Коли ви вносите продукти, вони автоматично зберігаються за поточну добу (03:00 – 02:59).
-          </div>
-        `;
-        return;
-      }
-
-      const catColorMap = {};
-      const catIconMap = {};
-      MASTER_CATEGORIES.forEach(c => {
-        catColorMap[c.id] = c.badgeBg;
-        catIconMap[c.id] = c.icon;
-      });
-
-      historyRecords.forEach(entry => {
-        const card = document.createElement("div");
-        card.className = "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3 shadow-xs transition-colors";
-
-        const shares = entry.categoryShares || {};
-        if (Object.keys(shares).length === 0 && Array.isArray(entry.items)) {
-          entry.items.forEach(it => {
-            if (it.category) shares[it.category] = (shares[it.category] || 0) + 1;
-          });
-        }
-        const catBadgesHtml = Object.keys(shares).map(catId => {
-          const bg = catColorMap[catId] || "#475569";
-          const ico = catIconMap[catId] || catId;
-          const valLabel = entry.categoryShares ? (catId === "P" ? "протеїн" : `${shares[catId]}%`) : `${shares[catId]}шт`;
-          return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: ${bg};">${ico} ${valLabel}</span>`;
-        }).join("");
-
-        const itemsHtml = (entry.items || []).map(it => `
-          <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 dark:border-slate-700/50 last:border-0">
-            <span class="text-gray-700 dark:text-gray-300 pr-2">• ${it.name}</span>
-            <span class="font-semibold text-gray-900 dark:text-white shrink-0">${it.weight}${it.unit} <span class="text-gray-400 font-normal">(${it.kcal} ккал)</span></span>
-          </div>
-        `).join("");
-
-        card.innerHTML = `
-          <div class="history-card-header flex justify-between items-center cursor-pointer select-none">
-            <div class="space-y-1.5 flex-1 min-w-0 pr-2">
-              <div class="flex items-center flex-wrap gap-1.5">
-                <span class="text-xs font-bold text-gray-900 dark:text-white">${entry.date}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                  ${entry.goal}
-                </span>
-              </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center flex-wrap gap-x-3 gap-y-0.5">
-                <span>🔥 <strong class="text-gray-800 dark:text-gray-200">${entry.totalCalories}</strong> / ${entry.targetCalories} ккал</span>
-                <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
-                <span>🥗 Продуктів: <strong class="text-gray-800 dark:text-gray-200">${entry.itemsCount}</strong></span>
-              </div>
-              ${catBadgesHtml ? `<div class="flex items-center flex-wrap gap-1 pt-0.5">${catBadgesHtml}</div>` : ""}
-            </div>
-            <div class="flex items-center space-x-1 text-gray-400 shrink-0 pl-1">
-              <svg class="history-chevron w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="history-items-drawer hidden pt-2.5 mt-2.5 border-t border-gray-100 dark:border-slate-700/60 space-y-0.5">
-            ${itemsHtml}
-          </div>
-        `;
-
-        const headerEl = card.querySelector(".history-card-header");
-        const drawerEl = card.querySelector(".history-items-drawer");
-        const chevronEl = card.querySelector(".history-chevron");
-
-        headerEl.addEventListener("click", () => {
-          const isHidden = drawerEl.classList.contains("hidden");
-          drawerEl.classList.toggle("hidden", !isHidden);
-          if (chevronEl) chevronEl.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
-        });
-
-        list.appendChild(card);
-      });
     }
 
     const clearHistoryModal = document.getElementById("clear-history-modal");
