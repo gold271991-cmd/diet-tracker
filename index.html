@@ -193,6 +193,18 @@
 
       <!-- Закріплений дашборд: Калорії + Білок + Іконки-фільтри категорій (тільки на вкладці "Раціон") -->
       <div id="top-nutrition-summary" class="px-3.5 pb-2.5 space-y-2">
+        <!-- Банер режиму редагування минулого дня -->
+        <div id="past-day-edit-banner" class="hidden bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/80 rounded-xl px-2.5 py-2 flex items-center justify-between gap-2 text-xs">
+          <div class="min-w-0">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block leading-none">Редагування історії</span>
+            <strong id="past-day-edit-label" class="text-xs font-extrabold text-amber-950 dark:text-amber-100 truncate block mt-0.5">—</strong>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button id="past-day-done-history-btn" type="button" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] transition active:scale-95">✓ Готово</button>
+            <button id="past-day-back-today-btn" type="button" class="px-2 py-1 rounded-lg bg-white/80 dark:bg-slate-800 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700 font-semibold text-[11px] transition">Сьогодні</button>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-2">
           <!-- Calories Box -->
           <div class="bg-gray-50/90 dark:bg-slate-800/80 rounded-xl p-2 border border-gray-100 dark:border-slate-700/60">
@@ -247,6 +259,9 @@
       
       <!-- 1. Ration Calculator View -->
       <div id="view-calculator" class="space-y-3">
+        <!-- Блок швидких рецептів та шаблонів -->
+        <div id="templates-strip-card" class="bg-white dark:bg-slate-800/80 rounded-2xl p-3 border border-gray-200 dark:border-slate-700/80 shadow-xs space-y-2"></div>
+
         <div id="categories-container" class="space-y-3"></div>
       </div>
 
@@ -854,11 +869,92 @@
     <!-- Reset Confirmation Modal -->
     <div id="reset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
       <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3.5 border border-gray-100 dark:border-slate-700">
-        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Скинути всі внесені дані?</h3>
-        <p class="text-xs text-gray-600 dark:text-gray-300">Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.</p>
+        <h3 id="reset-modal-title" class="text-sm font-bold text-gray-900 dark:text-white">Скинути всі внесені дані?</h3>
+        <p id="reset-modal-desc" class="text-xs text-gray-600 dark:text-gray-300">Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.</p>
         <div class="flex justify-end space-x-2 pt-1">
           <button id="modal-cancel-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition">Скасувати</button>
           <button id="modal-confirm-btn" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition">Скинути</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Creating / Editing Meal Templates & Multi-Portion Recipes -->
+    <div id="template-modal" style="padding-top: calc(1rem + var(--app-top-inset));" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3.5 border border-gray-100 dark:border-slate-700 my-auto max-h-[92vh] overflow-y-auto no-scrollbar">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <h3 id="tpl-modal-title" class="text-base font-extrabold text-gray-900 dark:text-white">Новий рецепт / шаблон</h3>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">Збережіть набір сирих продуктів для додавання в 1 клік</p>
+          </div>
+          <button id="close-tpl-modal-btn" type="button" class="p-1.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-500 hover:text-gray-800 dark:text-gray-300">✕</button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <input type="hidden" id="tpl-edit-id" value="">
+
+          <div>
+            <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Назва рецепту або шаблону:</label>
+            <input type="text" id="tpl-name-input" placeholder="Напр.: Стандартний сніданок або Сирники" enterkeyhint="next" class="w-full py-2 px-3 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 items-end">
+            <div>
+              <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Кількість порцій:</label>
+              <input type="text" inputmode="numeric" id="tpl-portions-input" value="1" placeholder="1" class="w-full py-2 px-3 text-xs font-bold rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <button type="button" id="tpl-import-current-btn" class="py-2 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-[11px] transition border border-blue-200/70 dark:border-blue-800/70">
+              📥 Взяти з поточного дня
+            </button>
+          </div>
+          <p id="tpl-portions-hint" class="text-[10px] text-gray-400 dark:text-gray-500 -mt-1.5">
+            Якщо готуєте на кілька днів (напр., 3 порції), вкажіть загальну сиру вагу та число 3 — збережеться 1 порція.
+          </p>
+
+          <!-- Add Ingredient Controls -->
+          <div class="p-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-slate-700 space-y-2">
+            <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300">Додати інгредієнт:</label>
+            <select id="tpl-item-select" class="w-full py-2 px-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center flex-1 gap-1.5">
+                <input type="text" inputmode="decimal" enterkeyhint="done" id="tpl-item-weight-input" placeholder="Кількість" class="w-full py-2 px-3 text-xs font-bold rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <span id="tpl-item-unit-label" class="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0 w-6">г</span>
+              </div>
+              <button type="button" id="tpl-add-ingredient-btn" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shrink-0">
+                + Додати
+              </button>
+            </div>
+          </div>
+
+          <!-- Draft Ingredients List -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-gray-700 dark:text-gray-300">Склад рецепту:</span>
+              <span id="tpl-items-count-label" class="text-[10px] text-gray-400">0 інгредієнтів</span>
+            </div>
+            <div id="tpl-draft-items-list" class="max-h-44 overflow-y-auto no-scrollbar divide-y divide-gray-100 dark:divide-slate-700/60 bg-gray-50/70 dark:bg-slate-900/40 rounded-xl px-2.5 border border-gray-100 dark:border-slate-700/60"></div>
+          </div>
+
+          <!-- Per-Portion Summary -->
+          <div class="p-3 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 block">На 1 порцію (збережеться)</span>
+              <strong id="tpl-preview-kcal" class="text-sm font-black text-gray-900 dark:text-white">0 ккал</strong>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">Білок</span>
+              <strong id="tpl-preview-protein" class="text-sm font-black text-emerald-600 dark:text-emerald-400">0 г</strong>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <button type="button" id="tpl-delete-btn" class="hidden px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+              Видалити
+            </button>
+            <div class="flex items-center gap-2 ml-auto">
+              <button type="button" id="tpl-cancel-btn" class="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-semibold text-xs transition">Скасувати</button>
+              <button type="button" id="tpl-save-btn" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition">Зберегти рецепт</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1313,6 +1409,52 @@
     const userStateKey = "diet_consumed_state_" + userId;
     const historyKey = "diet_history_" + userId;
     const measurementsKey = "diet_measurements_" + userId;
+    const templatesKey = "diet_meal_templates_" + userId;
+
+    // Стан для редагування минулого дня та шаблонів рецептів
+    let editingHistoryDayKey = null;
+    let todayConsumedBackup = null;
+    let mealTemplates = [];
+    try {
+      const savedTemplates = localStorage.getItem(templatesKey);
+      if (savedTemplates) {
+        const parsedTpls = JSON.parse(savedTemplates);
+        if (Array.isArray(parsedTpls)) mealTemplates = parsedTpls;
+      }
+    } catch (e) {}
+
+    function saveTemplatesToStorage() {
+      try { localStorage.setItem(templatesKey, JSON.stringify(mealTemplates)); } catch (e) {}
+    }
+
+    function findProductById(itemId) {
+      for (const cat of MASTER_CATEGORIES) {
+        for (const it of cat.items) {
+          if (it.id === itemId) return { cat, item: it };
+        }
+      }
+      return null;
+    }
+
+    function findProductIdFromHistoryItem(recItem) {
+      if (!recItem) return null;
+      if (recItem.id && findProductById(recItem.id)) return recItem.id;
+      const targetName = String(recItem.name || "").trim().toLowerCase();
+      const targetCat = recItem.category || null;
+      for (const cat of MASTER_CATEGORIES) {
+        if (targetCat && cat.id !== targetCat) continue;
+        for (const it of cat.items) {
+          const candidates = [
+            it.name,
+            it.deficit && it.deficit.name,
+            it.maintenance && it.maintenance.name,
+            it.surplus && it.surplus.name
+          ].filter(Boolean).map(s => String(s).trim().toLowerCase());
+          if (candidates.includes(targetName)) return it.id;
+        }
+      }
+      return null;
+    }
 
     try {
       const savedProfile = localStorage.getItem(profileKey);
@@ -1547,6 +1689,10 @@
             historyRecords = normalizeHistoryRecords([...remote.historyRecords, ...historyRecords]);
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
           }
+          if (Array.isArray(remote.mealTemplates)) {
+            mealTemplates = remote.mealTemplates;
+            saveTemplatesToStorage();
+          }
           if (remote.currentGoal || remote.currentGoalKey) {
             currentGoalKey = remote.currentGoal || remote.currentGoalKey;
           }
@@ -1598,9 +1744,10 @@
           userProfile: userProfile,
           customBaseMap: customBaseMap,
           hiddenItemsMap: hiddenItemsMap,
-          consumed: consumed,
+          consumed: editingHistoryDayKey && todayConsumedBackup ? todayConsumedBackup : consumed,
           measurementsData: measurementsData,
           historyRecords: historyRecords,
+          mealTemplates: mealTemplates,
           currentGoal: currentGoalKey,
           lastUpdated: new Date().toISOString()
         };
@@ -1734,6 +1881,7 @@
 
     function buildCalculatorDOM() {
       buildMiniRadarDOM();
+      renderTemplatesStrip();
       const container = document.getElementById("categories-container");
       container.innerHTML = "";
 
@@ -1857,7 +2005,7 @@
       attachListenersOnce();
     }
 
-    function updateValuesInPlace(sourceType = null, activeItemId = null) {
+    function updateValuesInPlace(sourceType = null, activeItemId = null, skipAutoSave = false) {
       const meta = calculateUserMetabolism();
       const targetCalories = meta.goals[currentGoalKey].targetKcal;
       const targetProtein = meta.proteinNorm;
@@ -2100,7 +2248,9 @@
       document.getElementById("top-protein-bar").style.width = `${Math.min(100, proteinPct)}%`;
       document.getElementById("top-protein-sub").textContent = `${proteinPct}% від норми (${meta.proteinMult} г/кг)`;
 
-      triggerAutoSave(topCalories, topProtein);
+      if (!skipAutoSave) {
+        triggerAutoSave(topCalories, topProtein);
+      }
       updateReminderBadges();
     }
 
@@ -2116,6 +2266,10 @@
 
     function saveCurrentStateToDisk(totalKcal, totalProtein) {
       try {
+        if (editingHistoryDayKey) {
+          updateDailyHistoryAuto(totalKcal, totalProtein, editingHistoryDayKey);
+          return;
+        }
         const currentDay = getDietDayKey();
         activeDietDay = currentDay;
         const payload = {
@@ -2125,11 +2279,11 @@
           consumed: consumed
         };
         localStorage.setItem(userStateKey, JSON.stringify(payload));
-        updateDailyHistoryAuto(totalKcal, totalProtein);
+        updateDailyHistoryAuto(totalKcal, totalProtein, currentDay);
       } catch (e) {}
     }
 
-    function updateDailyHistoryAuto(totalKcal, totalProtein) {
+    function updateDailyHistoryAuto(totalKcal, totalProtein, targetDayKey = null) {
       const consumedList = [];
       const categoryShares = {};
       MASTER_CATEGORIES.forEach(cat => {
@@ -2144,6 +2298,7 @@
             const specs = getItemSpecs(it);
             const f = baseW > 0 ? (w / baseW) : 0;
             consumedList.push({
+              id: it.id,
               category: cat.id,
               name: specs.name,
               weight: w,
@@ -2160,11 +2315,13 @@
         }
       });
 
-      const currentDayKey = getDietDayKey();
-      const todayDate = getDietDayFormatted();
+      const currentDayKey = targetDayKey || getDietDayKey();
+      const formattedDate = currentDayKey === getDietDayKey()
+        ? getDietDayFormatted()
+        : formatDayKeyToUkrainian(currentDayKey);
 
       if (consumedList.length === 0) {
-        const emptyIdx = historyRecords.findIndex(r => resolveRecordDayKey(r) === currentDayKey || r.shortDate === todayDate);
+        const emptyIdx = historyRecords.findIndex(r => resolveRecordDayKey(r) === currentDayKey || r.shortDate === formattedDate);
         if (emptyIdx !== -1) {
           historyRecords.splice(emptyIdx, 1);
           try { localStorage.setItem(historyKey, JSON.stringify(historyRecords)); } catch (e) {}
@@ -2173,13 +2330,13 @@
       }
 
       const meta = calculateUserMetabolism();
-      let todayEntry = historyRecords.find(r => resolveRecordDayKey(r) === currentDayKey || r.shortDate === todayDate);
-      if (!todayEntry) {
-        todayEntry = {
+      let dayEntry = historyRecords.find(r => resolveRecordDayKey(r) === currentDayKey || r.shortDate === formattedDate);
+      if (!dayEntry) {
+        dayEntry = {
           id: Date.now(),
           dietDayKey: currentDayKey,
-          shortDate: todayDate,
-          date: todayDate,
+          shortDate: formattedDate,
+          date: formattedDate,
           userId: userId,
           userName: userName,
           goal: meta.goals[currentGoalKey].name,
@@ -2190,21 +2347,455 @@
           categoryShares: categoryShares,
           items: consumedList
         };
-        historyRecords.unshift(todayEntry);
+        historyRecords.unshift(dayEntry);
       } else {
-        todayEntry.dietDayKey = currentDayKey;
-        todayEntry.goal = meta.goals[currentGoalKey].name;
-        todayEntry.targetCalories = meta.goals[currentGoalKey].targetKcal;
-        todayEntry.totalCalories = totalKcal;
-        todayEntry.totalProtein = totalProtein;
-        todayEntry.itemsCount = consumedList.length;
-        todayEntry.categoryShares = categoryShares;
-        todayEntry.items = consumedList;
+        dayEntry.dietDayKey = currentDayKey;
+        dayEntry.shortDate = formattedDate;
+        dayEntry.date = formattedDate;
+        dayEntry.goal = meta.goals[currentGoalKey].name;
+        dayEntry.targetCalories = meta.goals[currentGoalKey].targetKcal;
+        dayEntry.totalCalories = totalKcal;
+        dayEntry.totalProtein = totalProtein;
+        dayEntry.itemsCount = consumedList.length;
+        dayEntry.categoryShares = categoryShares;
+        dayEntry.items = consumedList;
       }
 
+      historyRecords = normalizeHistoryRecords(historyRecords);
       if (historyRecords.length > 90) historyRecords.length = 90;
       try { localStorage.setItem(historyKey, JSON.stringify(historyRecords)); } catch (e) {}
     }
+
+    // ==========================================
+    // МОЇ РЕЦЕПТИ / ШАБЛОНИ (1-TAP ДОДАВАННЯ + ПОДІЛ НА ПОРЦІЇ)
+    // ==========================================
+    let tplDraftItems = [];
+    let tplDeleteArmed = false;
+
+    function computeTemplateMacros(itemsList, portionsDivisor = 1) {
+      const div = Math.max(1, Number(portionsDivisor) || 1);
+      let kcal = 0;
+      let protein = 0;
+      (itemsList || []).forEach(entry => {
+        const found = findProductById(entry.itemId);
+        if (!found) return;
+        const baseW = getItemEffectiveBase(found.item);
+        const w = (Number(entry.weight) || 0) / div;
+        if (baseW > 0 && w > 0) {
+          kcal += (w / baseW) * getItemEffectiveKcal(found.item);
+          protein += (w / baseW) * getItemEffectiveProtein(found.item);
+        }
+      });
+      return {
+        kcal: Math.round(kcal),
+        protein: Math.round(protein * 10) / 10
+      };
+    }
+
+    function applyMealTemplate(templateId) {
+      const tpl = mealTemplates.find(t => t.id === templateId);
+      if (!tpl || !Array.isArray(tpl.items) || tpl.items.length === 0) return;
+
+      tpl.items.forEach(entry => {
+        if (Object.prototype.hasOwnProperty.call(consumed, entry.itemId)) {
+          const cur = Number(consumed[entry.itemId]) || 0;
+          const add = Number(entry.weight) || 0;
+          consumed[entry.itemId] = Math.round((cur + add) * 10) / 10;
+        }
+      });
+
+      updateValuesInPlace();
+      showToast(`Додано рецепт «${tpl.name}»`);
+    }
+
+    function renderTemplatesStrip() {
+      const card = document.getElementById("templates-strip-card");
+      if (!card) return;
+
+      const countBadge = mealTemplates.length > 0
+        ? `<span class="px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[10px] font-bold">${mealTemplates.length}</span>`
+        : "";
+
+      if (mealTemplates.length === 0) {
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm">🍽</span>
+                <span class="text-xs font-extrabold text-gray-900 dark:text-white">Мої рецепти та шаблони</span>
+              </div>
+              <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">Збережіть стандартний сніданок або страву для вводу в 1 клік</p>
+            </div>
+            <button type="button" id="open-new-tpl-btn" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[11px] font-bold transition shrink-0">
+              + Створити
+            </button>
+          </div>
+        `;
+        document.getElementById("open-new-tpl-btn").addEventListener("click", () => openTemplateModal(null, true));
+        return;
+      }
+
+      const itemsHtml = mealTemplates.map(tpl => {
+        const macros = computeTemplateMacros(tpl.items, 1);
+        const countStr = `${tpl.items.length} прод.`;
+        return `
+          <div class="shrink-0 w-44 bg-gray-50 dark:bg-slate-900/70 rounded-xl p-2.5 border border-gray-200/80 dark:border-slate-700 flex flex-col justify-between gap-2">
+            <div class="flex items-start justify-between gap-1">
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-gray-900 dark:text-white truncate">${tpl.name}</div>
+                <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">${macros.kcal} ккал • ${macros.protein} г білка</div>
+                <div class="text-[10px] text-gray-400 dark:text-gray-500">${countStr}</div>
+              </div>
+              <button type="button" data-edit-tpl-id="${tpl.id}" class="edit-tpl-btn p-1 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition shrink-0" title="Редагувати рецепт">
+                ✎
+              </button>
+            </div>
+            <button type="button" data-apply-tpl-id="${tpl.id}" class="apply-tpl-btn w-full py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[11px] font-bold transition">
+              + Додати
+            </button>
+          </div>
+        `;
+      }).join("");
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">🍽</span>
+            <span class="text-xs font-extrabold text-gray-900 dark:text-white">Мої рецепти</span>
+            ${countBadge}
+          </div>
+          <button type="button" id="open-new-tpl-btn" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-600 dark:text-blue-400 text-[11px] font-bold transition">
+            + Новий
+          </button>
+        </div>
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+          ${itemsHtml}
+        </div>
+      `;
+
+      document.getElementById("open-new-tpl-btn").addEventListener("click", () => openTemplateModal(null, false));
+      card.querySelectorAll(".apply-tpl-btn").forEach(btn => {
+        btn.addEventListener("click", () => applyMealTemplate(btn.getAttribute("data-apply-tpl-id")));
+      });
+      card.querySelectorAll(".edit-tpl-btn").forEach(btn => {
+        btn.addEventListener("click", () => openTemplateModal(btn.getAttribute("data-edit-tpl-id"), false));
+      });
+    }
+
+    function populateTemplateSelectOptions() {
+      const sel = document.getElementById("tpl-item-select");
+      if (!sel) return;
+      sel.innerHTML = MASTER_CATEGORIES.map(cat => `
+        <optgroup label="${cat.icon} ${cat.name}">
+          ${cat.items.map(it => `<option value="${it.id}" data-unit="${it.unit}">${getItemSpecs(it).name} (${it.unit})</option>`).join("")}
+        </optgroup>
+      `).join("");
+      updateTemplateUnitLabel();
+    }
+
+    function updateTemplateUnitLabel() {
+      const sel = document.getElementById("tpl-item-select");
+      const unitLbl = document.getElementById("tpl-item-unit-label");
+      if (!sel || !unitLbl) return;
+      const found = findProductById(sel.value);
+      unitLbl.textContent = found ? found.item.unit : "г";
+    }
+
+    function renderTemplateDraftList() {
+      const listEl = document.getElementById("tpl-draft-items-list");
+      const countEl = document.getElementById("tpl-items-count-label");
+      const kcalEl = document.getElementById("tpl-preview-kcal");
+      const protEl = document.getElementById("tpl-preview-protein");
+      const portions = Math.max(1, Math.round(parseDecimalInput(document.getElementById("tpl-portions-input").value)) || 1);
+
+      countEl.textContent = `${tplDraftItems.length} інгред.`;
+
+      if (tplDraftItems.length === 0) {
+        listEl.innerHTML = `<div class="py-4 text-center text-[11px] text-gray-400">Додайте продукти вище або натисніть «Взяти з поточного дня»</div>`;
+      } else {
+        listEl.innerHTML = tplDraftItems.map((entry, idx) => {
+          const found = findProductById(entry.itemId);
+          if (!found) return "";
+          const unit = found.item.unit;
+          const perPortion = unit === "шт"
+            ? Math.max(0.5, Math.round((entry.weight / portions) * 2) / 2)
+            : Math.max(1, Math.round(entry.weight / portions));
+          const splitNote = portions > 1
+            ? `<span class="text-[10px] text-blue-600 dark:text-blue-400 block">1 порція: ${perPortion} ${unit}</span>`
+            : "";
+          return `
+            <div class="flex items-center justify-between py-2 gap-2">
+              <div class="min-w-0 flex-1">
+                <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 block truncate">${found.cat.icon} ${getItemSpecs(found.item).name}</span>
+                ${splitNote}
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-extrabold text-gray-900 dark:text-white">${entry.weight} ${unit}</span>
+                <button type="button" data-remove-draft-idx="${idx}" class="tpl-remove-draft-btn p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs">✕</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        listEl.querySelectorAll(".tpl-remove-draft-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const idx = Number(btn.getAttribute("data-remove-draft-idx"));
+            tplDraftItems.splice(idx, 1);
+            renderTemplateDraftList();
+          });
+        });
+      }
+
+      const macros = computeTemplateMacros(tplDraftItems, portions);
+      kcalEl.textContent = `${macros.kcal} ккал`;
+      protEl.textContent = `${macros.protein} г`;
+    }
+
+    function openTemplateModal(editId = null, autoImportIfConsumed = false) {
+      populateTemplateSelectOptions();
+      tplDeleteArmed = false;
+      const delBtn = document.getElementById("tpl-delete-btn");
+      delBtn.textContent = "Видалити";
+
+      if (editId) {
+        const existing = mealTemplates.find(t => t.id === editId);
+        if (!existing) return;
+        document.getElementById("tpl-modal-title").textContent = "Редагувати рецепт";
+        document.getElementById("tpl-edit-id").value = existing.id;
+        document.getElementById("tpl-name-input").value = existing.name;
+        document.getElementById("tpl-portions-input").value = "1";
+        tplDraftItems = existing.items.map(it => ({ itemId: it.itemId, weight: it.weight }));
+        delBtn.classList.remove("hidden");
+      } else {
+        document.getElementById("tpl-modal-title").textContent = "Новий рецепт / шаблон";
+        document.getElementById("tpl-edit-id").value = "";
+        document.getElementById("tpl-name-input").value = "";
+        document.getElementById("tpl-portions-input").value = "1";
+        tplDraftItems = [];
+        delBtn.classList.add("hidden");
+
+        if (autoImportIfConsumed) {
+          importCurrentConsumedToDraft(true);
+        }
+      }
+
+      document.getElementById("tpl-item-weight-input").value = "";
+      renderTemplateDraftList();
+      document.getElementById("template-modal").classList.remove("hidden");
+    }
+
+    function importCurrentConsumedToDraft(silent = false) {
+      const imported = [];
+      MASTER_CATEGORIES.forEach(cat => {
+        cat.items.forEach(it => {
+          const w = Number(consumed[it.id]) || 0;
+          if (w > 0) imported.push({ itemId: it.id, weight: w });
+        });
+      });
+      if (imported.length === 0) {
+        if (!silent) showToast("У поточному дні ще немає внесених продуктів");
+        return;
+      }
+      tplDraftItems = imported;
+      renderTemplateDraftList();
+      if (!silent) showToast(`Додано ${imported.length} прод. із раціону`);
+    }
+
+    document.getElementById("tpl-item-select").addEventListener("change", updateTemplateUnitLabel);
+    document.getElementById("tpl-portions-input").addEventListener("input", renderTemplateDraftList);
+    document.getElementById("tpl-import-current-btn").addEventListener("click", () => importCurrentConsumedToDraft(false));
+    document.getElementById("close-tpl-modal-btn").addEventListener("click", () => document.getElementById("template-modal").classList.add("hidden"));
+    document.getElementById("tpl-cancel-btn").addEventListener("click", () => document.getElementById("template-modal").classList.add("hidden"));
+
+    document.getElementById("tpl-add-ingredient-btn").addEventListener("click", () => {
+      const itemId = document.getElementById("tpl-item-select").value;
+      const weight = parseDecimalInput(document.getElementById("tpl-item-weight-input").value);
+      if (!itemId || weight <= 0) {
+        showToast("Введіть кількість продукту");
+        return;
+      }
+      const existing = tplDraftItems.find(x => x.itemId === itemId);
+      if (existing) {
+        existing.weight = Math.round((existing.weight + weight) * 10) / 10;
+      } else {
+        tplDraftItems.push({ itemId, weight });
+      }
+      document.getElementById("tpl-item-weight-input").value = "";
+      renderTemplateDraftList();
+    });
+
+    document.getElementById("tpl-delete-btn").addEventListener("click", () => {
+      const editId = document.getElementById("tpl-edit-id").value;
+      if (!editId) return;
+      const delBtn = document.getElementById("tpl-delete-btn");
+      if (!tplDeleteArmed) {
+        tplDeleteArmed = true;
+        delBtn.textContent = "Точно видалити?";
+        return;
+      }
+      mealTemplates = mealTemplates.filter(t => t.id !== editId);
+      saveTemplatesToStorage();
+      syncSaveToServer();
+      document.getElementById("template-modal").classList.add("hidden");
+      renderTemplatesStrip();
+      showToast("Рецепт видалено");
+    });
+
+    document.getElementById("tpl-save-btn").addEventListener("click", () => {
+      const name = document.getElementById("tpl-name-input").value.trim();
+      const editId = document.getElementById("tpl-edit-id").value;
+      const portions = Math.max(1, Math.round(parseDecimalInput(document.getElementById("tpl-portions-input").value)) || 1);
+
+      if (!name) {
+        showToast("Введіть назву рецепту");
+        document.getElementById("tpl-name-input").focus();
+        return;
+      }
+      if (tplDraftItems.length === 0) {
+        showToast("Додайте хоча б один інгредієнт");
+        return;
+      }
+
+      const normalizedItems = tplDraftItems.map(entry => {
+        const found = findProductById(entry.itemId);
+        const isPiece = found && found.item.unit === "шт";
+        const perPortionWeight = isPiece
+          ? Math.max(0.5, Math.round((entry.weight / portions) * 2) / 2)
+          : Math.max(1, Math.round(entry.weight / portions));
+        return { itemId: entry.itemId, weight: perPortionWeight };
+      });
+
+      if (editId) {
+        const idx = mealTemplates.findIndex(t => t.id === editId);
+        if (idx !== -1) {
+          mealTemplates[idx] = { id: editId, name, items: normalizedItems };
+        }
+      } else {
+        mealTemplates.unshift({
+          id: "tpl_" + Date.now(),
+          name,
+          items: normalizedItems
+        });
+      }
+
+      saveTemplatesToStorage();
+      syncSaveToServer();
+      document.getElementById("template-modal").classList.add("hidden");
+      renderTemplatesStrip();
+      showToast(editId ? "Рецепт оновлено!" : `Рецепт «${name}» збережено!`);
+    });
+
+    // ==========================================
+    // РЕДАГУВАННЯ РАЦІОНУ ЗА МИНУЛІ ДНІ
+    // ==========================================
+    function updatePastDayBannerUI() {
+      const banner = document.getElementById("past-day-edit-banner");
+      const label = document.getElementById("past-day-edit-label");
+      if (!banner || !label) return;
+      if (editingHistoryDayKey) {
+        label.textContent = formatDayKeyToUkrainian(editingHistoryDayKey);
+        banner.classList.remove("hidden");
+      } else {
+        banner.classList.add("hidden");
+      }
+    }
+
+    function startEditingHistoryDay(dayKey) {
+      const todayKey = getDietDayKey();
+      if (!dayKey || dayKey === todayKey) {
+        exitEditingHistoryDay("calculator");
+        return;
+      }
+
+      // Зберігаємо поточний стан сьогоднішнього дня перед переходом на минулу дату
+      if (!editingHistoryDayKey) {
+        todayConsumedBackup = { ...consumed };
+      }
+
+      editingHistoryDayKey = dayKey;
+      resetConsumedObject();
+
+      const entry = historyRecords.find(r => resolveRecordDayKey(r) === dayKey);
+      if (entry && Array.isArray(entry.items)) {
+        entry.items.forEach(it => {
+          const matchedId = findProductIdFromHistoryItem(it);
+          if (matchedId && Object.prototype.hasOwnProperty.call(consumed, matchedId)) {
+            consumed[matchedId] = Math.round(((consumed[matchedId] || 0) + (Number(it.weight) || 0)) * 10) / 10;
+          }
+        });
+      }
+
+      currentFilter = "all";
+      expandedCompletedCats = {};
+      closeAllProductDrawers();
+      switchView("calculator", true);
+      updatePastDayBannerUI();
+      updateValuesInPlace(null, null, true);
+      renderTemplatesStrip();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      showToast(`Редагування: ${formatDayKeyToUkrainian(dayKey)}`);
+    }
+
+    function exitEditingHistoryDay(targetView = null) {
+      if (editingHistoryDayKey) {
+        // Якщо є незавершений таймер автозбереження — миттєво фіксуємо зміни за минулий день
+        if (saveTimeout) {
+          clearTimeout(saveTimeout);
+          saveTimeout = null;
+          let flushKcal = 0;
+          let flushProt = 0;
+          MASTER_CATEGORIES.forEach(cat => {
+            cat.items.forEach(it => {
+              const w = consumed[it.id] || 0;
+              const baseW = getItemEffectiveBase(it);
+              if (baseW > 0 && w > 0) {
+                flushKcal += (w / baseW) * getItemEffectiveKcal(it);
+                flushProt += (w / baseW) * getItemEffectiveProtein(it);
+              }
+            });
+          });
+          updateDailyHistoryAuto(Math.round(flushKcal), Math.round(flushProt * 10) / 10, editingHistoryDayKey);
+          syncSaveToServer();
+        }
+
+        selectedHistoryDateKey = editingHistoryDayKey;
+        editingHistoryDayKey = null;
+        if (todayConsumedBackup) {
+          resetConsumedObject();
+          for (const k in todayConsumedBackup) {
+            if (Object.prototype.hasOwnProperty.call(consumed, k)) {
+              consumed[k] = todayConsumedBackup[k];
+            }
+          }
+          todayConsumedBackup = null;
+        }
+        updatePastDayBannerUI();
+        closeAllProductDrawers();
+        updateValuesInPlace(null, null, true);
+      }
+
+      if (targetView) {
+        switchView(targetView, true);
+      }
+    }
+
+    document.getElementById("past-day-done-history-btn").addEventListener("click", () => {
+      const editedKey = editingHistoryDayKey;
+      exitEditingHistoryDay(null);
+      if (editedKey && /^\d{4}-\d{2}-\d{2}$/.test(editedKey)) {
+        const [y, m] = editedKey.split("-").map(Number);
+        calendarYear = y;
+        calendarMonth = m - 1;
+        selectedHistoryDateKey = editedKey;
+      }
+      switchView("history", true);
+      showToast("Зміни за минулий день збережено");
+    });
+
+    document.getElementById("past-day-back-today-btn").addEventListener("click", () => {
+      exitEditingHistoryDay("calculator");
+      showToast("Повернуто до сьогоднішнього раціону");
+    });
 
     let outsideClickBound = false;
     function attachListenersOnce() {
@@ -2689,14 +3280,26 @@
 
     // Reset Day Modal
     const resetModal = document.getElementById("reset-modal");
-    document.getElementById("reset-day-btn").addEventListener("click", () => resetModal.classList.remove("hidden"));
+    document.getElementById("reset-day-btn").addEventListener("click", () => {
+      const titleEl = document.getElementById("reset-modal-title");
+      const descEl = document.getElementById("reset-modal-desc");
+      if (editingHistoryDayKey) {
+        const dLabel = formatDayKeyToUkrainian(editingHistoryDayKey);
+        titleEl.textContent = `Скинути дані за ${dLabel}?`;
+        descEl.textContent = "Це обнулить усі продукти за вибраний минулий день. Сьогоднішній раціон залишиться без змін.";
+      } else {
+        titleEl.textContent = "Скинути всі внесені дані?";
+        descEl.textContent = "Це обнулить вагу всіх обраних продуктів за сьогодні до початкового стану.";
+      }
+      resetModal.classList.remove("hidden");
+    });
     document.getElementById("modal-cancel-btn").addEventListener("click", () => resetModal.classList.add("hidden"));
     document.getElementById("modal-confirm-btn").addEventListener("click", () => {
       resetConsumedObject();
       expandedCompletedCats = {};
       resetModal.classList.add("hidden");
       updateValuesInPlace();
-      showToast("Дані успішно скинуто!");
+      showToast(editingHistoryDayKey ? "Дані за обраний день очищено!" : "Дані успішно скинуто!");
     });
 
     // ==========================================
@@ -4030,7 +4633,12 @@
       btn.addEventListener("click", () => switchView(btn.getAttribute("data-view")));
     });
 
-    function switchView(viewName) {
+    function switchView(viewName, preserveHistorySelection = false) {
+      // Якщо користувач переходить з редагування минулого дня на іншу вкладку — безпечно повертаємо сьогоднішній стан
+      if (viewName !== "calculator" && editingHistoryDayKey) {
+        exitEditingHistoryDay(null);
+      }
+
       currentView = viewName;
       document.getElementById("view-calculator").classList.toggle("hidden", viewName !== "calculator");
       document.getElementById("view-measurements").classList.toggle("hidden", viewName !== "measurements");
@@ -4044,7 +4652,7 @@
       if (resetBtn) resetBtn.classList.toggle("hidden", viewName !== "calculator");
 
       const titleEl = document.getElementById("top-title-text");
-      if (viewName === "calculator") titleEl.textContent = "Раціон";
+      if (viewName === "calculator") titleEl.textContent = editingHistoryDayKey ? "Редагування" : "Раціон";
       else if (viewName === "measurements") titleEl.textContent = "Заміри тіла";
       else if (viewName === "history") titleEl.textContent = "Історія днів";
       else if (viewName === "settings") titleEl.textContent = "Мої норми";
@@ -4056,15 +4664,19 @@
           : "tab-btn relative flex flex-col items-center space-y-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium";
       });
 
-      if (viewName === "measurements") {
+      if (viewName === "calculator") {
+        renderTemplatesStrip();
+      } else if (viewName === "measurements") {
         document.getElementById("measurement-detail-screen").classList.add("hidden");
         document.getElementById("measurements-list-screen").classList.remove("hidden");
         renderMeasurementsList();
       } else if (viewName === "history") {
-        const curShifted = getShiftedDietDate();
-        calendarYear = curShifted.getFullYear();
-        calendarMonth = curShifted.getMonth();
-        selectedHistoryDateKey = getDietDayKey();
+        if (!preserveHistorySelection) {
+          const curShifted = getShiftedDietDate();
+          calendarYear = curShifted.getFullYear();
+          calendarMonth = curShifted.getMonth();
+          selectedHistoryDateKey = getDietDayKey();
+        }
         renderHistory();
       } else if (viewName === "settings") {
         renderProfileDetails();
@@ -4084,17 +4696,33 @@
       const dayKey = selectedHistoryDateKey || getDietDayKey();
       const entry = recByDay[dayKey] || null;
       const formattedDate = (entry && entry.date) ? entry.date : formatDayKeyToUkrainian(dayKey);
-      const isToday = dayKey === getDietDayKey();
+      const todayKey = getDietDayKey();
+      const isToday = dayKey === todayKey;
+      const isFuture = dayKey > todayKey;
 
       if (!entry || !Array.isArray(entry.items) || entry.items.length === 0) {
         detailEl.innerHTML = `
-          <div class="bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs text-center space-y-1">
-            <div class="text-xs font-bold text-gray-900 dark:text-white">
-              ${formattedDate} ${isToday ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px]">Сьогодні</span>' : ""}
+          <div class="bg-white dark:bg-slate-800/90 border border-gray-200 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs text-center space-y-2.5">
+            <div>
+              <div class="text-xs font-bold text-gray-900 dark:text-white">
+                ${formattedDate} ${isToday ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px]">Сьогодні</span>' : ""}
+              </div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">За цей день записів раціону немає</p>
             </div>
-            <p class="text-xs text-gray-400 dark:text-gray-500">За цей день записів раціону немає</p>
+            ${!isFuture ? `
+              <button type="button" id="hist-edit-selected-day-btn" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold transition shadow-xs">
+                <span>${isToday ? "🥗 Заповнити сьогодні" : "+ Заповнити цей день"}</span>
+              </button>
+            ` : ""}
           </div>
         `;
+        const editEmptyBtn = document.getElementById("hist-edit-selected-day-btn");
+        if (editEmptyBtn) {
+          editEmptyBtn.addEventListener("click", () => {
+            if (isToday) switchView("calculator");
+            else startEditingHistoryDay(dayKey);
+          });
+        }
         return;
       }
 
@@ -4129,7 +4757,7 @@
       detailEl.innerHTML = `
         <div class="bg-white dark:bg-slate-800 border-2 border-blue-500/40 dark:border-blue-500/30 rounded-2xl p-3.5 shadow-xs space-y-2.5">
           <div class="flex items-start justify-between gap-2">
-            <div>
+            <div class="min-w-0 flex-1">
               <div class="flex items-center flex-wrap gap-1.5">
                 <span class="text-xs font-extrabold text-gray-900 dark:text-white">${formattedDate}</span>
                 ${isToday ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Сьогодні</span>' : ""}
@@ -4142,6 +4770,11 @@
                 <span>🥩 Білок: <strong class="text-gray-800 dark:text-gray-200">${entry.totalProtein} г</strong></span>
               </div>
             </div>
+            ${!isFuture ? `
+              <button type="button" id="hist-edit-selected-day-btn" class="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 text-[11px] font-bold transition shrink-0">
+                ✏️ Редагувати
+              </button>
+            ` : ""}
           </div>
 
           <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
@@ -4155,6 +4788,14 @@
           </div>
         </div>
       `;
+
+      const editBtn = document.getElementById("hist-edit-selected-day-btn");
+      if (editBtn) {
+        editBtn.addEventListener("click", () => {
+          if (isToday) switchView("calculator");
+          else startEditingHistoryDay(dayKey);
+        });
+      }
     }
 
     function renderHistory() {
@@ -4594,7 +5235,8 @@
         customBaseMap,
         hiddenItemsMap,
         measurementsData,
-        historyRecords
+        historyRecords,
+        mealTemplates
       };
       const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -4635,6 +5277,10 @@
             historyRecords = normalizeHistoryRecords(parsed.historyRecords);
             localStorage.setItem(historyKey, JSON.stringify(historyRecords));
           }
+          if (Array.isArray(parsed.mealTemplates)) {
+            mealTemplates = parsed.mealTemplates;
+            saveTemplatesToStorage();
+          }
           updateGoalHeaderUI();
           buildCalculatorDOM();
           updateValuesInPlace();
@@ -4652,7 +5298,9 @@
     });
 
     document.getElementById("header-back-btn").addEventListener("click", () => {
-      if (currentView === "measurements" && !document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
+      if (currentView === "calculator" && editingHistoryDayKey) {
+        document.getElementById("past-day-done-history-btn").click();
+      } else if (currentView === "measurements" && !document.getElementById("measurement-detail-screen").classList.contains("hidden")) {
         document.getElementById("measurement-detail-screen").classList.add("hidden");
         document.getElementById("measurements-list-screen").classList.remove("hidden");
         renderMeasurementsList();
@@ -4681,16 +5329,22 @@
       const nowDietDay = getDietDayKey();
       if (nowDietDay !== activeDietDay) {
         activeDietDay = nowDietDay;
-        resetConsumedObject();
+        if (editingHistoryDayKey && todayConsumedBackup) {
+          MASTER_CATEGORIES.forEach(cat => cat.items.forEach(it => { todayConsumedBackup[it.id] = 0; }));
+        } else {
+          resetConsumedObject();
+        }
         try {
+          const cleanDayState = {};
+          MASTER_CATEGORIES.forEach(cat => cat.items.forEach(it => { cleanDayState[it.id] = 0; }));
           localStorage.setItem(userStateKey, JSON.stringify({
             dietDayKey: activeDietDay,
             savedAt: new Date().toISOString(),
             goal: currentGoalKey,
-            consumed: consumed
+            consumed: cleanDayState
           }));
         } catch (e) {}
-        updateValuesInPlace();
+        if (!editingHistoryDayKey) updateValuesInPlace();
         if (currentView === "history") renderHistory();
         showToast("Розпочато нову добу раціону (03:00)");
       }
